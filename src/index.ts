@@ -21,7 +21,7 @@ export type { RenderOptions, RenderResult } from './core/renderer.js';
 export { ERROR_CODES, isWaEngineError, WaEngineError } from './core/errors.js';
 export type { ErrorBody, ErrorCode } from './core/errors.js';
 export { DslShape, parseDsl } from './schemas/dsl.schema.js';
-export type { Dsl, DslRoom } from './schemas/dsl.schema.js';
+export type { Dsl, DslInput, DslRoom } from './schemas/dsl.schema.js';
 export { TOOLS } from './tools/registry.js';
 export { runTool } from './tools/tool.js';
 export type { ToolEntry } from './tools/tool.js';

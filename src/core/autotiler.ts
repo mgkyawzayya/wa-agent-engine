@@ -1,5 +1,5 @@
 import type { AssetSet, FaceRow, FaceStyle } from '../schemas/asset-set.schema.js';
-import { doorCells, interiorOf, isVertical, type DslRoom } from '../schemas/dsl.schema.js';
+import { doorCells, FACE_ROWS, interiorOf, isVertical, type DslRoom } from '../schemas/dsl.schema.js';
 import type { LoadedAssetSet, WallLookup, WallNeighbour } from './asset-set-registry.js';
 import { WaEngineError } from './errors.js';
 import { CellSet, DIRECTIONS4, inBounds, perimeterCells, rectCells, rectContains, type Cell } from './grid.js';
@@ -19,6 +19,10 @@ import { TILE_ROLES, type TileRole } from './layers.js';
 
 // A door must open onto at least this many connected walkable cells on its outside.
 export const MIN_DOOR_SIDE_AREA = 4;
+// How many steps from a door the walk of doorSideProblems can look: through the gap in the
+// wall-face rows under a south door, then MIN_DOOR_SIDE_AREA cells. A cell farther from
+// every door cell never changes its answer.
+export const DOOR_SIDE_REACH = FACE_ROWS + MIN_DOOR_SIDE_AREA + 1;
 
 export interface Placement {
   role: TileRole;
@@ -64,6 +68,8 @@ export interface AutotileResult {
   // Cells this build owns: room rectangles, the faces it draws, and the cells under its
   // doors whose old faces it clears.
   footprint: CellSet;
+  // The wall faces this build draws, inside rooms and out.
+  faces: CellSet;
   // Existing wall cells next to the build whose wall-top tile was recomputed.
   halo: CellSet;
   doors: CellSet;
@@ -451,10 +457,20 @@ export function doorSideProblems(
       const offMap = span.cells.every((c) => !inBounds(c.x + dx, c.y + dy, width, height));
       if (span.exit && offMap) continue;
       const starts = span.cells.map((c) => ({ x: c.x + dx, y: c.y + dy })).filter((c) => !blocked(c.x, c.y) && !own.has(c.x, c.y));
+      const room = starts
+        .map((c) => interiorRoomAt(rooms, c.x, c.y))
+        .find((r) => r !== undefined && span.cells.some((d) => onPerimeter(r, d.x, d.y)));
+      // Below a door that does not open into one of its rooms, the gap the door leaves in the
+      // wall-face rows does not count: the door must reach walkable ground past the faces.
+      const gap = new CellSet();
+      if (room === undefined && !span.vertical && dy === 1) {
+        for (const c of span.cells) for (let row = 1; row <= FACE_ROWS; row++) gap.add(c.x, c.y + row);
+      }
       // Count connected walkable cells on this side, without going back through the door.
       const seen = new CellSet(starts);
       const queue = [...starts];
-      for (let i = 0; i < queue.length && seen.size < MIN_DOOR_SIDE_AREA; i++) {
+      let counted = starts.filter((c) => !gap.has(c.x, c.y)).length;
+      for (let i = 0; i < queue.length && counted < MIN_DOOR_SIDE_AREA; i++) {
         const { x, y } = queue[i]!;
         for (const d of DIRECTIONS4) {
           const nx = x + d.dx;
@@ -462,24 +478,22 @@ export function doorSideProblems(
           if (!blocked(nx, ny) && !own.has(nx, ny) && !seen.has(nx, ny)) {
             seen.add(nx, ny);
             queue.push({ x: nx, y: ny });
+            if (!gap.has(nx, ny)) counted += 1;
           }
         }
       }
-      if (seen.size >= MIN_DOOR_SIDE_AREA) continue;
+      if (counted >= MIN_DOOR_SIDE_AREA) continue;
       // Into a room the door belongs to, fewer cells are enough when the room's largest open
       // area is itself smaller; reaching less than that means a pocket.
-      const room = starts
-        .map((c) => interiorRoomAt(rooms, c.x, c.y))
-        .find((r) => r !== undefined && span.cells.some((d) => onPerimeter(r, d.x, d.y)));
-      if (room !== undefined && seen.size >= largest(room)) continue;
+      if (room !== undefined && counted >= largest(room)) continue;
       problems.push(new WaEngineError(
         'DOOR_UNREACHABLE',
         room !== undefined
           ? `door at (${first.x},${first.y}) opens into a pocket of room "${room.id}" closed off by walls or furniture`
           : offMap
           ? `door at (${first.x},${first.y}) opens off the map edge; if it is an exit, mark it exit: true and add an exitUrl zone over it`
-          : `door at (${first.x},${first.y}) leads nowhere on one side (a wall, wall faces, or fewer than ${MIN_DOOR_SIDE_AREA} walkable cells)`,
-        { door: first, side: { dx, dy }, walkableCells: seen.size },
+          : `door at (${first.x},${first.y}) leads nowhere on one side (a wall, wall faces, or fewer than ${MIN_DOOR_SIDE_AREA} walkable cells${gap.size > 0 ? ' past the wall-face rows under it' : ''})`,
+        { door: first, side: { dx, dy }, walkableCells: counted },
       ));
     }
   }
@@ -535,6 +549,7 @@ export function autotile(input: AutotileInput): AutotileResult {
     placements: b.placements,
     clears: b.clears,
     footprint: b.footprint,
+    faces: new CellSet(b.faces),
     halo: b.halo,
     doors: new CellSet(b.spans.flatMap((s) => s.cells)),
     errors: b.errors,

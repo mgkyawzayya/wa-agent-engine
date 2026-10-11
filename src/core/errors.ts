@@ -75,6 +75,9 @@ export const ERROR_CODES = [
   'PREFAB_REMOVED',
   'PREFAB_UNTRACKED',
   'VARIABLE_DEFAULT_AS_TEXT',
+  'SCATTER_INCOMPLETE',
+  // Also a validate_wa_map code: a build warns when its water covers a start tile.
+  'START_TILE_BLOCKED',
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

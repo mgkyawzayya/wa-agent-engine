@@ -184,6 +184,26 @@
       "grass": {
         "tileset": "WA_Exterior",
         "tile": 628
+      },
+      "grass-light": {
+        "tileset": "WA_Exterior",
+        "tile": 627
+      },
+      "grass-dark": {
+        "tileset": "WA_Exterior",
+        "tile": 625
+      },
+      "grass-dry": {
+        "tileset": "WA_Exterior",
+        "tile": 626
+      },
+      "cobble": {
+        "tileset": "WA_Exterior",
+        "tile": 650
+      },
+      "stone-dark": {
+        "tileset": "WA_Exterior",
+        "tile": 651
       }
     }
   },
@@ -194,6 +214,22 @@
   "startTile": {
     "tileset": "WA_Special_Zones",
     "tile": 1
+  },
+  "water": {
+    "tile": {
+      "tileset": "WA_Exterior",
+      "tile": 676
+    },
+    "bridge": {
+      "horizontal": {
+        "tileset": "WA_Exterior",
+        "tile": 651
+      },
+      "vertical": {
+        "tileset": "WA_Exterior",
+        "tile": 808
+      }
+    }
   },
   "prefabs": [
     {
@@ -540,6 +576,312 @@
       "placement": "free",
       "use": "Phone or 1:1 call nook: high-back armchair and side table",
       "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "tree-oak-2x3",
+      "path": "prefabs/tree-oak-2x3.tmj",
+      "width": 2,
+      "height": 3,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Green leafy tree; avatars walk behind the canopy; the trunk row blocks"
+    },
+    {
+      "id": "tree-oak-light-2x3",
+      "path": "prefabs/tree-oak-light-2x3.tmj",
+      "width": 2,
+      "height": 3,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Light green leafy tree; avatars walk behind the canopy; the trunk row blocks"
+    },
+    {
+      "id": "tree-oak-yellow-2x3",
+      "path": "prefabs/tree-oak-yellow-2x3.tmj",
+      "width": 2,
+      "height": 3,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Yellow-green leafy tree; avatars walk behind the canopy; the trunk row blocks"
+    },
+    {
+      "id": "tree-oak-orange-2x3",
+      "path": "prefabs/tree-oak-orange-2x3.tmj",
+      "width": 2,
+      "height": 3,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Leafy tree with orange blossoms; avatars walk behind the canopy; the trunk row blocks"
+    },
+    {
+      "id": "tree-oak-blossom-2x3",
+      "path": "prefabs/tree-oak-blossom-2x3.tmj",
+      "width": 2,
+      "height": 3,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Leafy tree with pale blue blossoms; avatars walk behind the canopy; the trunk row blocks"
+    },
+    {
+      "id": "tree-pine-2x3",
+      "path": "prefabs/tree-pine-2x3.tmj",
+      "width": 2,
+      "height": 3,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Dark green conifer; avatars walk behind the canopy; the trunk row blocks"
+    },
+    {
+      "id": "tree-pine-light-2x3",
+      "path": "prefabs/tree-pine-light-2x3.tmj",
+      "width": 2,
+      "height": 3,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Light green conifer; avatars walk behind the canopy; the trunk row blocks"
+    },
+    {
+      "id": "tree-pine-emerald-2x3",
+      "path": "prefabs/tree-pine-emerald-2x3.tmj",
+      "width": 2,
+      "height": 3,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Emerald green conifer; avatars walk behind the canopy; the trunk row blocks"
+    },
+    {
+      "id": "tree-pine-small-2x2",
+      "path": "prefabs/tree-pine-small-2x2.tmj",
+      "width": 2,
+      "height": 2,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Small conifer; avatars walk behind the canopy; the trunk row blocks"
+    },
+    {
+      "id": "tree-round-2x2",
+      "path": "prefabs/tree-round-2x2.tmj",
+      "width": 2,
+      "height": 2,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Small round tree; avatars walk behind the canopy; the trunk row blocks"
+    },
+    {
+      "id": "forest-oak-4x4",
+      "path": "prefabs/forest-oak-4x4.tmj",
+      "width": 4,
+      "height": 4,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Dense block of oaks, solid: plain oaks on the left half, blossom oaks on the right; copies placed side by side join into one forest, for example along the map edge"
+    },
+    {
+      "id": "forest-pine-4x4",
+      "path": "prefabs/forest-pine-4x4.tmj",
+      "width": 4,
+      "height": 4,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Dense block of pines, solid: dark pines on the left half, emerald pines on the right; copies placed side by side join into one forest, for example along the map edge"
+    },
+    {
+      "id": "bush-round-2x1",
+      "path": "prefabs/bush-round-2x1.tmj",
+      "width": 2,
+      "height": 1,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Round green bush; blocks"
+    },
+    {
+      "id": "bush-large-2x1",
+      "path": "prefabs/bush-large-2x1.tmj",
+      "width": 2,
+      "height": 1,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Large double bush; blocks"
+    },
+    {
+      "id": "bush-small-2x1",
+      "path": "prefabs/bush-small-2x1.tmj",
+      "width": 2,
+      "height": 1,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Small cluster of bushes; blocks"
+    },
+    {
+      "id": "rocks-mossy-2x1",
+      "path": "prefabs/rocks-mossy-2x1.tmj",
+      "width": 2,
+      "height": 1,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Flat stones among grass tufts; blocks"
+    },
+    {
+      "id": "rocks-pile-2x1",
+      "path": "prefabs/rocks-pile-2x1.tmj",
+      "width": 2,
+      "height": 1,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Pile of large rocks; blocks"
+    },
+    {
+      "id": "rocks-small-1x1",
+      "path": "prefabs/rocks-small-1x1.tmj",
+      "width": 1,
+      "height": 1,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "A few small stones; blocks"
+    },
+    {
+      "id": "rocks-boulder-1x1",
+      "path": "prefabs/rocks-boulder-1x1.tmj",
+      "width": 1,
+      "height": 1,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Single boulder; blocks"
+    },
+    {
+      "id": "hedge-1x3",
+      "path": "prefabs/hedge-1x3.tmj",
+      "width": 1,
+      "height": 3,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Dark green hedge, one tile long: line copies up side by side for a longer hedge. The middle row blocks; the top row is the leafy edge and the bottom row the hedge front, both walkable"
+    },
+    {
+      "id": "hedge-olive-1x3",
+      "path": "prefabs/hedge-olive-1x3.tmj",
+      "width": 1,
+      "height": 3,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Olive green hedge, one tile long: line copies up side by side for a longer hedge. The middle row blocks; the top row is the leafy edge and the bottom row the hedge front, both walkable"
+    },
+    {
+      "id": "flowers-yellow-3x3",
+      "path": "prefabs/flowers-yellow-3x3.tmj",
+      "width": 3,
+      "height": 3,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Patch of yellow flowers; walkable"
+    },
+    {
+      "id": "flowers-white-3x3",
+      "path": "prefabs/flowers-white-3x3.tmj",
+      "width": 3,
+      "height": 3,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Patch of white flowers; walkable"
+    },
+    {
+      "id": "flowers-pink-2x2",
+      "path": "prefabs/flowers-pink-2x2.tmj",
+      "width": 2,
+      "height": 2,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Patch of pink flowers; walkable"
+    },
+    {
+      "id": "flowers-orange-2x2",
+      "path": "prefabs/flowers-orange-2x2.tmj",
+      "width": 2,
+      "height": 2,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Patch of orange flowers; walkable"
+    },
+    {
+      "id": "flowers-yellow-1x1",
+      "path": "prefabs/flowers-yellow-1x1.tmj",
+      "width": 1,
+      "height": 1,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Yellow tulips; walkable"
+    },
+    {
+      "id": "flowers-white-1x1",
+      "path": "prefabs/flowers-white-1x1.tmj",
+      "width": 1,
+      "height": 1,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Small white flowers; walkable"
+    },
+    {
+      "id": "flowers-pink-1x1",
+      "path": "prefabs/flowers-pink-1x1.tmj",
+      "width": 1,
+      "height": 1,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Pink flowers; walkable"
+    },
+    {
+      "id": "flowers-orange-1x1",
+      "path": "prefabs/flowers-orange-1x1.tmj",
+      "width": 1,
+      "height": 1,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Small orange flowers; walkable"
+    },
+    {
+      "id": "fountain-2x2",
+      "path": "prefabs/fountain-2x2.tmj",
+      "width": 2,
+      "height": 2,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Stone fountain on its own cobblestone; place it on cobble ground; solid"
+    },
+    {
+      "id": "pillar-1x2",
+      "path": "prefabs/pillar-1x2.tmj",
+      "width": 1,
+      "height": 2,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Stone pillar; the base blocks, the top draws over avatars behind it"
+    },
+    {
+      "id": "crate-3x3",
+      "path": "prefabs/crate-3x3.tmj",
+      "width": 3,
+      "height": 3,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Large wooden crate, drawn across the middle of its 3x3 area; the middle row blocks"
+    },
+    {
+      "id": "barrels-2x2",
+      "path": "prefabs/barrels-2x2.tmj",
+      "width": 2,
+      "height": 2,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Stack of three barrels; the bottom row blocks, the top barrel draws over avatars behind it"
+    },
+    {
+      "id": "fence-rope-3x1",
+      "path": "prefabs/fence-rope-3x1.tmj",
+      "width": 3,
+      "height": 1,
+      "category": "outdoor",
+      "placement": "free",
+      "use": "Rope fence between two wooden posts; blocks"
     }
   ]
 }

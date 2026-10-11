@@ -33,11 +33,11 @@ test('npm pack ships the asset set, only allowlisted files, and no PNG', async (
   expect(paths).toContain('LICENSE');
   expect(paths.filter((p) => p.toLowerCase().endsWith('.png'))).toEqual([]);
   expect(paths.filter((p) => !ALLOWED.some((re) => re.test(p)))).toEqual([]);
-  // The built-in asset set must ship: set.json, its 9 tilesets, and the 35 prefabs.
+  // The built-in asset set must ship: set.json, its 9 tilesets, and the 69 prefabs.
   const set = paths.filter((p) => p.startsWith('assets/sets/wa-starter-office/'));
   expect(set).toContain('assets/sets/wa-starter-office/set.json');
   expect(set.filter((p) => p.endsWith('.tsj'))).toHaveLength(9);
-  expect(set.filter((p) => p.endsWith('.tmj'))).toHaveLength(35);
+  expect(set.filter((p) => p.endsWith('.tmj'))).toHaveLength(69);
 });
 
 test('the package is MIT-licensed, and says so in package.json and LICENSE', async () => {

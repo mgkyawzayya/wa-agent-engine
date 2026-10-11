@@ -4,7 +4,7 @@ import { listPrefabs, loadPrefab } from '../../src/core/prefab-registry.js';
 import { writeDemoSet } from '../helpers/demo-set.js';
 import { makeProject, type TempProject } from '../helpers/project.js';
 
-// The VarCamp prefab catalog: id, width, height, and collision cells "x,y".
+// The built-in prefab catalog: id, width, height, and collision cells "x,y".
 const CATALOG: [string, number, number, string][] = [
   ["stage-light-4x3", 4, 3, ""],
   ["stage-dark-4x3", 4, 3, ""],
@@ -41,6 +41,40 @@ const CATALOG: [string, number, number, string][] = [
   ["pouf-row-4x1", 4, 1, ""],
   ["party-balloons-1x1", 1, 1, ""],
   ["phone-pod-2x2", 2, 2, "1,1"],
+  ["tree-oak-2x3", 2, 3, "0,2 1,2"],
+  ["tree-oak-light-2x3", 2, 3, "0,2 1,2"],
+  ["tree-oak-yellow-2x3", 2, 3, "0,2 1,2"],
+  ["tree-oak-orange-2x3", 2, 3, "0,2 1,2"],
+  ["tree-oak-blossom-2x3", 2, 3, "0,2 1,2"],
+  ["tree-pine-2x3", 2, 3, "0,2 1,2"],
+  ["tree-pine-light-2x3", 2, 3, "0,2 1,2"],
+  ["tree-pine-emerald-2x3", 2, 3, "0,2 1,2"],
+  ["tree-pine-small-2x2", 2, 2, "0,1 1,1"],
+  ["tree-round-2x2", 2, 2, "0,1 1,1"],
+  ["forest-oak-4x4", 4, 4, "0,0 1,0 2,0 3,0 0,1 1,1 2,1 3,1 0,2 1,2 2,2 3,2 0,3 1,3 2,3 3,3"],
+  ["forest-pine-4x4", 4, 4, "0,0 1,0 2,0 3,0 0,1 1,1 2,1 3,1 0,2 1,2 2,2 3,2 0,3 1,3 2,3 3,3"],
+  ["bush-round-2x1", 2, 1, "0,0 1,0"],
+  ["bush-large-2x1", 2, 1, "0,0 1,0"],
+  ["bush-small-2x1", 2, 1, "0,0 1,0"],
+  ["rocks-mossy-2x1", 2, 1, "0,0 1,0"],
+  ["rocks-pile-2x1", 2, 1, "0,0 1,0"],
+  ["rocks-small-1x1", 1, 1, "0,0"],
+  ["rocks-boulder-1x1", 1, 1, "0,0"],
+  ["hedge-1x3", 1, 3, "0,1"],
+  ["hedge-olive-1x3", 1, 3, "0,1"],
+  ["flowers-yellow-3x3", 3, 3, ""],
+  ["flowers-white-3x3", 3, 3, ""],
+  ["flowers-pink-2x2", 2, 2, ""],
+  ["flowers-orange-2x2", 2, 2, ""],
+  ["flowers-yellow-1x1", 1, 1, ""],
+  ["flowers-white-1x1", 1, 1, ""],
+  ["flowers-pink-1x1", 1, 1, ""],
+  ["flowers-orange-1x1", 1, 1, ""],
+  ["fountain-2x2", 2, 2, "0,0 1,0 0,1 1,1"],
+  ["pillar-1x2", 1, 2, "0,1"],
+  ["crate-3x3", 3, 3, "0,1 1,1 2,1"],
+  ["barrels-2x2", 2, 2, "0,1 1,1"],
+  ["fence-rope-3x1", 3, 1, "0,0 1,0 2,0"],
 ];
 
 let project: TempProject;
@@ -52,8 +86,8 @@ beforeEach(async () => {
 afterEach(() => project.cleanup());
 
 describe('catalog', () => {
-  test('has all 35 prefabs, matching set.json', () => {
-    expect(CATALOG).toHaveLength(35);
+  test('has all 69 prefabs, matching set.json', () => {
+    expect(CATALOG).toHaveLength(69);
     expect(listPrefabs(set).map((p) => p.id).sort()).toEqual(CATALOG.map(([id]) => id).sort());
   });
 
@@ -74,11 +108,11 @@ describe('catalog', () => {
     ).toEqual(['notice-board-3x1', 'snack-bar-5x3', 'sponsor-booth-4x4', 'wall-screen-3x2']);
   });
 
-  test('categories cover talks, work, social, logistics, fun, and phone', () => {
+  test('categories cover talks, work, social, logistics, fun, phone, and outdoor', () => {
     const counts = Object.fromEntries(
-      (['talks', 'work', 'social', 'logistics', 'fun', 'phone'] as const).map((c) => [c, listPrefabs(set, { category: c }).length]),
+      (['talks', 'work', 'social', 'logistics', 'fun', 'phone', 'outdoor'] as const).map((c) => [c, listPrefabs(set, { category: c }).length]),
     );
-    expect(counts).toEqual({ talks: 9, work: 9, social: 9, logistics: 4, fun: 3, phone: 1 });
+    expect(counts).toEqual({ talks: 9, work: 9, social: 9, logistics: 4, fun: 3, phone: 1, outdoor: 34 });
   });
 });
 
@@ -109,6 +143,18 @@ describe('decoding', () => {
     }
     const original = await loadPrefab(set, 'lectern-1x1');
     expect([original.credit, original.license]).toEqual([undefined, undefined]);
+  });
+
+  test('outdoor trees draw their canopy over avatars and keep the trunk row under them, colliding', async () => {
+    const trees = listPrefabs(set, { category: 'outdoor' }).filter((p) => p.id.startsWith('tree-') || p.id.startsWith('forest-'));
+    expect(trees).toHaveLength(12);
+    for (const summary of trees) {
+      const prefab = await loadPrefab(set, summary.id);
+      const base = prefab.height - 1;
+      expect(prefab.layers.foreground1?.every((c) => c.y < base), summary.id).toBe(true);
+      expect(prefab.layers.furniture1?.every((c) => c.y === base), summary.id).toBe(true);
+      expect(prefab.collisions.filter((c) => c.y === base), summary.id).toHaveLength(prefab.width);
+    }
   });
 
   test('north-wall prefabs say which face row their top row sits on', () => {

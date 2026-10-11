@@ -122,6 +122,11 @@ function checkReferences(id: string, set: AssetSet, tilesets: ReadonlyMap<string
   check(terrain.tileset, terrain.isolatedWallTile, 'isolated wall tile');
   check(set.collisionTile.tileset, set.collisionTile.tile, 'collision tile');
   check(set.startTile.tileset, set.startTile.tile, 'start tile');
+  if (set.water !== undefined) {
+    check(set.water.tile.tileset, set.water.tile.tile, 'water tile');
+    check(set.water.bridge.horizontal.tileset, set.water.bridge.horizontal.tile, 'horizontal bridge tile');
+    check(set.water.bridge.vertical.tileset, set.water.bridge.vertical.tile, 'vertical bridge tile');
+  }
   const wangset = tilesets.get(terrain.tileset)?.tsj.wangsets?.find((w) => w.name === terrain.wangset);
   for (const { tileid } of wangset?.wangtiles ?? []) check(terrain.tileset, tileid, 'wall terrain');
   const colors = wangset?.colors?.length ?? 0;

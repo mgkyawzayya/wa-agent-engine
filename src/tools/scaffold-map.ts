@@ -12,7 +12,10 @@ const input = z.strictObject({
   assetSet: assetSetField.default(DEFAULT_ASSET_SET),
   spawn: z
     .strictObject({ x: tilesField('Tile column'), y: tilesField('Tile row') })
-    .describe('The tile where players arrive; pick one inside a room, below the wall-face rows, clear of furniture and doors'),
+    .describe(
+      'The tile where players arrive; pick a walkable one: inside a room below its wall-face rows, or in a world on a plaza or path; ' +
+        'clear of furniture, doors and water',
+    ),
   mapName: z.string().exactOptional().describe('Map name WorkAdventure shows, for example "VarCamp 2025"'),
   mapDescription: z.string().exactOptional().describe('One-line description of the map'),
   script: z.string().exactOptional().describe('Map script: a file in the project, relative to the map, or an https URL'),

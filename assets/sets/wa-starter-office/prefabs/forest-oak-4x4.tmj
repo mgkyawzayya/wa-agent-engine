@@ -1,0 +1,89 @@
+{
+ "compressionlevel": -1,
+ "height": 4,
+ "infinite": false,
+ "layers": [
+  {
+   "data": [3, 3, 3, 3,
+  3, 3, 3, 3,
+  3, 3, 3, 3,
+  3, 3, 3, 3],
+   "height": 4,
+   "id": 1,
+   "name": "collisions",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 4,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  263, 264, 265, 266],
+   "height": 4,
+   "id": 2,
+   "name": "furniture1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 4,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [188, 189, 190, 191,
+  213, 214, 215, 216,
+  238, 239, 240, 241,
+  0, 0, 0, 0],
+   "height": 4,
+   "id": 3,
+   "name": "foreground1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 4,
+   "x": 0,
+   "y": 0
+  }
+ ],
+ "nextlayerid": 4,
+ "nextobjectid": 1,
+ "orientation": "orthogonal",
+ "properties": [
+  {
+   "name": "category",
+   "type": "string",
+   "value": "outdoor"
+  },
+  {
+   "name": "placement",
+   "type": "string",
+   "value": "free"
+  },
+  {
+   "name": "use",
+   "type": "string",
+   "value": "Dense block of oaks, solid: plain oaks on the left half, blossom oaks on the right; copies placed side by side join into one forest, for example along the map edge"
+  }
+ ],
+ "renderorder": "right-down",
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilesets": [
+  {
+   "firstgid": 1,
+   "source": "../tilesets/WA_Special_Zones.tsj"
+  },
+  {
+   "firstgid": 13,
+   "source": "../tilesets/WA_Exterior.tsj"
+  }
+ ],
+ "tilewidth": 32,
+ "type": "map",
+ "version": "1.11",
+ "width": 4
+}

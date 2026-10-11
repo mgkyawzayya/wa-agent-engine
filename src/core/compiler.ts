@@ -1,9 +1,9 @@
 import { access } from 'node:fs/promises';
-import { interiorOf, MAX_MAP_TILES, parseDsl, type Dsl } from '../schemas/dsl.schema.js';
+import { interiorOf, MAX_MAP_TILES, parseDsl, type Dsl, type DslRoom, type Rect } from '../schemas/dsl.schema.js';
 import { isExternalTileset, setProperty, type TiledMap, type TiledObject } from '../schemas/tiled.schema.js';
 import { NPC_WRITABLE_BY, type WaVariable } from '../schemas/wa.schema.js';
 import { loadAssetSet, type LoadedAssetSet } from './asset-set-registry.js';
-import { autotile, faceStyleOf } from './autotiler.js';
+import { autotile, collectDoorSpans, DOOR_SIDE_REACH, doorSideProblems, faceStyleOf, type DoorSpan } from './autotiler.js';
 import {
   decodeCells,
   eachWrite,
@@ -18,9 +18,10 @@ import {
 } from './engine-state.js';
 import { assertWhole, WaEngineError, isWaEngineError, type ErrorCode } from './errors.js';
 import { decodeGid, tilesetForGid } from './gid.js';
-import { CellSet } from './grid.js';
+import { CellSet, inBounds, rectCells, type Cell } from './grid.js';
 import { allocObjectId, ensureStandardLayers, forEachObjectGroup, removeOwnedObjects, resolveRole, type TileRole } from './layers.js';
 import { writeLabels } from './labels.js';
+import { doorFronts, drawWorld, seededRandom } from './world.js';
 import { createEmptyMap, readMap, withMapLock, writeMap } from './map-io.js';
 import { editMap, resolveMap } from './map-session.js';
 import { loadPrefab, type LoadedPrefab } from './prefab-registry.js';
@@ -265,9 +266,35 @@ function newlySolid(writer: TileWriter, writes: Writes, colliding: Set<number>, 
   return fresh;
 }
 
-function checkDoors(map: TiledMap, rooms: EngineState['rooms']): void {
-  const problems = doorProblems(map, rooms, solidCells(map));
+function checkDoors(map: TiledMap, rooms: EngineState['rooms'], solid: CellSet = solidCells(map)): void {
+  const problems = doorProblems(map, rooms, solid);
   if (problems.length > 0) firstError(problems);
+}
+
+// Whether the cells a stamp just made solid cut a door off from walkable ground. Every door
+// was walkable before the stamp, so any problem is new. Only doors within DOOR_SIDE_REACH of
+// the stamp can change, so only they are walked again.
+function cutsDoorOff(spans: readonly DoorSpan[], rooms: readonly DslRoom[], solid: CellSet, fresh: CellSet, size: { width: number; height: number }): boolean {
+  if (fresh.size === 0) return false;
+  const cells = [...fresh];
+  const box = {
+    left: Math.min(...cells.map((c) => c.x)),
+    right: Math.max(...cells.map((c) => c.x)),
+    top: Math.min(...cells.map((c) => c.y)),
+    bottom: Math.max(...cells.map((c) => c.y)),
+  };
+  const reach = (d: Cell): number => Math.max(0, box.left - d.x, d.x - box.right) + Math.max(0, box.top - d.y, d.y - box.bottom);
+  const near = spans.filter((s) => s.cells.some((d) => reach(d) <= DOOR_SIDE_REACH));
+  if (near.length === 0) return false;
+  const blocked = (x: number, y: number): boolean => solid.has(x, y) || fresh.has(x, y);
+  return near.some((s) => s.cells.some((d) => blocked(d.x, d.y))) || doorSideProblems(near, rooms, blocked, size.width, size.height).length > 0;
+}
+
+// The tiles of the start layer, where players arrive.
+function startCells(map: TiledMap, writer: TileWriter): Cell[] {
+  const cells: Cell[] = [];
+  for (let y = 0; y < map.height; y++) for (let x = 0; x < map.width; x++) if (writer.get('start', x, y) !== 0) cells.push({ x, y });
+  return cells;
 }
 
 export interface PlacePrefabOptions {
@@ -346,7 +373,8 @@ export interface BuildRoomsResult {
   placedCells: number;
   zones: string[];
   variables: string[];
-  // Instances of the DSL's furniture, and of the tool-placed prefabs still in the map.
+  // Instances of the DSL's furniture (scattered prefabs are not listed), and of the
+  // tool-placed prefabs still in the map.
   prefabs: string[];
   toolPrefabs: string[];
   warnings: WaEngineError[];
@@ -416,7 +444,7 @@ function setModalOrigins(map: TiledMap, origins: readonly string[] | undefined):
 // Why a rebuild removed a tool prefab, or stopped tracking one; in the warning's details.reason
 // so agents can branch on it.
 const REMOVED_REASONS = {
-  covered: 'the new rooms or their furniture cover it',
+  covered: 'the new rooms, their furniture or water cover it',
   'floor-gone': 'its floor is gone',
   'wall-gone': 'its wall is gone',
   'blocks-door': 'it would block a door of the new rooms',
@@ -603,6 +631,20 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
     const recorder = new WriteRecorder();
     for (const c of tiles.clears) writer.set(c.role, c.x, c.y, 0, recorder);
     for (const p of tiles.placements) writer.set(p.role, p.x, p.y, writer.gid(p.tileset, p.tile), recorder);
+    // The world around the rooms: ground, water and paths, owned by the build like the rooms.
+    const buildings = new CellSet([...dsl.rooms.flatMap((r) => rectCells(r.bounds)), ...tiles.faces]);
+    const world = drawWorld(dsl, set, writer, recorder, collision, buildings);
+    // Where players arrive; only water and scatter need it.
+    const starts = dsl.water.length > 0 || dsl.scatter.length > 0 ? startCells(map, writer) : [];
+    for (const c of starts.filter((s) => world.water.has(s.x, s.y))) {
+      warnings.push(
+        new WaEngineError(
+          'START_TILE_BLOCKED',
+          `the start tile at (${c.x},${c.y}) is under water, so players would arrive stuck; move the water, or add a start area on walkable ground with configure_wa_zone`,
+          c,
+        ),
+      );
+    }
 
     const state: EngineState = {
       ...previous,
@@ -642,22 +684,89 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
     setModalOrigins(map, dsl.modalOrigins);
 
     // Furniture from the DSL, stamped like place_prefab and owned by the build.
-    const buildPrefabs: PrefabRecord[] = [];
+    const furniture: PrefabRecord[] = [];
     for (const room of dsl.rooms) {
       for (const item of room.furniture) {
         const prefab = await definition(item.prefabId);
-        const furniture = new WriteRecorder();
-        stampPrefab(map, writer, set, prefab, item.x, item.y, furniture);
-        buildPrefabs.push({ instance: `b-${room.id}-${buildPrefabs.length + 1}`, prefabId: prefab.id, x: item.x, y: item.y, origin: 'build', writes: furniture.toWrites() });
+        const stamp = new WriteRecorder();
+        stampPrefab(map, writer, set, prefab, item.x, item.y, stamp);
+        furniture.push({ instance: `b-${room.id}-${furniture.length + 1}`, prefabId: prefab.id, x: item.x, y: item.y, origin: 'build', writes: stamp.toWrites() });
+      }
+    }
+    // The rooms and their furniture must leave every door walkable; what goes on after them
+    // only goes where it keeps the doors so.
+    writer.flush();
+    const colliding = collidingGids(map);
+    const solid = solidCells(map);
+    checkDoors(map, dsl.rooms, solid);
+
+    // Scattered prefabs (trees, flowers): seeded random spots on the ground, clear of rooms,
+    // water, paths, the fronts of doors, the spawn, prefabs placed with place_prefab, and each
+    // other. A spot that would still cut a door off is skipped. The same DSL and map give the
+    // same spots.
+    const keepOff = doorFronts(dsl.rooms, map.width, map.height);
+    const keepOffRect = (r: Rect): void => {
+      for (const c of rectCells(r)) if (inBounds(c.x, c.y, map.width, map.height)) keepOff.add(c.x, c.y);
+    };
+    for (const c of starts) keepOffRect({ x: c.x - 1, y: c.y - 1, width: 3, height: 3 });
+    for (const { record, prefab } of toolPrefabs) keepOffRect({ x: record.x, y: record.y, width: prefab.width, height: prefab.height });
+    const spans = collectDoorSpans(dsl.rooms);
+    const scattered: PrefabRecord[] = [];
+    for (const [i, area] of dsl.scatter.entries()) {
+      const choices = await Promise.all(area.prefabs.map((id) => definition(id)));
+      const hanging = choices.find((p) => p.placement !== 'free');
+      if (hanging !== undefined) {
+        throw new WaEngineError('INVALID_INPUT', `scatter ${i + 1}: prefab "${hanging.id}" hangs on a wall; scatter only free-standing prefabs`);
+      }
+      // A prefab larger than the area is never picked.
+      const fitting = choices.filter((p) => p.width <= area.area.width && p.height <= area.area.height);
+      const random = seededRandom(area.seed * 7919 + i + 1);
+      let placed = 0;
+      for (let attempt = 0; fitting.length > 0 && placed < area.count && attempt < area.count * 30; attempt++) {
+        const prefab = fitting[Math.floor(random() * fitting.length)]!;
+        const at = {
+          x: area.area.x + Math.floor(random() * (area.area.width - prefab.width + 1)),
+          y: area.area.y + Math.floor(random() * (area.area.height - prefab.height + 1)),
+          width: prefab.width,
+          height: prefab.height,
+        };
+        if (rectCells(at).some((c) => world.taken.has(c.x, c.y) || keepOff.has(c.x, c.y))) continue;
+        const stamp = new WriteRecorder();
+        try {
+          stampPrefab(map, writer, set, prefab, at.x, at.y, stamp);
+        } catch (err) {
+          if (isWaEngineError(err) && NO_LONGER_FITS.has(err.code)) continue;
+          throw err;
+        }
+        const writes = stamp.toWrites();
+        const fresh = newlySolid(writer, writes, colliding, solid, map);
+        if (cutsDoorOff(spans, dsl.rooms, solid, fresh, map)) {
+          restore(writer, writes, map);
+          continue;
+        }
+        for (const c of fresh) solid.add(c.x, c.y);
+        scattered.push({ instance: `s${i + 1}-${placed + 1}`, prefabId: prefab.id, x: at.x, y: at.y, origin: 'build', writes });
+        placed += 1;
+      }
+      if (placed < area.count) {
+        const why =
+          fitting.length === 0
+            ? `none of its prefabs fits in the ${area.area.width} x ${area.area.height} area`
+            : 'the area has no more free ground clear of rooms, paths, water, door fronts, the spawn and other prefabs';
+        warnings.push(
+          new WaEngineError('SCATTER_INCOMPLETE', `scatter ${i + 1}: placed ${placed} of ${area.count}; ${why}`, {
+            scatter: i + 1,
+            placed,
+            requested: area.count,
+          }),
+        );
       }
     }
 
     // Tool prefabs go back on in the order they were placed, under the same rules as
-    // place_prefab. One the new rooms or their furniture leave no room for, or that would
-    // block a door of the new rooms, is removed.
+    // place_prefab. One the new rooms, their furniture or the world leave no room for, or that
+    // would block a door of the new rooms, is removed.
     writer.flush();
-    const solid = solidCells(map);
-    const colliding = collidingGids(map);
     const baseline = doorProblems(map, dsl.rooms, solid);
     const replaced: PrefabRecord[] = [];
     for (const { record, prefab } of toolPrefabs) {
@@ -680,7 +789,7 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
       }
       replaced.push({ ...record, writes });
     }
-    state.prefabs = [...buildPrefabs, ...replaced];
+    state.prefabs = [...furniture, ...scattered, ...replaced];
     writer.flush();
     // Labels last, so they see every piece of furniture now on the walls.
     writeLabels(map, state, faceRows, TILE);
@@ -691,7 +800,7 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
         placedCells: tiles.placements.length,
         zones: zoneNames,
         variables,
-        prefabs: buildPrefabs.map((b) => b.instance),
+        prefabs: furniture.map((b) => b.instance),
         toolPrefabs: replaced.map((r) => r.instance),
         warnings,
       },

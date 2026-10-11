@@ -124,7 +124,7 @@ Output: `ok` (false when there is any error), `errors` and `warnings`. Each issu
 | `MISSING_START_LAYER` | error | No `start` layer, `startLayer` property, or area named `start`, so players would spawn at the map centre. |
 | `START_LAYER_NESTED` | warning | The start layer is inside a group. |
 | `START_LAYER_EMPTY` | warning | The start layer has no tiles. |
-| `START_TILE_BLOCKED` | warning | A start tile lies under a wall, wall face or furniture, so players would spawn stuck. |
+| `START_TILE_BLOCKED` | warning | A start tile lies under a wall, wall face, furniture or water, so players would spawn stuck. |
 | `OVERLAY_ABOVE_FLOOR` | error | The start or collisions layer draws above the floor, so its marker tiles show. |
 | `LAYER_DATA_UNSUPPORTED` | error | A tile layer cannot be decoded. |
 | `LAYER_SIZE_MISMATCH` | error | A tile layer is not the size of the map. |

@@ -19,7 +19,7 @@ export const PREFAB_LAYER_NAMES = [
 ] as const;
 export type PrefabLayerName = (typeof PREFAB_LAYER_NAMES)[number];
 
-export const PREFAB_CATEGORIES = ['talks', 'work', 'social', 'logistics', 'fun', 'phone'] as const;
+export const PREFAB_CATEGORIES = ['talks', 'work', 'social', 'logistics', 'fun', 'phone', 'outdoor'] as const;
 export type PrefabCategory = (typeof PREFAB_CATEGORIES)[number];
 
 export const PREFAB_PLACEMENTS = ['free', 'north-wall'] as const;

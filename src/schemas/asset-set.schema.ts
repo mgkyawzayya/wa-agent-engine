@@ -77,6 +77,15 @@ export const AssetSetSchema = z
     floorStyles: z.strictObject({ default: z.string().min(1), styles: z.record(z.string(), TileRefSchema) }),
     collisionTile: TileRefSchema,
     startTile: TileRefSchema,
+    // Outdoor water: its surface tile (the build adds the collision tile on it), and the walkable
+    // deck tiles a path gets where it crosses water, for paths running east-west (horizontal)
+    // and north-south (vertical).
+    water: z
+      .strictObject({
+        tile: TileRefSchema,
+        bridge: z.strictObject({ horizontal: TileRefSchema, vertical: TileRefSchema }),
+      })
+      .exactOptional(),
     prefabs: z.array(PrefabEntrySchema),
   })
   .superRefine((set, ctx) => {
@@ -88,6 +97,11 @@ export const AssetSetSchema = z
     needTileset(set.faceRules.tileset, ['faceRules', 'tileset']);
     needTileset(set.collisionTile.tileset, ['collisionTile', 'tileset']);
     needTileset(set.startTile.tileset, ['startTile', 'tileset']);
+    if (set.water !== undefined) {
+      needTileset(set.water.tile.tileset, ['water', 'tile', 'tileset']);
+      needTileset(set.water.bridge.horizontal.tileset, ['water', 'bridge', 'horizontal', 'tileset']);
+      needTileset(set.water.bridge.vertical.tileset, ['water', 'bridge', 'vertical', 'tileset']);
+    }
     for (const [name, ref] of Object.entries(set.floorStyles.styles)) {
       needTileset(ref.tileset, ['floorStyles', 'styles', name, 'tileset']);
     }

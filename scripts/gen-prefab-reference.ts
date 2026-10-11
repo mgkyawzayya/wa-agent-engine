@@ -27,6 +27,7 @@ const CATEGORY_TITLES: Record<PrefabCategory, string> = {
   logistics: 'Logistics: registration, sponsors, signs',
   fun: 'Fun: games and decoration',
   phone: 'Phone: call nooks',
+  outdoor: 'Outdoor: trees, bushes, rocks, flowers, fountains',
 };
 
 const FACE_ROW_TEXT = {
@@ -89,11 +90,17 @@ export function renderCatalog(set: AssetSet): string {
     '',
     `- \`wallStyle\` of a room: ${wallStyles.join(', ')}. It sets the wall faces inside the room.`,
     `- Wall faces outside every room use the \`${exterior}\` style, unless a face is already there. \`${exterior}\` cannot be chosen as a room's \`wallStyle\`.`,
-    '- `floorStyle` of a room:',
+    '- `floorStyle` of a room, and the `ground` and path `style` of a world:',
     '',
     '| Floor style | Tile |',
     '|---|---|',
     ...floorStyles,
+    '',
+    ...(set.water === undefined
+      ? ['- No water tiles: this set cannot draw `water`.']
+      : [
+          `- \`water\` draws ${set.water.tile.tileset} tile ${set.water.tile.tile}, which blocks walking. A path that crosses it becomes a bridge: ${set.water.bridge.horizontal.tileset} tile ${set.water.bridge.horizontal.tile} where the path runs east-west, ${set.water.bridge.vertical.tileset} tile ${set.water.bridge.vertical.tile} where it runs north-south.`,
+        ]),
     '',
     '## Licences',
     '',

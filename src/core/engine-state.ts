@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { DslRoomSchema, MAX_FURNITURE_PER_ROOM, MAX_ROOMS, parseDsl } from '../schemas/dsl.schema.js';
+import { DslRoomSchema, MAX_FURNITURE_PER_ROOM, MAX_ROOMS, MAX_SCATTER_TOTAL, parseDsl } from '../schemas/dsl.schema.js';
 import { getProperty, isExternalTileset, setProperty, type TiledMap } from '../schemas/tiled.schema.js';
 import { WaEngineError } from './errors.js';
 import { decodeGid, encodeGid } from './gid.js';
@@ -98,8 +98,10 @@ export type Writes = z.infer<typeof WritesSchema>;
 
 export const PREFAB_ORIGINS = ['build', 'tool'] as const;
 
-// Every DSL furniture item, plus room for tool-placed prefabs; a longer list is damage.
-const MAX_STATE_PREFABS = MAX_ROOMS * MAX_FURNITURE_PER_ROOM + 10_000;
+// Every DSL furniture item and scattered prefab, plus room for tool-placed prefabs; a longer
+// list is damage.
+const MAX_TOOL_PREFABS = 10_000;
+export const MAX_STATE_PREFABS = MAX_ROOMS * MAX_FURNITURE_PER_ROOM + MAX_SCATTER_TOTAL + MAX_TOOL_PREFABS;
 
 // Rooms as stored in the build record: the DSL room without the input-only name length limit,
 // so maps built before the limit stay readable.
@@ -208,9 +210,20 @@ export function readState(map: TiledMap): EngineState | undefined {
   return state;
 }
 
+// Refuses a record the engine could not read back, so an edit that went over a limit fails and
+// leaves the map as it was instead of saving a record every later edit would refuse.
 export function writeState(map: TiledMap, state: EngineState): void {
   state.size = { width: map.width, height: map.height };
   state.tilesets = fingerprint(map);
+  if (state.prefabs.length > MAX_STATE_PREFABS) {
+    throw new WaEngineError(
+      'INVALID_INPUT',
+      `the map would hold ${state.prefabs.length} prefabs, more than the ${MAX_STATE_PREFABS} wa-agent-engine can track; use less furniture or scatter, or fewer place_prefab calls`,
+      { prefabs: state.prefabs.length, max: MAX_STATE_PREFABS },
+    );
+  }
+  const checked = EngineStateSchema.safeParse(state);
+  if (!checked.success) throw new WaEngineError('INTERNAL', `the new ${ENGINE_STATE_PROPERTY} record is not valid:\n${z.prettifyError(checked.error)}`);
   setProperty(map, ENGINE_STATE_PROPERTY, 'string', JSON.stringify(state));
 }
 

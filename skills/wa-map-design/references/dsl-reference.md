@@ -19,6 +19,21 @@ All positions and sizes are whole tiles of 32 px. `x` grows to the east and `y` 
 | `modalOrigins` | array of up to 20 strings | no | Only for Stage B, the NPC map script: the https origins that script may open in a modal, each a bare origin such as `https://var.camp` (`BAD_URL` otherwise). It is stored in the map property `wa-agent-engine:modalOrigins`; leaving it out removes that property. |
 | `variables` | array of variables, up to 100 | no | WorkAdventure variables for map scripts. |
 
+## World
+
+These top-level fields draw the world around the rooms. Leave them out for a single building. [world-recipe.md](world-recipe.md) explains how to plan with them.
+
+| Field | Type | Required | Meaning |
+|---|---|---|---|
+| `ground` | floor style | no | Every tile no room covers gets this floor, for example `"grass"`, if its floor is empty: floors drawn by hand stay. |
+| `paths` | array, up to 100 | no | Each is `{"points": [[x, y], …], "width": 2, "style": "cobble"}` (a line; neighbouring points share x or y) or `{"rect": {…}, "style": …}` (a plaza). `width` is 1 to 12, 2 by default. A path never covers a room or its wall faces. |
+| `water` | array, up to 50 | no | The same shapes without `style`: rivers and ponds. Water blocks walking; where a path crosses it, a walkable bridge deck is drawn instead. Needs an asset set with water tiles. Water over a start tile gives the build warning `START_TILE_BLOCKED`. |
+| `scatter` | array, up to 50 | no | `{"area": {…}, "prefabs": ["…"], "count": 20, "seed": 1}`: up to `count` free-standing prefabs (at most 500 per area, 5,000 over all areas) at random spots in `area`, clear of rooms, paths, water, the fronts of doors, the spawn and the tiles around it, prefabs placed with `place_prefab`, and each other. A spot that would still cut a door off is skipped, and so is a prefab larger than the area. The same seed gives the same spots. Fewer than `count` fit: build warning `SCATTER_INCOMPLETE`. |
+
+Points, rectangles and scatter areas must lie inside the map, and the points of a line must go straight across or straight down from one to the next; otherwise the DSL fails with `INVALID_INPUT`, naming the path, water or scatter entry. Unknown styles fail with `UNKNOWN_STYLE`.
+
+Everything is redrawn on every build, like the rooms. Ground goes only on tiles whose floor is empty once the previous build is taken off, so floors drawn by hand before stay. The cells the build drew, ground, paths and water included, belong to it like room floors: a later build replaces hand edits on them. Make lasting changes in the DSL.
+
 ## Room
 
 | Field | Type | Required | Meaning |
@@ -80,7 +95,7 @@ Each variable becomes an object of class `variable` in the `wa_zones` layer.
 | A door keeps a straight wall cell before any wall that meets its wall line, and no wall crosses it. | `DOOR_AT_JUNCTION` |
 | A door in an east or west wall has `offset` ≥ 3, and misses the two face rows of the room on its other side. | `DOOR_BLOCKED_BY_FACE` |
 | Doors on one wall line, across all rooms, have at least 2 wall cells between them. | `DOOR_TOO_CLOSE` |
-| Each side of a door opens onto the inside of a room it belongs to, or onto at least 4 connected walkable cells, with nothing solid in the doorway. | `DOOR_UNREACHABLE` |
+| Each side of a door opens onto the inside of a room it belongs to, or onto at least 4 connected walkable cells, with nothing solid in the doorway. Below a door in a south wall that does not open into another room, the gap it leaves in the two wall-face rows does not count: the 4 cells must lie past the faces. | `DOOR_UNREACHABLE` |
 | An exit door lies on a map-edge wall. | `EXIT_NOT_AT_MAP_EDGE` |
 
 To place a room east of another, start it at the other room's `x + width − 1`. To place it south, start it at `y + height − 1`. A long hall under a row of rooms works well: each room gets a door in its south wall, which is the hall's north wall.
@@ -94,14 +109,15 @@ To place a room east of another, start it at the other room's `x + width − 1`.
 - **Collisions** on every wall top and wall face, never on doors.
 - **Room areas.** Each room with `waProperties` gets an area named after its `id` over its walkable inside: from tile (`x + 1`, `y + 3`), `width − 2` wide and `height − 4` high.
 - **Furniture, variables and `modalOrigins`** from the layout.
+- **The world** when the layout has one: ground, paths, water and bridges, and scattered prefabs (see [World](#world)).
 - **The build record** in the map property `wa-agent-engine:build`: the layout, and the original of every tile the build replaced.
 
 ## Rebuilds
 
 Building again is the normal way to change a layout. Each build:
 
-- takes the previous build off first, in reverse order: prefabs placed with `place_prefab`, then DSL furniture, then rooms, restoring the tiles that were there before;
-- draws the new layout, so cells outside both the old and the new rooms stay as they were;
+- takes the previous build off first, in reverse order: prefabs placed with `place_prefab`, then DSL furniture and scattered prefabs, then rooms and the world, restoring the tiles that were there before;
+- draws the new layout, so cells outside both the old and the new layout stay as they were, and hand edits on cells the build drew are replaced;
 - puts each `place_prefab` prefab back where it was, under `place_prefab`'s rules, or removes it with a `PREFAB_REMOVED` warning whose `details.reason` is `covered`, `floor-gone`, `wall-gone`, `blocks-door` or `out-of-bounds`;
 - leaves a `place_prefab` prefab that someone erased or edited in Tiled, or that left the asset set, as it is, with a `PREFAB_UNTRACKED` warning (`details.reason`: `erased`, `edited` or `not-in-set`);
 - updates room areas: keys removed from `waProperties` are removed, keys someone added in Tiled stay, and the area of a removed room goes;

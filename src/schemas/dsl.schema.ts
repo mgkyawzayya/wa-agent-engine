@@ -86,6 +86,68 @@ export const DslVariableSchema = WaVariableSchema.extend({
   writableBy: z.string().min(1).default(NPC_WRITABLE_BY).describe('Player tag allowed to write it; by default only the NPC service can'),
 });
 
+// ---- the world around the rooms ----
+
+export const MAX_PATHS = 100;
+export const MAX_WATER = 50;
+export const MAX_SCATTER = 50;
+export const MAX_SCATTER_COUNT = 500;
+// The sum of `count` over all scatter areas; every placed prefab is a record in the build.
+export const MAX_SCATTER_TOTAL = 5_000;
+const MAX_POINTS = 64;
+
+// Each coordinate is checked against the actual map size by parseDsl.
+const coordinate = int.min(0).max(MAX_MAP_TILES - 1);
+const extent = int.min(1).max(MAX_MAP_TILES);
+
+// [x, y] as a two-number array: some tool-calling clients cannot read tuple schemas.
+const PointSchema = z.array(coordinate).length(2).describe('[x, y], a map tile');
+export type Point = z.infer<typeof PointSchema>;
+export const pointXY = (p: Point): [number, number] => [p[0]!, p[1]!];
+
+const AreaSchema = z.strictObject({ x: coordinate, y: coordinate, width: extent, height: extent });
+export type Area = z.infer<typeof AreaSchema>;
+
+// A strip along a line of points (each step straight across or straight down), or a rectangle.
+const StripShape = {
+  points: z
+    .array(PointSchema)
+    .min(2)
+    .max(MAX_POINTS)
+    .exactOptional()
+    .describe('Centre line as map tiles inside the map; each pair of neighbours must share x or y (straight segments, corners allowed)'),
+  width: int.min(1).max(12).default(2).describe('Width in tiles of a line strip'),
+  rect: AreaSchema.exactOptional().describe('A rectangle inside the map instead of a line, for example a plaza or a lake'),
+};
+const oneShape = (v: { points?: unknown; rect?: unknown }): boolean => (v.points === undefined) !== (v.rect === undefined);
+
+export const PathSchema = z
+  .strictObject({
+    ...StripShape,
+    style: z.string().min(1).describe('Floor style of the path, for example "cobble"; see the catalog'),
+  })
+  .refine(oneShape, { message: 'give either points or rect' })
+  .describe('A walkable path, road or plaza on the ground; where it crosses water it becomes a bridge');
+
+export const WaterSchema = z
+  .strictObject(StripShape)
+  .refine(oneShape, { message: 'give either points or rect' })
+  .describe('A river or pond; it blocks walking except where a path crosses it');
+
+export const ScatterSchema = z.strictObject({
+  area: AreaSchema.describe('Where to scatter: a rectangle of map tiles inside the map'),
+  prefabs: z.array(z.string().min(1)).min(1).max(20).describe('Prefab ids to pick from, for example trees and bushes'),
+  count: int
+    .min(1)
+    .max(MAX_SCATTER_COUNT)
+    .describe(`How many to place; fewer if the area has no room. All areas together place at most ${MAX_SCATTER_TOTAL}`),
+  seed: int.min(0).default(1).describe('Change it for another arrangement; the same seed gives the same one'),
+});
+
+export type DslPath = z.infer<typeof PathSchema>;
+export type DslWater = z.infer<typeof WaterSchema>;
+export type DslScatter = z.infer<typeof ScatterSchema>;
+
 export const DslShape = z.strictObject({
   mapWidth: int.min(1).describe('Must equal the map width from scaffold_map'),
   mapHeight: int.min(1).describe('Must equal the map height from scaffold_map'),
@@ -94,8 +156,20 @@ export const DslShape = z.strictObject({
   rooms: z.array(DslRoomSchema).max(MAX_ROOMS).describe('Every room of the map; rooms left out are removed'),
   modalOrigins: z.array(z.string()).max(20).exactOptional().describe('Bare https origins the NPC map script may open in a pop-up; leave it out unless the map runs the NPC'),
   variables: z.array(DslVariableSchema).max(MAX_VARIABLES).default([]).describe('Shared map variables'),
+  ground: z
+    .string()
+    .min(1)
+    .exactOptional()
+    .describe(
+      'Floor style for every tile no room covers, for example "grass": the map becomes a world with buildings in a landscape. Floors drawn by hand stay',
+    ),
+  paths: z.array(PathSchema).max(MAX_PATHS).default([]).describe('Paths, roads and plazas on the ground'),
+  water: z.array(WaterSchema).max(MAX_WATER).default([]).describe('Rivers and ponds on the ground'),
+  scatter: z.array(ScatterSchema).max(MAX_SCATTER).default([]).describe('Areas filled at random with prefabs such as trees and flowers'),
 });
 export type Dsl = z.infer<typeof DslShape>;
+// What callers may pass in: the fields with defaults are optional here.
+export type DslInput = z.input<typeof DslShape>;
 
 export function interiorOf(r: Rect): Rect {
   return { x: r.x + 1, y: r.y + 1, width: r.width - 2, height: r.height - 2 };
@@ -263,6 +337,38 @@ function checkModalOrigins(origins: readonly string[]): void {
   }
 }
 
+// Paths, water and scatter areas lie inside the map, so drawing them stays bounded by the map
+// size; the points of a line go straight across or straight down from one to the next.
+function checkWorld(dsl: Dsl): void {
+  const map = `${dsl.mapWidth} x ${dsl.mapHeight} map`;
+  const fits = (r: Area): boolean => r.x + r.width <= dsl.mapWidth && r.y + r.height <= dsl.mapHeight;
+  const describe = (r: Area): string => `(${r.x}, ${r.y}) ${r.width} x ${r.height}`;
+  const strips = [...dsl.paths.map((s, i) => ({ what: `path ${i + 1}`, strip: s })), ...dsl.water.map((s, i) => ({ what: `water ${i + 1}`, strip: s }))];
+  for (const { what, strip } of strips) {
+    if (strip.rect !== undefined && !fits(strip.rect)) {
+      fail('INVALID_INPUT', `${what}: rect ${describe(strip.rect)} reaches past the ${map}`, { what });
+    }
+    const points = (strip.points ?? []).map(pointXY);
+    for (const [x, y] of points) {
+      if (x >= dsl.mapWidth || y >= dsl.mapHeight) fail('INVALID_INPUT', `${what}: point [${x}, ${y}] is outside the ${map}`, { what });
+    }
+    for (let i = 0; i + 1 < points.length; i++) {
+      const [ax, ay] = points[i]!;
+      const [bx, by] = points[i + 1]!;
+      if (ax !== bx && ay !== by) {
+        fail('INVALID_INPUT', `${what}: points [${ax}, ${ay}] and [${bx}, ${by}] are not on one row or one column`, { what });
+      }
+    }
+  }
+  dsl.scatter.forEach((s, i) => {
+    if (!fits(s.area)) fail('INVALID_INPUT', `scatter ${i + 1}: area ${describe(s.area)} reaches past the ${map}`, { what: `scatter ${i + 1}` });
+  });
+  const total = dsl.scatter.reduce((sum, s) => sum + s.count, 0);
+  if (total > MAX_SCATTER_TOTAL) {
+    fail('INVALID_INPUT', `the scatter areas ask for ${total} prefabs in all; at most ${MAX_SCATTER_TOTAL} are allowed`, { total, max: MAX_SCATTER_TOTAL });
+  }
+}
+
 function safeParseShape(input: unknown): ReturnType<typeof DslShape.safeParse> {
   try {
     return DslShape.safeParse(input);
@@ -354,6 +460,7 @@ export function parseDsl(input: unknown): Dsl {
   checkThickWalls(dsl.rooms);
   checkNeighbourFaces(dsl.rooms);
   checkDoorSpacing(dsl.rooms);
+  checkWorld(dsl);
   if (dsl.modalOrigins !== undefined) checkModalOrigins(dsl.modalOrigins);
   return dsl;
 }

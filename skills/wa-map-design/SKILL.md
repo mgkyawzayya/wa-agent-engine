@@ -61,7 +61,7 @@ Furniture positions in the DSL are map coordinates, not coordinates inside the r
 
 **Name and describe every room.** Give each room a `name` of 2–4 words and `details` that say what happens there ("Keynotes 10:00 and 16:30", "Q&A with the speaker after each talk", "Ask the organizers anything"). The engine writes them as a label on the room's top wall, which WorkAdventure shows; a room without a name has no label. Number rooms of the same kind ("Session Room 3").
 
-**Size the map to the layout.** Scaffold the map exactly as wide and tall as the rooms together: map area outside every room shows as empty void.
+**One building or a world.** For one building, scaffold the map exactly as wide and tall as the rooms together: map area outside every room shows as empty void. For a world (a campus, a park, separate buildings in a landscape), set `ground` and add `paths`, `water` and `scatter` around the buildings, and leave space between them: see [references/world-recipe.md](references/world-recipe.md). When the user asks for a big venue or a world, prefer separate buildings on the ground to one block of rooms.
 
 For an event venue, plan the spaces in the venue checklist of [references/event-hall-recipe.md](references/event-hall-recipe.md): lobby with registration and a help desk, main hall, session rooms, Q&A rooms, workshop rooms, an organizer room, a sponsor row, a food court, a games and chill area, and phone booths.
 
@@ -88,7 +88,7 @@ The prefab ids, sizes and placement rules are in [references/prefab-catalog.md](
 
 ## 5. Run the tools in order
 
-1. **Scaffold** the map at the size of the layout. Choose the spawn tile now, because it stays where scaffolding puts it: a walkable cell inside a room, below its two face rows, clear of furniture and of the cells in front of doors. If a later build covers it, `validate_wa_map` warns `START_TILE_BLOCKED`; then move the furniture or the room, or add an entry area with `start` and point people at it.
+1. **Scaffold** the map at the size of the layout. Choose the spawn tile now, because it stays where scaffolding puts it: a walkable cell inside a room, below its two face rows, clear of furniture and of the cells in front of doors. In a world map it may also be on a plaza or a path, away from water. If a later build covers it, `validate_wa_map` warns `START_TILE_BLOCKED`; then move the furniture or the room, or add an entry area with `start` and point people at it.
 
    ```bash
    npx -y wa-agent-engine@0.2.0 scaffold --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "width": 24, "height": 14, "spawn": {"x": 17, "y": 10}, "mapName": "VarCamp test venue"}'
@@ -196,13 +196,15 @@ Branch on `code`, never on the message text. `details` often names the cells, th
 | `PREFAB_UNTRACKED` (warning) | Someone erased or edited that prefab in Tiled, or it left the asset set (`details.reason`: `erased`, `edited`, `not-in-set`). It stays as it is, and the engine stops managing it. |
 | `INVALID_ZONE_PROPERTY` | Unknown key, wrong type, `{{ template }}` value, or a `jitsiConfig` that is not a JSON object. Check [references/zone-properties.md](references/zone-properties.md). |
 | `BAD_URL` | Use an http(s) URL or a relative path. `playAudio` needs https or a file in the project; `modalOrigins` entries are bare https origins. |
+| `SCATTER_INCOMPLETE` (warning) | A scatter area had less free ground than `count` asked for. Lower the count, widen the area, or move paths and rooms out of it. |
+| `START_TILE_BLOCKED` (warning) | The build's water covers the spawn tile. Move the water, or add an entry area with `start` on walkable ground. |
 | `LABEL_COVERED` (warning) | Wall furniture covers the room's top wall, so its label overlaps it. Move the screen, board or booth along the wall to leave 2 free tiles, or widen the room. |
 | `LABEL_TOO_LONG` (warning) | A room's name or details do not fit on its top wall. Shorten them (name 2–4 words, details one short line), or make the room wider. |
 | `ZONE_OWNED_BY_ROOM` | That zone is a room's area. Change the room's `waProperties` in the DSL and build again. |
 | `ZONE_NAME_TAKEN` | An area with that name exists and the engine did not make it, or a tool zone holds a new room's id. Choose another name; never take over the user's area. |
 | `ZONE_OUT_OF_BOUNDS` | Keep the zone inside the map and at least 1×1. |
 | `VARIABLE_NAME_TAKEN` | The map already has a hand-made variable with that name. Rename yours. |
-| `SPAWN_OUT_OF_BOUNDS` | Put the spawn tile inside the map, on a walkable cell of a room. |
+| `SPAWN_OUT_OF_BOUNDS` | Put the spawn tile inside the map, on a walkable cell of a room, or of the ground in a world. |
 | `ASSET_SET_NOT_FOUND`, `ASSET_SET_MISMATCH` | Use the set the map was built with (named in the message), or a set that extends it, such as a prop set made with `import_prop_set`. A map cannot go back from a prop set to its base set. |
 | `ASSET_SET_EXISTS` | A set with that id is already in the project. Pick another `setId`, or pass `overwrite: true` if the user wants it replaced. |
 | `ASSET_SET_LOCKED` | Another import of that set is running. Wait for it, then try again. |
@@ -222,7 +224,7 @@ The validator's own codes, such as `WALL_WITHOUT_COLLISION`, `START_TILE_BLOCKED
 ## 7. Rules
 
 - **Licence.** The tileset images belong to the user's starter-kit project and are licensed for WorkAdventure maps. Never copy, move, upload, commit or embed tileset PNGs anywhere, including into this skill, another project or a repository. Prop images the user gives you for `import_prop_set` are theirs: the tool copies them into the project's own `tilesets/` folder, and that is the only copy to make. The engine reads them where they are. Previews in `.wa-preview/` are made from those images: use them to check the map, and keep them out of version control.
-- **Engine ownership.** The DSL is the source of truth for the rooms. Each build first undoes the previous build exactly, then draws the new layout, so walls, faces, floors and DSL furniture of DSL rooms are regenerated every time. Hand edits to those cells in Tiled are lost on the next build. To customise a room, change the DSL or add prefabs. Taking a room out of the DSL and building again removes the room's tiles and restores what was under them; only then is that part of the map free for drawing by hand.
+- **Engine ownership.** The DSL is the source of truth for the rooms. Each build first undoes the previous build exactly, then draws the new layout, so walls, faces, floors and DSL furniture of DSL rooms are regenerated every time. Hand edits to those cells in Tiled are lost on the next build. To customise a room, change the DSL or add prefabs. Taking a room out of the DSL and building again removes the room's tiles and restores what was under them; only then is that part of the map free for drawing by hand. The world fields work the same way: ground, paths and water belong to the build like room floors. Ground goes only on empty floor, so floors drawn by hand before stay.
 - **Tool prefabs.** A prefab placed with `place_prefab` goes back where it was after a rebuild, or is removed with a `PREFAB_REMOVED` warning and a reason. Read the warnings of every build and place removed prefabs again where they fit.
 - **Zones.** A room's area is owned by the DSL; change it through `waProperties`. Areas the user drew by hand are never changed. Calling `configure_wa_zone` again with the same name moves that zone and merges in the new properties; it does not remove keys.
 - **Tiled co-editing.** The user may have the map open in Tiled. Before an agent edit, ask the user to save in Tiled. After the edit, the user must reload the map in Tiled before editing there again, or Tiled will save the old version over yours. If a tool returns `MAP_CHANGED_ON_DISK`, read the map again by repeating the call. Never resize an engine-built map in Tiled.
@@ -237,3 +239,4 @@ The validator's own codes, such as `WALL_WITHOUT_COLLISION`, `START_TILE_BLOCKED
 - [references/prefab-catalog.md](references/prefab-catalog.md): the furniture prefabs and the wall and floor styles, generated from the asset set.
 - [references/varcamp-venue-recipe.md](references/varcamp-venue-recipe.md): a complete, validated VarCamp venue with every step.
 - [references/event-hall-recipe.md](references/event-hall-recipe.md): the spaces of a VarCamp venue and how to furnish each, with built-in and prop-set furniture.
+- [references/world-recipe.md](references/world-recipe.md): worlds of separate buildings with ground, paths, plazas, rivers, bridges and forests.

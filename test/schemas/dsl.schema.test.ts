@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import * as z from 'zod';
 import { DslShape, parseDsl, type Rect } from '../../src/schemas/dsl.schema.js';
 
 const room = (id: string, bounds: Rect, extra: Record<string, unknown> = {}) => ({ id, bounds, ...extra });
@@ -139,5 +140,53 @@ describe('coded geometry errors', () => {
       if (code === 'INVALID_INPUT') continue;
       expect(DslShape.safeParse(input).success).toBe(true);
     }
+  });
+});
+
+describe('world geometry', () => {
+  const messageOf = (input: unknown): string | undefined => {
+    try {
+      parseDsl(input);
+      return undefined;
+    } catch (err) {
+      return (err as Error).message;
+    }
+  };
+  const path = (shape: Record<string, unknown>) => ({ ...shape, style: 'cobble' });
+
+  test('points, rectangles and scatter areas outside the map are refused, naming the entry', () => {
+    expect(messageOf(dsl([], { paths: [path({ points: [[0, 5], [10, 5]] }), path({ points: [[35, 12], [45, 12]] })] }))).toBe(
+      'path 2: point [45, 12] is outside the 40 x 30 map',
+    );
+    expect(messageOf(dsl([], { water: [{ rect: { x: 30, y: 0, width: 20, height: 5 } }] }))).toBe('water 1: rect (30, 0) 20 x 5 reaches past the 40 x 30 map');
+    expect(messageOf(dsl([], { scatter: [{ area: { x: 0, y: 25, width: 10, height: 10 }, prefabs: ['tree-oak-2x3'], count: 3 }] }))).toBe(
+      'scatter 1: area (0, 25) 10 x 10 reaches past the 40 x 30 map',
+    );
+    expect(codeOf(dsl([], { paths: [path({ rect: { x: 0, y: 0, width: 40, height: 30 } })], water: [{ points: [[39, 0], [39, 29]] }] }))).toBeUndefined();
+  });
+
+  test('crooked points are refused by the geometry pass', () => {
+    expect(messageOf(dsl([], { water: [{ points: [[1, 1], [1, 6], [5, 9]] }] }))).toBe('water 1: points [1, 6] and [5, 9] are not on one row or one column');
+  });
+
+  test('huge coordinates are shape errors, refused at once', () => {
+    const started = Date.now();
+    expect(codeOf(dsl([], { paths: [path({ rect: { x: 0, y: 0, width: 60_000, height: 60_000 } })] }))).toBe('INVALID_INPUT');
+    expect(codeOf(dsl([], { water: [{ points: [[0, 0], [0, 2 ** 52]] }] }))).toBe('INVALID_INPUT');
+    expect(codeOf(dsl([], { scatter: [{ area: { x: 9_000_000, y: 0, width: 1, height: 1 }, prefabs: ['tree-oak-2x3'], count: 1 }] }))).toBe('INVALID_INPUT');
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
+
+  test('a point is a pair of numbers, not a tuple schema', () => {
+    expect(JSON.stringify(z.toJSONSchema(DslShape, { io: 'input', unrepresentable: 'any' }))).not.toContain('prefixItems');
+    expect(codeOf(dsl([], { paths: [path({ points: [[0, 5, 1], [10, 5]] })] }))).toBe('INVALID_INPUT');
+  });
+
+  test('the scatter areas together place at most 5,000 prefabs', () => {
+    const area = (count: number) => ({ area: { x: 0, y: 0, width: 40, height: 30 }, prefabs: ['tree-oak-2x3'], count });
+    expect(codeOf(dsl([], { scatter: Array.from({ length: 10 }, () => area(500)) }))).toBeUndefined();
+    expect(messageOf(dsl([], { scatter: [...Array.from({ length: 10 }, () => area(500)), area(1)] }))).toBe(
+      'the scatter areas ask for 5001 prefabs in all; at most 5000 are allowed',
+    );
   });
 });
