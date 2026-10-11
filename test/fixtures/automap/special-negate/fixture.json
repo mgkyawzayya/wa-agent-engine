@@ -1,0 +1,7 @@
+{
+ "description": "Negate turns \"A\" into \"anything but A\", empty included",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "fde000e7ff094f99db35693c6c62ec4264ed927533109a17fc1cbd997fd1ceca",
+ "capturedInputsHash": "fde000e7ff094f99db35693c6c62ec4264ed927533109a17fc1cbd997fd1ceca"
+}

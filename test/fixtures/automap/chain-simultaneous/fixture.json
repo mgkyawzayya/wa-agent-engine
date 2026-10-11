@@ -1,0 +1,7 @@
+{
+ "description": "By default every rule matches the map as it was before the rule map ran",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "1fa8ab6619f939ad8ad0c5e3d1348d1d026a25292138f1825eeb6d9542e36590",
+ "capturedInputsHash": "1fa8ab6619f939ad8ad0c5e3d1348d1d026a25292138f1825eeb6d9542e36590"
+}

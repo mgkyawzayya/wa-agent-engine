@@ -1,0 +1,125 @@
+{
+ "compressionlevel": -1,
+ "height": 1,
+ "infinite": false,
+ "layers": [
+  {
+   "data": [
+    2
+   ],
+   "height": 1,
+   "id": 1,
+   "name": "input_ground",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 1,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [
+    3
+   ],
+   "height": 1,
+   "id": 2,
+   "name": "output_ground",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 1,
+   "x": 0,
+   "y": 0
+  }
+ ],
+ "nextlayerid": 3,
+ "nextobjectid": 1,
+ "orientation": "orthogonal",
+ "renderorder": "right-down",
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilesets": [
+  {
+   "firstgid": 1,
+   "columns": 8,
+   "image": "../tilesets/colours.png",
+   "imageheight": 32,
+   "imagewidth": 256,
+   "margin": 0,
+   "name": "colours",
+   "spacing": 0,
+   "tilecount": 8,
+   "tileheight": 32,
+   "tilewidth": 32
+  },
+  {
+   "columns": 5,
+   "firstgid": 9,
+   "image": "../tilesets/rules.png",
+   "imageheight": 32,
+   "imagewidth": 160,
+   "margin": 0,
+   "name": "automap-rules",
+   "spacing": 0,
+   "tilecount": 5,
+   "tileheight": 32,
+   "tilewidth": 32,
+   "tiles": [
+    {
+     "id": 0,
+     "properties": [
+      {
+       "name": "MatchType",
+       "type": "string",
+       "value": "Empty"
+      }
+     ]
+    },
+    {
+     "id": 1,
+     "properties": [
+      {
+       "name": "MatchType",
+       "type": "string",
+       "value": "NonEmpty"
+      }
+     ]
+    },
+    {
+     "id": 2,
+     "properties": [
+      {
+       "name": "MatchType",
+       "type": "string",
+       "value": "Other"
+      }
+     ]
+    },
+    {
+     "id": 3,
+     "properties": [
+      {
+       "name": "MatchType",
+       "type": "string",
+       "value": "Ignore"
+      }
+     ]
+    },
+    {
+     "id": 4,
+     "properties": [
+      {
+       "name": "MatchType",
+       "type": "string",
+       "value": "Negate"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "tilewidth": 32,
+ "type": "map",
+ "version": "1.11",
+ "width": 1
+}

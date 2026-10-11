@@ -1,0 +1,7 @@
+{
+ "description": "ModX 2, ModY 2, OffsetX 1 try only every other column and row",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "7070ec744f044fd2e79ba3abf930c11a3647877b0f55f02ac18205778f544722",
+ "capturedInputsHash": "7070ec744f044fd2e79ba3abf930c11a3647877b0f55f02ac18205778f544722"
+}

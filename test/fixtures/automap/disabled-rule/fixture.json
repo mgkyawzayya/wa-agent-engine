@@ -1,0 +1,7 @@
+{
+ "description": "A rule_options rectangle disables only the rule it fully contains",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "56d2b4e7b0e7883d8d6c08f855ee7d8e6888c97c69bd603130d012fd152545c4",
+ "capturedInputsHash": "56d2b4e7b0e7883d8d6c08f855ee7d8e6888c97c69bd603130d012fd152545c4"
+}

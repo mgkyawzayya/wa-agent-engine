@@ -1,0 +1,7 @@
+{
+ "description": "By default the whole input box must lie inside the map",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "c6315d2db2c1d0e99d1a14100e395220070218ec0aed5c4156b44a3b667951a8",
+ "capturedInputsHash": "c6315d2db2c1d0e99d1a14100e395220070218ec0aed5c4156b44a3b667951a8"
+}

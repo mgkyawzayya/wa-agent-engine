@@ -1,0 +1,7 @@
+{
+ "description": "Other refuses only the tiles of its own index and target layer",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "dda0b0e394642ba849e69179a97f7ee0637c772f081d39624847e8d6a3522ef8",
+ "capturedInputsHash": "dda0b0e394642ba849e69179a97f7ee0637c772f081d39624847e8d6a3522ef8"
+}

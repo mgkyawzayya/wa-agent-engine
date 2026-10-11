@@ -1,0 +1,13 @@
+{
+ "description": "In a partial run each rule map's output widens the region of the next one",
+ "random": false,
+ "map": "map.tmj",
+ "region": {
+  "x": 0,
+  "y": 0,
+  "width": 1,
+  "height": 1
+ },
+ "inputsHash": "9374a7b18b862778b818816c4b15a8d77cc5fd5cbe07d281d4f205f55c4fd452",
+ "capturedInputsHash": "9374a7b18b862778b818816c4b15a8d77cc5fd5cbe07d281d4f205f55c4fd452"
+}

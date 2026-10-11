@@ -1,0 +1,6 @@
+{
+ "description": "Output index 1 (weight 3) or 2 (weight 1) is drawn per match",
+ "random": true,
+ "map": "map.tmj",
+ "inputsHash": "b67190104aace205df7ee8179b694fda81e2773172b0eaefac0302417fde75f4"
+}

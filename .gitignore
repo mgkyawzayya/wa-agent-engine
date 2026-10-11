@@ -2,6 +2,7 @@ node_modules/
 dist/
 .cache/
 .vitest/
+coverage/
 .wa-preview/
 *.local.*
 *.tmp

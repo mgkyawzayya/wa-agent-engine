@@ -1,0 +1,7 @@
+{
+ "description": "Rule maps run one after another, each on the previous one's output",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "3be836318815c499bed2da1fcef192a7f4383f393629f607659e826134749930",
+ "capturedInputsHash": "3be836318815c499bed2da1fcef192a7f4383f393629f607659e826134749930"
+}

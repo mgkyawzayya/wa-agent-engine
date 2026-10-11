@@ -1,0 +1,7 @@
+{
+ "description": "OverflowBorder reads outside cells as the nearest edge cell",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "e98172c1f08bdce423fb2d950ede443b8806e9019abe8965a772c4479f370155",
+ "capturedInputsHash": "e98172c1f08bdce423fb2d950ede443b8806e9019abe8965a772c4479f370155"
+}

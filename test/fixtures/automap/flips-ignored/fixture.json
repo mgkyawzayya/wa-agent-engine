@@ -1,0 +1,7 @@
+{
+ "description": "IgnoreHorizontalFlip lets A match A and its horizontal mirror only",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "e453189aca18f90a361ac98e8d5588933c8683b5c7d4bcdce320d626c82b9e56",
+ "capturedInputsHash": "e453189aca18f90a361ac98e8d5588933c8683b5c7d4bcdce320d626c82b9e56"
+}

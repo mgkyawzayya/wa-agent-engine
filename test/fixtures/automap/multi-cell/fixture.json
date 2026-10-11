@@ -1,0 +1,7 @@
+{
+ "description": "A 2x1 rule; overlapping outputs are applied in scan order, the later one wins",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "f0ee426a2e54ce06b1b10647f6c76c99be4e49b0f0a3e6150ffe64b37ee7ccca",
+ "capturedInputsHash": "f0ee426a2e54ce06b1b10647f6c76c99be4e49b0f0a3e6150ffe64b37ee7ccca"
+}

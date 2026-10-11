@@ -1,0 +1,7 @@
+{
+ "description": "Other refuses the tiles the rule uses on that input layer (A) and accepts empty",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "ea71256e47f876b2da00b5a89356b8b3809bfe174885129d6aaa7b63c3509ed2",
+ "capturedInputsHash": "ea71256e47f876b2da00b5a89356b8b3809bfe174885129d6aaa7b63c3509ed2"
+}

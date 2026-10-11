@@ -1,0 +1,7 @@
+{
+ "description": "IgnoreLock writes into a locked target layer",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "1a8da3cd4c05e4a0c8b1e82b7b472e03660fddd1b3a4ba32572dea8d061fb58b",
+ "capturedInputsHash": "1a8da3cd4c05e4a0c8b1e82b7b472e03660fddd1b3a4ba32572dea8d061fb58b"
+}

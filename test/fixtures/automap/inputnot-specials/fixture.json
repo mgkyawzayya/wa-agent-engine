@@ -1,0 +1,7 @@
+{
+ "description": "inputnot NonEmpty requires empty; inputnot Empty requires a tile",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "ad8a6aa40791852a14feefb89c9665887322ef223b8af8d599c1763677de2046",
+ "capturedInputsHash": "ad8a6aa40791852a14feefb89c9665887322ef223b8af8d599c1763677de2046"
+}

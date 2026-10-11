@@ -1,0 +1,7 @@
+{
+ "description": "A locked target layer is left alone",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "be86017503e89088a0ef27e487237d95b393a1254c1bb46f323c799141b94f8b",
+ "capturedInputsHash": "be86017503e89088a0ef27e487237d95b393a1254c1bb46f323c799141b94f8b"
+}

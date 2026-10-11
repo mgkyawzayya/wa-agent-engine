@@ -1,0 +1,7 @@
+{
+ "description": "Tiled 1.12: an index with no condition inside a rule never matches",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "765549bf3185ad6e9f7885ccf8c87f757fadd6330ff3ee1363543addf485eaff",
+ "capturedInputsHash": "765549bf3185ad6e9f7885ccf8c87f757fadd6330ff3ee1363543addf485eaff"
+}

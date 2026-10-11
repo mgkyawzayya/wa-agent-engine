@@ -1,0 +1,7 @@
+{
+ "description": "Two rules whose boxes start at the same corner keep Tiled's region order",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "130808075a4c03411e921aff2a37024c63d279b74b121a7398e3dd46ecf1e34b",
+ "capturedInputsHash": "130808075a4c03411e921aff2a37024c63d279b74b121a7398e3dd46ecf1e34b"
+}

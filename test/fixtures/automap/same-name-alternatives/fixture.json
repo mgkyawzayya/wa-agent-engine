@@ -1,0 +1,7 @@
+{
+ "description": "Two input layers with the same name accept either tile: A or C becomes F",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "674162582e890e0b95b2266471081e83d64a6da3bddbd6046936a83f3b9e66d4",
+ "capturedInputsHash": "674162582e890e0b95b2266471081e83d64a6da3bddbd6046936a83f3b9e66d4"
+}

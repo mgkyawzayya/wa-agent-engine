@@ -13,7 +13,7 @@ import { tileCountKnown } from './gid.js';
 import { mapRelativePath, resolveMapRelative } from './project-paths.js';
 
 // Fields of a .tsj that only belong to standalone tileset files (Tiled drops them on embed).
-const FILE_ONLY_KEYS = new Set(['type', 'version', 'tiledversion', 'editorsettings', 'source']);
+export const FILE_ONLY_KEYS = new Set(['type', 'version', 'tiledversion', 'editorsettings', 'source']);
 
 export interface EmbedResult {
   firstgid: number;

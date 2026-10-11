@@ -50,6 +50,7 @@
     "clean": "node -e \"process.getBuiltinModule('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage test/core/automap",
     "fetch-assets": "tsx scripts/fetch-starter-kit.ts",
     "dev:mcp": "tsx src/cli/index.ts mcp",
     "smoke": "node dist/cli/index.js --version && node dist/cli/index.js --help",
@@ -65,6 +66,7 @@
   "devDependencies": {
     "@modelcontextprotocol/client": "2.3.1",
     "@types/node": "26.6.5",
+    "@vitest/coverage-v8": "5.0.3",
     "tsx": "4.23.15",
     "typescript": "7.0.2",
     "vite": "8.3.4",

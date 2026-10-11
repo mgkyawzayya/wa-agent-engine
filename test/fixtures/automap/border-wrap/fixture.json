@@ -1,0 +1,7 @@
+{
+ "description": "WrapBorder wraps reads and writes around the map",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "2f646167855ac2ea2095a1c884b93c547d7469d3d05acacb6ae4ee21f5b313c9",
+ "capturedInputsHash": "2f646167855ac2ea2095a1c884b93c547d7469d3d05acacb6ae4ee21f5b313c9"
+}

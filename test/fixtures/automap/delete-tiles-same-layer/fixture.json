@@ -1,0 +1,7 @@
+{
+ "description": "DeleteTiles erases an input layer that is also an output before matching, so nothing matches",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "762a6fb2ae280c945a2d926f8939c9647de5712010b639739a19b9bf034dc37f",
+ "capturedInputsHash": "762a6fb2ae280c945a2d926f8939c9647de5712010b639739a19b9bf034dc37f"
+}

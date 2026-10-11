@@ -71,11 +71,17 @@ export const ERROR_CODES = [
   'TILESET_IMAGE_MISSING',
   'IMAGE_TOO_LARGE',
   'PREVIEW_TOO_LARGE',
+  // automapping
+  'AUTOMAP_RULES_NOT_FOUND',
+  'AUTOMAP_RULES_INVALID',
+  'AUTOMAP_UNSUPPORTED',
   // warnings
   'PREFAB_REMOVED',
   'PREFAB_UNTRACKED',
   'VARIABLE_DEFAULT_AS_TEXT',
   'SCATTER_INCOMPLETE',
+  // A rule map layer, property or rule_options object that automapping ignores, as Tiled does.
+  'AUTOMAP_RULES_IGNORED',
   // Also a validate_wa_map code: a build warns when its water covers a start tile.
   'START_TILE_BLOCKED',
 ] as const;

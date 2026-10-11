@@ -1,0 +1,7 @@
+{
+ "description": "Unnamed outputs are written first, then the drawn index, which wins on shared cells",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "99e18d5b2d34f87e7cb10406a2409fd1fad0716fa13db59ea82cb05905d527fd",
+ "capturedInputsHash": "99e18d5b2d34f87e7cb10406a2409fd1fad0716fa13db59ea82cb05905d527fd"
+}

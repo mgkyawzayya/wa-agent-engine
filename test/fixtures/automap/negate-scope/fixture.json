@@ -1,0 +1,7 @@
+{
+ "description": "Negate changes only its own index: \"not A\" or \"A\" matches everything",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "4d346ca4a548f5830ff71bd64b465b00a847bc992721b42b8e226aa5a514782d",
+ "capturedInputsHash": "4d346ca4a548f5830ff71bd64b465b00a847bc992721b42b8e226aa5a514782d"
+}

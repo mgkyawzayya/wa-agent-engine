@@ -1,0 +1,7 @@
+{
+ "description": "DeleteTiles clears the output layers where an input layer has tiles, before matching",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "bf02584d1bd5045d22f99800eb763ac2e8598b2f2a51e8d8dc207b6a5cb38fbb",
+ "capturedInputsHash": "bf02584d1bd5045d22f99800eb763ac2e8598b2f2a51e8d8dc207b6a5cb38fbb"
+}

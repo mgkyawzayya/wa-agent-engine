@@ -1,0 +1,7 @@
+{
+ "description": "Filter lines limit rule maps to matching map names; an include inherits the filter and restores it after",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "812e2bbbc57f0b3097dbec1093f193533de1a315fbf1da41b2e17251c2b3687d",
+ "capturedInputsHash": "812e2bbbc57f0b3097dbec1093f193533de1a315fbf1da41b2e17251c2b3687d"
+}

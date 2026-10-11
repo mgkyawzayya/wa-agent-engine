@@ -1,0 +1,7 @@
+{
+ "description": "MatchOutsideMap reads cells outside the map as empty",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "1cf1f7a62367f73a68cb481db21cc848825fde647a8be7d33a221457bbbc0287",
+ "capturedInputsHash": "1cf1f7a62367f73a68cb481db21cc848825fde647a8be7d33a221457bbbc0287"
+}

@@ -1,0 +1,7 @@
+{
+ "description": "Ignore tiles widen the rule, so it cannot match at the map edge",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "a2aa50dcaf1efcd8c36d621ae9f7be8a55f2e1d6f01b51c33477a4e7f09b76b8",
+ "capturedInputsHash": "a2aa50dcaf1efcd8c36d621ae9f7be8a55f2e1d6f01b51c33477a4e7f09b76b8"
+}

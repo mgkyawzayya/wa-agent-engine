@@ -1,0 +1,7 @@
+{
+ "description": "MatchInOrder applies each match at once, so later positions see it",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "c0b696340693d2d2d47f29b5e9fe0e0bcf987dd6a87bf299af7a78a9a7038031",
+ "capturedInputsHash": "c0b696340693d2d2d47f29b5e9fe0e0bcf987dd6a87bf299af7a78a9a7038031"
+}

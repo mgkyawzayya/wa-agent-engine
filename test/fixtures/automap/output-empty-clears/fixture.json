@@ -1,0 +1,7 @@
+{
+ "description": "Empty on an output layer clears the cell; Ignore and NonEmpty outputs write nothing",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "166ac918a4df437641055f7aed3cb5dbf8f59fabbbc0eebaa5b9a6eb60656475",
+ "capturedInputsHash": "166ac918a4df437641055f7aed3cb5dbf8f59fabbbc0eebaa5b9a6eb60656475"
+}

@@ -1,0 +1,7 @@
+{
+ "description": "A flipped input tile matches only the same flip",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "439430a74a1332c49ec26b3460c5c859b277f0b70f5b7458aaed5e02f8423b33",
+ "capturedInputsHash": "439430a74a1332c49ec26b3460c5c859b277f0b70f5b7458aaed5e02f8423b33"
+}

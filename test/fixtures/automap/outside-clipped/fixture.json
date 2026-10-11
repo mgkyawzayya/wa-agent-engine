@@ -1,0 +1,7 @@
+{
+ "description": "Outputs past the map edge are dropped",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "ffc478ad60765735103915cde48c8fc47439f857f333ed0a95031d5e8999e494",
+ "capturedInputsHash": "ffc478ad60765735103915cde48c8fc47439f857f333ed0a95031d5e8999e494"
+}

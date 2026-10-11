@@ -1,0 +1,6 @@
+# rule maps for map.tmj only
+[other*.tmj]
+skipped.tmj
+[MA?.tmj]
+applied.tmj
+more.txt

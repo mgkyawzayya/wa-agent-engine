@@ -1,0 +1,7 @@
+{
+ "description": "The clear rule (input Ignore, output Empty) runs first, then the drawing rule",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "4d34212e77966465469e6441d2345adb7dd28a9ea3431b52f84048dfb4bc1e96",
+ "capturedInputsHash": "4d34212e77966465469e6441d2345adb7dd28a9ea3431b52f84048dfb4bc1e96"
+}

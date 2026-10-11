@@ -1,0 +1,7 @@
+{
+ "description": "A one-cell rule turns every A into B",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "8a552db57839fb6ee18f4ab7189812047a0768f0a339349ab14e07f5e328d49b",
+ "capturedInputsHash": "8a552db57839fb6ee18f4ab7189812047a0768f0a339349ab14e07f5e328d49b"
+}

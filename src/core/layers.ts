@@ -183,7 +183,7 @@ export function tryResolveRole(map: TiledMap, role: LayerRole): ResolvedLayer | 
 
 // ---- layer creation ----
 
-function allocLayerId(map: TiledMap): number {
+export function allocLayerId(map: TiledMap): number {
   let max = 0;
   const walk = (layers: TiledLayer[]): void => {
     for (const l of layers) {

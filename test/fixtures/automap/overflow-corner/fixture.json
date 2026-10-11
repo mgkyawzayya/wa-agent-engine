@@ -1,0 +1,7 @@
+{
+ "description": "OverflowBorder reads the corner cell for positions outside both edges",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "76737c5c9f89e1fa5d4813bce000d1536eac0af30b9e2a2eb8b531831f120f4b",
+ "capturedInputsHash": "76737c5c9f89e1fa5d4813bce000d1536eac0af30b9e2a2eb8b531831f120f4b"
+}

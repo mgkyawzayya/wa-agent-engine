@@ -1,0 +1,7 @@
+{
+ "description": "Properties of an output layer are copied to its target layer",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "304eb508f227b89affbd4fcd501f59f93deab28c387a33743de7fb79fdf73d96",
+ "capturedInputsHash": "304eb508f227b89affbd4fcd501f59f93deab28c387a33743de7fb79fdf73d96"
+}

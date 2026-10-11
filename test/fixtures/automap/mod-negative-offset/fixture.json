@@ -1,0 +1,7 @@
+{
+ "description": "OffsetX -1 with ModX 3 hits Tiled's unsigned modulo: columns 0 and 3",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "b72927a5ac472a5331245e46afbf051b97342e39f76c171ef6311f17769e5deb",
+ "capturedInputsHash": "b72927a5ac472a5331245e46afbf051b97342e39f76c171ef6311f17769e5deb"
+}

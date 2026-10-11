@@ -1,0 +1,7 @@
+{
+ "description": "NoOverlappingOutput skips matches whose output touches an earlier one of the same rule",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "d8c215a9817a3804d4f81cfd3ba499336dfbdad9c8fdeec9f02932da650d964f",
+ "capturedInputsHash": "d8c215a9817a3804d4f81cfd3ba499336dfbdad9c8fdeec9f02932da650d964f"
+}

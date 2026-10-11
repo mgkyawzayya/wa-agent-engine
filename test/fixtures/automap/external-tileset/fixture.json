@@ -1,0 +1,7 @@
+{
+ "description": "Tiles of the same external tileset file match across the map and the rule map",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "00c691b83e2f6bdaad70e146e379fd770f09e7ba174967491ee3aa0caa002d8b",
+ "capturedInputsHash": "00c691b83e2f6bdaad70e146e379fd770f09e7ba174967491ee3aa0caa002d8b"
+}

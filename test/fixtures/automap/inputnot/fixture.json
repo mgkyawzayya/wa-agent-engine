@@ -1,0 +1,7 @@
+{
+ "description": "An A whose right neighbour is not B becomes C",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "f107b6157e4cd564c81ccd4bbf09d9d1ff2fcf27caea4fd0c049eab319a2249f",
+ "capturedInputsHash": "f107b6157e4cd564c81ccd4bbf09d9d1ff2fcf27caea4fd0c049eab319a2249f"
+}

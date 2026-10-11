@@ -1,0 +1,13 @@
+{
+ "description": "AutomappingRadius grows the automapped region of a partial run",
+ "random": false,
+ "map": "map.tmj",
+ "region": {
+  "x": 1,
+  "y": 0,
+  "width": 1,
+  "height": 1
+ },
+ "inputsHash": "3cfab24ef785e454ec24ca74eeb4857fc6c77da911cdb85f4f706d99d0c1b105",
+ "capturedInputsHash": "3cfab24ef785e454ec24ca74eeb4857fc6c77da911cdb85f4f706d99d0c1b105"
+}
