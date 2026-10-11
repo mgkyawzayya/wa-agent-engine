@@ -175,7 +175,7 @@ Turns single-image props into furniture prefabs: a project asset set that extend
 |---|---|---|---|
 | `projectDir` | string | yes | See above. |
 | `setId` | string | yes | The new set's id: lowercase letters, digits and `-`, for example `varcamp`. |
-| `source` | string | yes | The props hints JSON, relative to `projectDir`. Each prop has `id`, `image` (a PNG relative to the hints file, exactly `sizeTiles` × 32 px) and `sizeTiles` `[width, height]`, and optionally `collisionGrid` (rows of 0/1), `foregroundRows` (rows drawn above players), `use`, `name`, `tags` and `license`. |
+| `source` | string or list of strings | yes | A props hints JSON, or several, relative to `projectDir`; prop ids must be unique across them. Each prop has `id`, `image` (a PNG relative to its hints file, exactly `sizeTiles` × 32 px) and `sizeTiles` `[width, height]`, and optionally `collisionGrid` (rows of 0/1), `foregroundRows` (rows drawn above players), `placement` (`free`, the default, or `north-wall` with a `faceRow` of `upper`, `lower` or `either`, for screens, plaques and windows that hang on the wall face), `use`, `name`, `tags` and `license`. |
 | `extends` | string | no | The set the props are added to; `wa-starter-office` by default. |
 | `overwrite` | boolean | no | Replace an existing set with this id. Without it, an existing set fails with `ASSET_SET_EXISTS`. |
 

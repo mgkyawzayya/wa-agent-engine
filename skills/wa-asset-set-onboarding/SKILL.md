@@ -26,7 +26,7 @@ Do this before anything else, and stop if the answer is unclear.
 When the user has furniture as single images (one PNG per prop, such as a stage, a banner or a pinball machine) and wants to keep the walls and floors of an existing set, do not write a set by hand: `import_prop_set` makes one.
 
 1. The images must be PNGs exactly `sizeTiles` × 32 px, inside the map project (for example `props/varcamp/images/`). Check the licence first (section 1) and write it into each prop's `license`.
-2. Write a hints JSON next to them: an array with one entry per prop, `id`, `image` (relative to the hints file), `sizeTiles` `[width, height]`, and if possible `collisionGrid` (one row of 0/1 per tile row; 1 blocks walking), `foregroundRows` (rows drawn above players, such as the top of a tall cabinet), `use` (one sentence an agent can pick the prop by), `name`, `tags` and `license`.
+2. Write a hints JSON next to them: an array with one entry per prop, `id`, `image` (relative to the hints file), `sizeTiles` `[width, height]`, and if possible `collisionGrid` (one row of 0/1 per tile row; 1 blocks walking), `foregroundRows` (rows drawn above players, such as the top of a tall cabinet), `placement: "north-wall"` with a `faceRow` for props that hang on the wall (screens, plaques, windows), `use` (one sentence an agent can pick the prop by), `name`, `tags` and `license`. Several hints files can go into one set: pass `source` as a list.
 3. Import it:
 
    ```bash

@@ -4,7 +4,7 @@ import { dirname, join, posix } from 'node:path';
 import * as z from 'zod';
 import { PREFAB_ID_PATTERN, type ExtendingAssetSet, type PrefabEntry } from '../schemas/asset-set.schema.js';
 import { PREFAB_CATEGORIES, type PrefabCategory } from '../schemas/prefab.schema.js';
-import { PropHintsSchema, type PropHint } from '../schemas/prop-hints.schema.js';
+import { MAX_PROPS, PropHintsSchema, type PropHint } from '../schemas/prop-hints.schema.js';
 import { BUILTIN_SETS_DIR, loadAssetSet, PROJECT_SETS_DIR } from './asset-set-registry.js';
 import { WaEngineError } from './errors.js';
 import { sha256Hex } from './map-io.js';
@@ -23,13 +23,14 @@ const ATLAS_COLUMNS = 16;
 const ATLAS_MAX_SIDE = 4096;
 const MAX_PROP_FILE_BYTES = 16 * 1024 * 1024;
 const LOCK_STALE_MS = 10 * 60 * 1000;
+export const MAX_SOURCES = 20;
 export const DEFAULT_BASE_SET = 'wa-starter-office';
 
 export interface ImportPropSetOptions {
   projectDir: string;
   setId: string;
-  // Hints JSON, relative to the project; images are relative to it.
-  source: string;
+  // Hints JSON files, relative to the project; each one's images are relative to it.
+  source: string | readonly string[];
   extends?: string;
   overwrite?: boolean;
 }
@@ -52,6 +53,7 @@ export interface ImportPropSetResult {
 // Engine categories from words in a prop's id and tags (plurals count), first match wins;
 // anything else is social. A hint category that is already an engine category is kept.
 const CATEGORY_WORDS: readonly (readonly [PrefabCategory, readonly string[]])[] = [
+  ['outdoor', ['outdoor', 'street', 'park', 'garden', 'picnic', 'tent', 'kiosk', 'bunting', 'bike', 'tree', 'bush', 'hedge', 'fence']],
   ['talks', ['stage', 'podium', 'projector', 'mic', 'audience', 'screen', 'lectern', 'speaker']],
   ['logistics', ['registration', 'help', 'desk', 'tea', 'water', 'vending', 'food', 'coffee', 'cooler', 'dispenser', 'snack']],
   ['fun', ['game', 'arcade', 'pool', 'pingpong', 'foosball', 'chess', 'prize', 'raffle', 'trophy', 'gift', 'balloon', 'treasure', 'teleport']],
@@ -149,6 +151,7 @@ function prefabMap(p: Placed, setId: string, columns: number, entry: PrefabEntry
   const properties = [
     { name: 'category', type: 'string', value: entry.category },
     { name: 'placement', type: 'string', value: entry.placement },
+    ...(entry.faceRow === undefined ? [] : [{ name: 'faceRow', type: 'string', value: entry.faceRow }]),
     { name: 'use', type: 'string', value: entry.use },
     ...(entry.license === undefined ? [] : [{ name: 'license', type: 'string', value: entry.license }]),
     ...(credit === undefined ? [] : [{ name: 'credit', type: 'string', value: credit }]),
@@ -205,27 +208,34 @@ export async function importPropSet(options: ImportPropSetOptions): Promise<Impo
   if (base.extends !== undefined) throw new WaEngineError('INVALID_INPUT', `"${baseId}" extends another set; extend a full set such as ${DEFAULT_BASE_SET}`);
 
   // 1. The hints, and every image's size from its PNG header, before decoding anything.
-  const sourceAbs = await resolveInProject(projectDir, options.source, { ext: '.json' });
-  let raw: unknown;
-  try {
-    raw = JSON.parse(await readFile(sourceAbs, 'utf8'));
-  } catch {
-    throw new WaEngineError('INVALID_INPUT', `${options.source} is missing or not valid JSON`);
+  const sources = typeof options.source === 'string' ? [options.source] : [...options.source];
+  if (sources.length === 0 || sources.length > MAX_SOURCES) throw new WaEngineError('INVALID_INPUT', `source must name 1 to ${MAX_SOURCES} hints files`);
+  const listed: { prop: PropHint; source: string }[] = [];
+  for (const source of sources) {
+    const sourceAbs = await resolveInProject(projectDir, source, { ext: '.json' });
+    let raw: unknown;
+    try {
+      raw = JSON.parse(await readFile(sourceAbs, 'utf8'));
+    } catch {
+      throw new WaEngineError('INVALID_INPUT', `${source} is missing or not valid JSON`);
+    }
+    const hints = PropHintsSchema.safeParse(raw);
+    if (!hints.success) throw new WaEngineError('INVALID_INPUT', `${source} is not a props hints file:\n${z.prettifyError(hints.error)}`);
+    for (const prop of hints.data) listed.push({ prop, source });
   }
-  const hints = PropHintsSchema.safeParse(raw);
-  if (!hints.success) throw new WaEngineError('INVALID_INPUT', `${options.source} is not a props hints file:\n${z.prettifyError(hints.error)}`);
+  if (listed.length > MAX_PROPS) throw new WaEngineError('INVALID_INPUT', `${listed.length} props; one set holds at most ${MAX_PROPS}`);
   const problems: string[] = [];
   const ids = new Set<string>();
   const baseIds = new Set(base.set.prefabs.map((p) => p.id));
   const sized: (Omit<Placed, 'x' | 'y' | 'image'> & { abs: string })[] = [];
-  for (const prop of hints.data) {
+  for (const { prop, source } of listed) {
     const id = prefabIdOf(prop.id);
     if (ids.has(id)) problems.push(`${prop.id}: two props become prefab "${id}"`);
     if (baseIds.has(id)) problems.push(`${prop.id}: "${id}" is already a prefab of ${baseId}`);
     ids.add(id);
     const [width, height] = prop.sizeTiles;
     try {
-      const abs = await resolveInProject(projectDir, posix.join(posix.dirname(options.source), prop.image), { ext: '.png' });
+      const abs = await resolveInProject(projectDir, posix.join(posix.dirname(source), prop.image), { ext: '.png' });
       if ((await stat(abs)).size > MAX_PROP_FILE_BYTES) throw new WaEngineError('IMAGE_TOO_LARGE', `is larger than ${MAX_PROP_FILE_BYTES} bytes`);
       const header = readPngHeader(new Uint8Array(await readFile(abs)));
       if (header.width !== width * TILE || header.height !== height * TILE) {
@@ -267,7 +277,7 @@ export async function importPropSet(options: ImportPropSetOptions): Promise<Impo
   const tilesetName = `${setId}-${sha256Hex(png).slice(0, 8)}`;
   const imageRel = `tilesets/${tilesetName}.png`;
 
-  const licenses = [...new Set(hints.data.map((p) => p.license).filter((l): l is string => l !== undefined))];
+  const licenses = [...new Set(listed.map(({ prop }) => prop.license).filter((l): l is string => l !== undefined))];
   const entries: PrefabEntry[] = [];
   const files: [string, string][] = [];
   const order = new Map(sized.map((s, i) => [s.id, i]));
@@ -278,9 +288,10 @@ export async function importPropSet(options: ImportPropSetOptions): Promise<Impo
       width: p.width,
       height: p.height,
       category: propCategory(p.prop),
-      placement: 'free',
+      placement: p.prop.placement ?? 'free',
       use: p.prop.use ?? p.prop.name ?? p.prop.id,
     };
+    if (p.prop.faceRow !== undefined) entry.faceRow = p.prop.faceRow;
     if (p.prop.license !== undefined) entry.license = p.prop.license;
     const credit = p.prop.name === undefined ? undefined : `${p.prop.name}${p.prop.provenanceRun === undefined ? '' : ` (${p.prop.provenanceRun})`}`;
     entries.push(entry);
@@ -288,14 +299,14 @@ export async function importPropSet(options: ImportPropSetOptions): Promise<Impo
   }
   const setJson: ExtendingAssetSet = {
     id: setId,
-    title: `${setId}: props imported from ${options.source}`,
+    title: `${setId}: props imported from ${sources.join(', ')}`,
     extends: baseId,
     tilesets: [
       {
         name: tilesetName,
         tsj: `tilesets/${setId}.tsj`,
         image: imageRel,
-        tilesetCopyright: licenses.length > 0 ? licenses.join('; ') : `Imported props (${options.source})`,
+        tilesetCopyright: licenses.length > 0 ? licenses.join('; ') : `Imported props (${sources.join(', ')})`,
       },
     ],
     prefabs: entries,

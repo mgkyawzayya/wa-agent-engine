@@ -142,6 +142,26 @@ describe('import_prop_set', () => {
     await expect(importVarcamp()).rejects.toMatchObject({ code: 'ASSET_SET_LOCKED' });
   });
 
+  test('wall props hang on the face rows, and two hints files make one set', async () => {
+    await writeProps();
+    await mkdir(join(project.dir, 'wall', 'images'), { recursive: true });
+    await writeFile(join(project.dir, 'wall', 'images', 'sign.png'), encodePng(propImage(5, 2, 2)));
+    await writeFile(
+      join(project.dir, 'wall', 'props.json'),
+      JSON.stringify([{ id: 'sign', image: 'images/sign.png', sizeTiles: [2, 2], placement: 'north-wall', faceRow: 'upper', use: 'a sign on the wall' }]),
+    );
+    const result = await importPropSet({ projectDir: project.dir, setId: 'varcamp', source: ['props/props.json', 'wall/props.json'] });
+    expect(result.prefabs.map((p) => p.id)).toEqual(['stage-big', 'beanbag', 'water-cooler', 'sign']);
+    const entry = (await loadAssetSet('varcamp', project.dir)).set.prefabs.find((p) => p.id === 'sign');
+    expect(entry).toMatchObject({ placement: 'north-wall', faceRow: 'upper' });
+    await scaffoldMap({ projectDir: project.dir, mapPath: 'venue.tmj', width: 20, height: 12, assetSet: 'varcamp', spawn: { x: 2, y: 9 } });
+    const room = { id: 'hall', name: 'Hall', bounds: { x: 0, y: 0, width: 20, height: 12 } };
+    const dsl = (furniture: unknown[]) => ({ mapWidth: 20, mapHeight: 12, assetSet: 'varcamp', rooms: [{ ...room, furniture }] });
+    await expect(buildRooms({ projectDir: project.dir, mapPath: 'venue.tmj', dsl: dsl([{ prefabId: 'sign', x: 8, y: 5 }]) })).rejects.toMatchObject({ code: 'PREFAB_PLACEMENT' });
+    await buildRooms({ projectDir: project.dir, mapPath: 'venue.tmj', dsl: dsl([{ prefabId: 'sign', x: 8, y: 1 }]) });
+    expect(await validateMap({ projectDir: project.dir, mapPath: 'venue.tmj' })).toMatchObject({ ok: true, errors: [], warnings: [] });
+  });
+
   test('refuses images of the wrong size, listing every problem, and writes nothing', async () => {
     await writeProps(PROPS, { 'stage.png': propImage(1, 2, 2) });
     await expect(importVarcamp()).rejects.toMatchObject({ code: 'INVALID_INPUT', details: { problems: [expect.stringContaining('stage_big')] } });
@@ -212,4 +232,6 @@ test('prop categories come from the id first, then the tags; the rest are social
   expect(propCategory({ id: 'schedule_board_a' })).toBe('work');
   expect(propCategory({ id: 'beanbag_red', tags: ['varcamp', 'seat'] })).toBe('social');
   expect(propCategory({ id: 'anything', category: 'phone' })).toBe('phone');
+  expect(propCategory({ id: 'street_lamp', tags: ['outdoor'] })).toBe('outdoor');
+  expect(propCategory({ id: 'outdoor_stage' })).toBe('outdoor');
 });

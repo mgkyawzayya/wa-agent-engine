@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { PREFAB_FACE_ROWS, PREFAB_PLACEMENTS } from './prefab.schema.js';
 
 // The hints file that describes single-image props for import_prop_set: one entry per prop
 // image, which must be a PNG exactly sizeTiles x 32 pixels. Other keys are allowed and ignored.
@@ -23,6 +24,8 @@ export const PropHintSchema = z
     collisionGrid: z.array(z.array(cellFlag)).exactOptional().describe('Rows of 0/1, one per tile row; 1 blocks walking'),
     foregroundRows: z.array(int.min(0)).exactOptional().describe('Tile rows drawn above the player'),
     use: z.string().min(1).exactOptional(),
+    placement: z.enum(PREFAB_PLACEMENTS).exactOptional().describe('"north-wall" for props that hang on the wall face rows (screens, plaques, windows); "free" (default) for props that stand on the floor'),
+    faceRow: z.enum(PREFAB_FACE_ROWS).exactOptional().describe('For north-wall props: "upper" puts the top row on the first face row, "lower" on the second, "either" allows both'),
     license: z.string().min(1).exactOptional(),
     provenanceRun: z.string().exactOptional(),
   })
@@ -31,6 +34,9 @@ export const PropHintSchema = z
     const grid = prop.collisionGrid;
     if (grid !== undefined && (grid.length !== height || grid.some((row) => row.length !== width))) {
       ctx.addIssue({ code: 'custom', path: ['collisionGrid'], message: `must be ${height} rows of ${width} cells` });
+    }
+    if ((prop.placement === 'north-wall') !== (prop.faceRow !== undefined)) {
+      ctx.addIssue({ code: 'custom', path: ['faceRow'], message: 'faceRow is required for north-wall props and only for them' });
     }
     for (const row of prop.foregroundRows ?? []) {
       if (row >= height) ctx.addIssue({ code: 'custom', path: ['foregroundRows'], message: `row ${row} is outside the prop (height ${height})` });

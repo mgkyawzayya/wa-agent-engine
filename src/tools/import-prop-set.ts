@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { DEFAULT_BASE_SET, importPropSet } from '../core/prop-import.js';
+import { DEFAULT_BASE_SET, importPropSet, MAX_SOURCES } from '../core/prop-import.js';
 import { attempt, toolOk } from './result.js';
 import { projectDirField, type ToolEntry } from './tool.js';
 
@@ -9,11 +9,12 @@ const input = z.strictObject({
     .string()
     .describe('Id of the new asset set: lowercase letters, digits and "-", for example "varcamp". Use it as the assetSet of the DSL and of place_prefab'),
   source: z
-    .string()
+    .union([z.string(), z.array(z.string()).min(1).max(MAX_SOURCES)])
     .describe(
-      'The props hints JSON, relative to projectDir, for example "props/varcamp/props.json". It is an array of props: id, image (a PNG ' +
-        'relative to the hints file, exactly sizeTiles x 32 px), sizeTiles [width, height], and optionally collisionGrid (rows of 0/1), ' +
-        'foregroundRows (rows drawn above players), use, name, tags and license',
+      'One props hints JSON, or a list of them, relative to projectDir, for example "props/varcamp/props.json". Each file is an array of ' +
+        'props: id, image (a PNG relative to that hints file, exactly sizeTiles x 32 px), sizeTiles [width, height], and optionally ' +
+        'collisionGrid (rows of 0/1), foregroundRows (rows drawn above players), placement ("free" or "north-wall") with faceRow for ' +
+        'wall props, use, name, tags and license. Prop ids must be unique across the files',
     ),
   extends: z.string().exactOptional().describe(`The set the props are added to; default "${DEFAULT_BASE_SET}"`),
   overwrite: z.boolean().exactOptional().describe('Replace an existing set with this id; without it an existing set is never touched'),
