@@ -35,13 +35,12 @@ import { MAX_MAP_DIMENSION } from '../limits.js';
 import { readMap } from '../map-io.js';
 import { resolveMapRelative } from '../project-paths.js';
 import { FILE_ONLY_KEYS } from '../tileset-embed.js';
-import { FLAG_D, FLAG_H, FLAG_HEX, FLAG_V, GID_MASK, tilesetIdentity, VISUAL_FLAGS } from './cells.js';
+import { FLAG_D, FLAG_H, FLAG_HEX, FLAG_V, GID_MASK, matchTypesOf, tilesetIdentity, VISUAL_FLAGS } from './cells.js';
 import { coherentRegions, Region, type RegionRect } from './region.js';
 
 // Rule maps larger than this are refused, like the DSL's map limit.
 export const MAX_RULE_MAP_TILES = 500;
 
-const MATCH_KINDS: readonly MatchKind[] = ['Empty', 'NonEmpty', 'Other', 'Negate', 'Ignore'];
 const NONE: RuleCell = { kind: 'none' };
 
 function invalid(ruleMap: string, message: string, details: Record<string, unknown> = {}): WaEngineError {
@@ -192,8 +191,10 @@ async function loadTilesets(projectDir: string, abs: string, map: TiledMap): Pro
         firstgid: ts.firstgid,
         tilecount: ts.tilecount ?? 0,
         identity: tilesetIdentity(ts, dirname(abs)),
+        similarity: tilesetIdentity(ts, dirname(abs)),
         embed: embeddable(ts, dirname(abs)),
         unusable: await imageProblem(projectDir, abs, ts),
+        matchTypes: matchTypesOf(ts),
       });
       fields.push(ts);
       continue;
@@ -213,7 +214,7 @@ async function loadTilesets(projectDir: string, abs: string, map: TiledMap): Pro
           : `external tileset "${ts.source}" cannot be read`;
     }
     if (file === undefined || sourceAbs === undefined) {
-      tilesets.push({ name: ts.source, firstgid: ts.firstgid, tilecount: 0, identity: undefined, embed: undefined, unusable });
+      tilesets.push({ name: ts.source, firstgid: ts.firstgid, tilecount: 0, identity: undefined, similarity: undefined, embed: undefined, unusable, matchTypes: new Map() });
       fields.push(undefined);
       continue;
     }
@@ -222,18 +223,14 @@ async function loadTilesets(projectDir: string, abs: string, map: TiledMap): Pro
       firstgid: ts.firstgid,
       tilecount: file.tilecount ?? 0,
       identity: `source:${sourceAbs}`,
+      similarity: tilesetIdentity(file, dirname(sourceAbs)),
       embed: embeddable(file, dirname(sourceAbs)),
       unusable: await imageProblem(projectDir, sourceAbs, file),
+      matchTypes: matchTypesOf(file),
     });
     fields.push(file);
   }
   return { tilesets, fields };
-}
-
-function matchTypeOf(fields: TiledTilesetFields | undefined, localId: number): MatchKind | undefined {
-  const prop = fields?.tiles?.find((t) => t.id === localId)?.properties?.find((p) => p.name === 'MatchType');
-  if (prop === undefined || typeof prop.value !== 'string') return undefined;
-  return (MATCH_KINDS as readonly string[]).includes(prop.value) ? (prop.value as MatchKind) : undefined;
 }
 
 // ---- layers ----
@@ -260,12 +257,13 @@ function makeDecoder(relPath: string, tilesets: RuleTileset[], fields: (TiledTil
     if (ts === undefined || (fields[index] !== undefined && localId >= ts.tilecount)) {
       throw invalid(relPath, `layer "${layerName}" uses tile id ${gid}, which no tileset of the rule map has`, { layer: layerName, gid });
     }
-    const match = matchTypeOf(fields[index], localId);
+    const match = ts.matchTypes.get(localId);
+    const flags = (raw & ~GID_MASK) >>> 0;
     let cell: RuleCell;
-    if (match !== undefined) cell = { kind: 'special', match };
+    if (match !== undefined) cell = { kind: 'special', match, tileset: index, localId, flags };
     else if (ts.unusable !== undefined || ts.identity === undefined) {
       throw invalid(relPath, ts.unusable ?? `tileset "${ts.name}" cannot be compared with a working map`, { tileset: ts.name, layer: layerName });
-    } else cell = { kind: 'tile', tileset: index, localId, flags: (raw & ~GID_MASK) >>> 0 };
+    } else cell = { kind: 'tile', tileset: index, localId, flags };
     cache.set(raw >>> 0, cell);
     return cell;
   };

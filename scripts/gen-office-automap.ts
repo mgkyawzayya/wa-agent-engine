@@ -23,6 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { BUILTIN_SETS_DIR, loadAssetSet, wangSet, type LoadedWangSet, type WallNeighbour } from '../src/core/asset-set-registry.js';
 import { MARKER_IMAGE, MARKER_PALETTE, MARKER_TILESET } from '../src/core/markers.js';
+import { encodePng } from '../src/core/png.js';
 import { DEFAULT_ASSET_SET } from '../src/core/zones.js';
 import type { FaceRow } from '../src/schemas/asset-set.schema.js';
 import type { TiledEmbeddedTileset, TiledMap, TiledTileLayer, TiledTilesetFile } from '../src/schemas/tiled.schema.js';
@@ -40,6 +41,19 @@ const MARKERS = {
 // From the rule maps (.wa-asset-sets/office-automap/automap/) to the project root.
 const TO_PROJECT = '../../../';
 const SPECIALS = ['Empty', 'Ignore', 'NonEmpty', 'Other'] as const;
+// The special tiles' own image, in the project's tilesets/. They must not share the marker
+// image: a rule-map tileset with the image and tile size of a map's tileset is that tileset to
+// Tiled and to the engine, and its tiles lose their MatchType.
+export const SPECIAL_IMAGE = 'tilesets/wa-automap-rules.png';
+
+// The special tiles' image: one flat 32x32 square each, in SPECIALS order.
+export function specialTilesPng(): Uint8Array {
+  const colours = [[255, 255, 255], [200, 200, 200], [40, 40, 40], [255, 0, 255]];
+  const width = 32 * SPECIALS.length;
+  const data = new Uint8ClampedArray(width * 32 * 4);
+  for (let y = 0; y < 32; y++) for (let x = 0; x < width; x++) data.set([...colours[Math.floor(x / 32)]!, 255], (y * width + x) * 4);
+  return encodePng({ width, height: 32, data });
+}
 
 // ---- rule tiles: markers 1-16, the special tiles, then the two art tilesets ----
 
@@ -270,8 +284,8 @@ function embedded(tsj: TiledTilesetFile, firstgid: number, image: string, tiles?
 }
 
 const json = (value: unknown): string => `${JSON.stringify(value, null, 1)}\n`;
-// Like Tiled: the tile ids of a layer on one line.
-const ruleMapJson = (value: unknown): string => json(value).replace(/\[\n[\d,\n ]*\]/g, (list) => `[${list.slice(1, -1).replace(/\s+/g, '').replaceAll(',', ', ')}]`);
+// A map as JSON with the tile ids of each layer on one line, like Tiled writes them.
+export const tiledJson = (value: unknown): string => json(value).replace(/\[\n[\d,\n ]*\]/g, (list) => `[${list.slice(1, -1).replace(/\s+/g, '').replaceAll(',', ', ')}]`);
 
 // Every file of the set, by path inside the set folder.
 export async function officeAutomapFiles(): Promise<Map<string, string>> {
@@ -286,12 +300,17 @@ export async function officeAutomapFiles(): Promise<Map<string, string>> {
   const markersTsj = JSON.parse(await readFile(fileURLToPath(new URL('../assets/markers/wa-markers.tsj', import.meta.url)), 'utf8')) as TiledTilesetFile;
   const builder = set.tilesets.get(ROOM_BUILDER)!;
   const zones = set.tilesets.get(ZONES)!;
-  const builderFirst = SPECIAL_FIRST + MARKER_PALETTE.length;
+  const builderFirst = SPECIAL_FIRST + SPECIALS.length;
   const zonesFirst = builderFirst + builder.tsj.tilecount!;
   const tilesets = [
     embedded(markersTsj, MARKER_FIRST, MARKER_IMAGE),
-    // The special tiles of the rules (MatchType), drawn with the marker image.
-    embedded({ ...markersTsj, name: 'wa-automap-rules' }, SPECIAL_FIRST, MARKER_IMAGE, SPECIALS.map((m, id) => ({ id, properties: [{ name: 'MatchType', type: 'string', value: m }] }))),
+    // The special tiles of the rules (MatchType), in a tileset of their own.
+    embedded(
+      { columns: SPECIALS.length, imageheight: 32, imagewidth: 32 * SPECIALS.length, margin: 0, name: 'wa-automap-rules', spacing: 0, tilecount: SPECIALS.length, tileheight: 32, tilewidth: 32 },
+      SPECIAL_FIRST,
+      SPECIAL_IMAGE,
+      SPECIALS.map((m, id) => ({ id, properties: [{ name: 'MatchType', type: 'string', value: m }] })),
+    ),
     embedded(builder.tsj, builderFirst, builder.image),
     embedded(zones.tsj, zonesFirst, zones.image),
   ];
@@ -320,9 +339,9 @@ export async function officeAutomapFiles(): Promise<Map<string, string>> {
   files.set('set.json', json(setJson));
   for (const t of setJson.tilesets) files.set(t.tsj, await readFile(join(BUILTIN_SETS_DIR, DEFAULT_ASSET_SET, t.tsj), 'utf8'));
   files.set('automap/rules.txt', '# Office walls, faces and floors, drawn from the sketch a room build paints.\nwalls.tmj\nfaces.tmj\nfloors.tmj\n');
-  files.set('automap/walls.tmj', ruleMapJson(ruleMap(wallRules(art), tilesets)));
-  files.set('automap/faces.tmj', ruleMapJson(ruleMap(faceRules(art), tilesets)));
-  files.set('automap/floors.tmj', ruleMapJson(ruleMap(floorRules(art), tilesets)));
+  files.set('automap/walls.tmj', tiledJson(ruleMap(wallRules(art), tilesets)));
+  files.set('automap/faces.tmj', tiledJson(ruleMap(faceRules(art), tilesets)));
+  files.set('automap/floors.tmj', tiledJson(ruleMap(floorRules(art), tilesets)));
   return files;
 }
 

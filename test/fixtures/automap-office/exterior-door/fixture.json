@@ -1,0 +1,6 @@
+{
+ "description": "The sketch of rooms/exterior-door.json before the rules run: A door in an outside wall takes the floor of the room it belongs to; no faces or collisions under its lintel.",
+ "source": "rooms/exterior-door.json",
+ "inputsHash": "22aa5f210b74ac83eca5758379e45374400ea646018be022b8b37a73fbcdaee6",
+ "capturedInputsHash": "22aa5f210b74ac83eca5758379e45374400ea646018be022b8b37a73fbcdaee6"
+}

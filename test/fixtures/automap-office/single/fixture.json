@@ -1,0 +1,6 @@
+{
+ "description": "The sketch of rooms/single.json before the rules run: One room: corners 28/29/53/54, edges 102/104, white faces 203/228 inside, brick 310 faces outside the south wall.",
+ "source": "rooms/single.json",
+ "inputsHash": "db5626d6cb58eaeffdb8796b8d065a95008e4fe40bff12e28ecca87e23ff759f",
+ "capturedInputsHash": "db5626d6cb58eaeffdb8796b8d065a95008e4fe40bff12e28ecca87e23ff759f"
+}

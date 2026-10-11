@@ -198,6 +198,8 @@ Errors and warnings:
 
 Rule maps run in the listed order, each on the result of the previous one. Tiles the rules need from a tileset the map lacks are added with that tileset, with its image path relative to the map. Like Tiled, a missing target layer is created at the top of the map when the rules put tiles on it; a locked target layer is left alone unless the rule map sets `IgnoreLock` (only the layer's own lock counts, not a locked group around it), and `DeleteTiles` clears output layers even when they are locked.
 
+As in Tiled, an embedded rule-map tileset with the same image, tile size, tile count, margin, spacing and offset as one of the map's tilesets (embedded or a `.tsj`), or else as one an earlier rule map brings, is that tileset, and an external rule-map tileset is the map's tileset from the same `.tsj` file. Its tiles match that tileset's tiles, and their `MatchType` comes from it. Give the special tiles a tileset of their own.
+
 Where the engine differs from Tiled: random choices are seeded (Tiled's are not, so random rules cannot match Tiled draw for draw); a rule map that is broken or missing fails the whole call (Tiled skips it); `MatchType` is read from the tile's own property, not from class defaults of a Tiled project; and the fallback rules file is `rules.txt` in `projectDir`, not the rules file set in a Tiled project.
 
 ### `import_prop_set` (CLI command `import-props`)

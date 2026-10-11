@@ -45,6 +45,7 @@ export class AutomapRun implements MatchEnv {
   private readonly originals = new Map<string, CellSource | undefined>();
   private readonly pickers = new Map<RuleDef, RandomPicker<RuleOutput>>();
   private readonly footprints = new WeakMap<OutputLayerDef, Map<RuleDef, [number, number][]>>();
+  private readonly cells = new WeakMap<RuleCell, RuleCell>();
   // While set, input layers are read from these copies (the map as it was when the rule map
   // started), so rules can be applied as soon as they are matched.
   private snapshot: Map<string, CellSource> | undefined;
@@ -93,6 +94,23 @@ export class AutomapRun implements MatchEnv {
 
   literal(ruleMap: RuleMap, cell: Extract<RuleCell, { kind: 'tile' }>): number {
     return (this.translator.gid(ruleMap.tilesets[cell.tileset]!, cell.localId) | cell.flags) >>> 0;
+  }
+
+  // A rule cell as this run reads it: the tileset a rule tile's tileset stands for decides
+  // whether it is special (Tiled replaces similar tilesets before running the rules), so a
+  // special tile from a tileset the map has without MatchType is a plain tile, and the other
+  // way round.
+  cell(ruleMap: RuleMap, c: RuleCell): RuleCell {
+    if (c.kind === 'none') return c;
+    let out = this.cells.get(c);
+    if (out === undefined) {
+      const match = this.translator.matchTypes(ruleMap.tilesets[c.tileset]!).get(c.localId);
+      const origin = { tileset: c.tileset, localId: c.localId, flags: c.flags };
+      if (match === undefined) out = c.kind === 'tile' ? c : { kind: 'tile', ...origin };
+      else out = c.kind === 'special' && c.match === match ? c : { kind: 'special', match, ...origin };
+      this.cells.set(c, out);
+    }
+    return out;
   }
 
   private picker(rule: RuleDef): RandomPicker<RuleOutput> {
@@ -206,7 +224,7 @@ export class AutomapRun implements MatchEnv {
       const target = this.outputs.get(layer.target)!;
       if (!rule.options.ignoreLock && target.locked) continue;
       for (const [x, y] of rule.outputOrder) {
-        const cell = layer.grid.cells[y * ruleMap.width + x]!;
+        const cell = this.cell(ruleMap, layer.grid.cells[y * ruleMap.width + x]!);
         if (cell.kind === 'none' || (cell.kind === 'special' && cell.match !== 'Empty')) continue;
         let dx = x + ox;
         let dy = y + oy;

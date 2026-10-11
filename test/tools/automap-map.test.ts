@@ -178,9 +178,10 @@ describe('automap_map details', () => {
     await writeStartRule(project.dir, mapPath, 'maps');
     await copyFile(join(project.dir, 'tilesets', 'WA_Special_Zones.png'), join(project.dir, 'tilesets', 'copy.png'));
     await editRuleMap((r) => (r.tilesets[0].image = '../tilesets/copy.png'));
-    // Input: the map's own start tile is no longer the rule's (other image), so match empty.
+    // Input: the map's own start tile is no longer the rule's (other image), so match empty, with
+    // an Empty tile from a tileset of its own (one the map has would make it a plain tile).
     await editRuleMap((r) => {
-      r.tilesets.push({ ...r.tilesets[0], name: 'automap-rules', firstgid: 13, image: '../tilesets/WA_Exterior.png', tilecount: 850, columns: 25, imagewidth: 800, imageheight: 1088, tiles: [{ id: 0, properties: [{ name: 'MatchType', type: 'string', value: 'Empty' }] }] });
+      r.tilesets.push({ ...r.tilesets[0], name: 'automap-rules', firstgid: 13, image: '../tilesets/automap-rules.png', tilecount: 1, columns: 1, imagewidth: 32, imageheight: 32, tiles: [{ id: 0, properties: [{ name: 'MatchType', type: 'string', value: 'Empty' }] }] });
       r.layers[0].data = [13];
     });
     expect(await call({})).toMatchObject({ ok: false, error: { code: 'TILESET_CONFLICT' } });
@@ -194,7 +195,7 @@ describe('automap_map details', () => {
     map.tilesets.push({ firstgid: 900000, source: 'old.tsx' });
     await writeFile(join(project.dir, mapPath), JSON.stringify(map));
     await editRuleMap((r) => {
-      r.tilesets.push({ ...r.tilesets[0], name: 'automap-rules', firstgid: 13, image: '../tilesets/WA_Exterior.png', tilecount: 850, columns: 25, imagewidth: 800, imageheight: 1088, tiles: [{ id: 0, properties: [{ name: 'MatchType', type: 'string', value: 'Empty' }] }] });
+      r.tilesets.push({ ...r.tilesets[0], name: 'automap-rules', firstgid: 13, image: '../tilesets/automap-rules.png', tilecount: 1, columns: 1, imagewidth: 32, imageheight: 32, tiles: [{ id: 0, properties: [{ name: 'MatchType', type: 'string', value: 'Empty' }] }] });
       r.layers[0].data = [13];
       r.layers[0].name = 'input_floor';
     });

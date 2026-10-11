@@ -1,0 +1,6 @@
+{
+ "description": "The sketch of rooms/doors-all-orientations.json before the rules run: One room with a door in each wall: 63/64/65 horizontally, 11/36/61 vertically, open face ends 206/231 and 205/230 beside the north lintel, no faces or collisions under lintels, continuous floor.",
+ "source": "rooms/doors-all-orientations.json",
+ "inputsHash": "86a5afbfbc7c00598523558e3d1215aca60844ba427401e288e6fa5bf723e894",
+ "capturedInputsHash": "86a5afbfbc7c00598523558e3d1215aca60844ba427401e288e6fa5bf723e894"
+}

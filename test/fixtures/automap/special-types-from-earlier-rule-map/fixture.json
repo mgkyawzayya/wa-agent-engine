@@ -1,0 +1,7 @@
+{
+ "description": "The second rule map's rules tileset has no MatchType; it stands for the first rule map's copy, so Empty clears",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "a86d213fa66b3c4a82fe4ad07ce0f81b5ee4adb243a3db97ef531e6a5c2da18c",
+ "capturedInputsHash": "a86d213fa66b3c4a82fe4ad07ce0f81b5ee4adb243a3db97ef531e6a5c2da18c"
+}

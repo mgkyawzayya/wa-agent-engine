@@ -1,5 +1,7 @@
 // Records Tiled's own automapping output for every deterministic fixture under
-// test/fixtures/automap/ as expected.tmj, so the engine is tested against real Tiled behaviour.
+// test/fixtures/automap/ as expected.tmj, so the engine is tested against real Tiled behaviour,
+// and for the proving set's goldens under test/fixtures/automap-office/ (named office/<name>),
+// which run in a throwaway project with the starter-kit images (npm run fetch-assets).
 //
 //   npx tsx scripts/tiled-automap-capture.ts [fixture-name ...]
 //
@@ -17,10 +19,11 @@
 
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { existsSync, rmSync } from 'node:fs';
-import { mkdtemp, mkdir, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdtemp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { makeOfficeProject, OFFICE_GOLDENS_DIR, OFFICE_RULES, type OfficeProject } from './gen-office-goldens.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', 'test', 'fixtures', 'automap');
 const TILED = process.env.TILED ?? '/Applications/Tiled.app/Contents/MacOS/Tiled';
@@ -41,7 +44,10 @@ interface Job {
   name: string;
   map: string;
   rules: string;
+  // Where Tiled writes, and where the output goes once every job succeeded.
   out: string;
+  dest: string;
+  metaPath: string;
   region?: Meta['region'];
 }
 
@@ -74,8 +80,11 @@ if (File.exists(${JSON.stringify(trigger)})) {
 
 let child: ChildProcess | undefined;
 let trigger: string | undefined;
+// Temporary folders to remove on every exit path.
+const temporary: string[] = [];
 
-function cleanup(): void {
+// Removes the extension and the trigger and stops the Tiled process this script started.
+function stopTiled(): void {
   rmSync(EXTENSION, { force: true });
   if (trigger !== undefined) rmSync(trigger, { force: true });
   if (child !== undefined && child.exitCode === null && child.signalCode === null) {
@@ -91,9 +100,14 @@ function cleanup(): void {
   }
 }
 
+function removeTemporary(): void {
+  for (const dir of temporary.splice(0)) rmSync(dir, { recursive: true, force: true });
+}
+
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
-    cleanup();
+    stopTiled();
+    removeTemporary();
     process.exit(130);
   });
 }
@@ -110,8 +124,25 @@ async function jobsFor(only: string[]): Promise<Job[]> {
       map: join(ROOT, name, 'map.tmj'),
       rules: join(ROOT, name, 'rules.txt'),
       out: join(ROOT, name, 'expected.new.tmj'),
+      dest: join(ROOT, name, 'expected.tmj'),
+      metaPath,
       ...(meta.region !== undefined ? { region: meta.region } : {}),
     });
+  }
+  return jobs;
+}
+
+// The proving set's goldens run in a project with its images; Tiled writes there, so the image
+// paths in its output stay relative to a project root.
+async function officeJobsFor(only: string[], project: OfficeProject): Promise<Job[]> {
+  const jobs: Job[] = [];
+  for (const dir of (await readdir(OFFICE_GOLDENS_DIR).catch(() => [] as string[])).sort()) {
+    const name = `office/${dir}`;
+    const metaPath = join(OFFICE_GOLDENS_DIR, dir, 'fixture.json');
+    if (!existsSync(metaPath) || (only.length > 0 && !only.includes(name))) continue;
+    const map = join(project.dir, `${dir}.tmj`);
+    await copyFile(join(OFFICE_GOLDENS_DIR, dir, 'map.tmj'), map);
+    jobs.push({ name, map, rules: join(project.dir, OFFICE_RULES), out: join(project.dir, `${dir}.expected.tmj`), dest: join(OFFICE_GOLDENS_DIR, dir, 'expected.tmj'), metaPath });
   }
   return jobs;
 }
@@ -126,10 +157,26 @@ async function main(): Promise<void> {
   if (versionRun.error !== undefined || !/^Tiled 1\.12\./.test(version)) throw new Error(`expected Tiled 1.12.x at ${TILED}, found "${version || String(versionRun.error)}"`);
   if (spawnSync('pgrep', ['-x', 'Tiled']).status === 0) throw new Error('Tiled is running: close it first, it would run the capture too');
 
-  const jobs = await jobsFor(process.argv.slice(2));
+  const only = process.argv.slice(2);
+  const jobs = await jobsFor(only);
+  // The proving set's goldens need the starter-kit images: only set up when they are wanted.
+  if (only.length === 0 || only.some((n) => n.startsWith('office/'))) {
+    const office = await makeOfficeProject();
+    temporary.push(office.dir);
+    jobs.push(...(await officeJobsFor(only, office)));
+  }
+  try {
+    await capture(version, jobs);
+  } finally {
+    removeTemporary();
+  }
+}
+
+async function capture(version: string, jobs: Job[]): Promise<void> {
   let work: string | undefined;
   try {
     work = await mkdtemp(join(tmpdir(), 'wa-automap-capture-'));
+    temporary.push(work);
     trigger = join(work, 'trigger');
     const jobsPath = join(work, 'jobs.json');
     const done = join(work, 'done');
@@ -150,7 +197,7 @@ async function main(): Promise<void> {
     })();
     await Promise.race([finished, launchError]);
   } finally {
-    cleanup();
+    stopTiled();
     if (work !== undefined) await rm(work, { recursive: true, force: true });
   }
 
@@ -175,11 +222,11 @@ async function main(): Promise<void> {
     return;
   }
   for (const job of jobs) {
-    await rename(job.out, join(dirname(job.out), 'expected.tmj'));
-    const metaPath = join(dirname(job.out), 'fixture.json');
-    const meta = JSON.parse(await readFile(metaPath, 'utf8')) as Meta;
+    await copyFile(job.out, job.dest);
+    await rm(job.out, { force: true });
+    const meta = JSON.parse(await readFile(job.metaPath, 'utf8')) as Meta;
     meta.capturedInputsHash = meta.inputsHash;
-    await writeFile(metaPath, `${JSON.stringify(meta, null, 1)}\n`);
+    await writeFile(job.metaPath, `${JSON.stringify(meta, null, 1)}\n`);
   }
   console.log(`${version}: captured ${jobs.length} of ${jobs.length} fixtures`);
 }

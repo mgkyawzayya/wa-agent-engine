@@ -1,0 +1,6 @@
+{
+ "description": "The sketch of rooms/door-in-shared-wall.json before the rules run: A vertical door in a shared wall, declared from both rooms: 11/36/61, and the door takes the east room's floor.",
+ "source": "rooms/door-in-shared-wall.json",
+ "inputsHash": "ef19169c151918a2a9faf596c67dd2c005841106dd46ee9d67dc8b986480fb3c",
+ "capturedInputsHash": "ef19169c151918a2a9faf596c67dd2c005841106dd46ee9d67dc8b986480fb3c"
+}

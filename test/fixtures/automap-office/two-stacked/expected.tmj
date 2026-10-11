@@ -1,0 +1,642 @@
+{ "compressionlevel":-1,
+ "height":13,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            2, 0, 0, 0, 0, 0, 0, 0],
+         "height":13,
+         "id":1,
+         "name":"start",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":8,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[3, 3, 3, 3, 3, 3, 0, 0,
+            3, 3, 3, 3, 3, 3, 0, 0,
+            3, 3, 3, 3, 3, 3, 0, 0,
+            3, 0, 0, 0, 0, 3, 0, 0,
+            3, 0, 0, 0, 0, 3, 0, 0,
+            3, 3, 3, 3, 3, 3, 0, 0,
+            3, 3, 3, 3, 3, 3, 0, 0,
+            3, 3, 3, 3, 3, 3, 0, 0,
+            3, 0, 0, 0, 0, 3, 0, 0,
+            3, 0, 0, 0, 0, 3, 0, 0,
+            3, 3, 3, 3, 3, 3, 0, 0,
+            3, 3, 3, 3, 3, 3, 0, 0,
+            3, 3, 3, 3, 3, 3, 0, 0],
+         "height":13,
+         "id":2,
+         "name":"collisions",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":8,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[1013, 1013, 1013, 1013, 1013, 1013, 0, 0,
+            1013, 1015, 1015, 1015, 1015, 1013, 0, 0,
+            1013, 1015, 1015, 1015, 1015, 1013, 0, 0,
+            1013, 1015, 1015, 1015, 1015, 1013, 0, 0,
+            1013, 1015, 1015, 1015, 1015, 1013, 0, 0,
+            1013, 1013, 1013, 1013, 1013, 1013, 0, 0,
+            1013, 1015, 1015, 1015, 1015, 1013, 0, 0,
+            1013, 1015, 1015, 1015, 1015, 1013, 0, 0,
+            1013, 1015, 1015, 1015, 1015, 1013, 0, 0,
+            1013, 1015, 1015, 1015, 1015, 1013, 0, 0,
+            1013, 1013, 1013, 1013, 1013, 1013, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0],
+         "height":13,
+         "id":3,
+         "name":"wa_sketch",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":false,
+         "width":8,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0,
+            0, 1019, 1019, 1019, 1019, 0, 0, 0,
+            0, 1019, 1019, 1019, 1019, 0, 0, 0,
+            0, 1019, 1019, 1019, 1019, 0, 0, 0,
+            0, 1019, 1019, 1019, 1019, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 1019, 1019, 1019, 1019, 0, 0, 0,
+            0, 1019, 1019, 1019, 1019, 0, 0, 0,
+            0, 1019, 1019, 1019, 1019, 0, 0, 0,
+            0, 1019, 1019, 1019, 1019, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0],
+         "height":13,
+         "id":4,
+         "name":"wa_style",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":false,
+         "width":8,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0,
+            0, 363, 363, 363, 363, 0, 0, 0,
+            0, 363, 363, 363, 363, 0, 0, 0,
+            0, 363, 363, 363, 363, 0, 0, 0,
+            0, 363, 363, 363, 363, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 363, 363, 363, 363, 0, 0, 0,
+            0, 363, 363, 363, 363, 0, 0, 0,
+            0, 363, 363, 363, 363, 0, 0, 0,
+            0, 363, 363, 363, 363, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0],
+         "height":13,
+         "id":5,
+         "name":"floor",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":8,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[41, 117, 117, 117, 117, 42, 0, 0,
+            115, 216, 216, 216, 216, 115, 0, 0,
+            115, 241, 241, 241, 241, 115, 0, 0,
+            115, 0, 0, 0, 0, 115, 0, 0,
+            115, 0, 0, 0, 0, 115, 0, 0,
+            121, 117, 117, 117, 117, 171, 0, 0,
+            115, 216, 216, 216, 216, 115, 0, 0,
+            115, 241, 241, 241, 241, 115, 0, 0,
+            115, 0, 0, 0, 0, 115, 0, 0,
+            115, 0, 0, 0, 0, 115, 0, 0,
+            66, 117, 117, 117, 117, 67, 0, 0,
+            323, 323, 323, 323, 323, 323, 0, 0,
+            323, 323, 323, 323, 323, 323, 0, 0],
+         "height":13,
+         "id":6,
+         "name":"walls",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":8,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "id":10,
+         "layers":[
+                {
+                 "data":[0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0],
+                 "height":13,
+                 "id":7,
+                 "name":"furniture1",
+                 "opacity":1,
+                 "type":"tilelayer",
+                 "visible":true,
+                 "width":8,
+                 "x":0,
+                 "y":0
+                }, 
+                {
+                 "data":[0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0],
+                 "height":13,
+                 "id":8,
+                 "name":"furniture2",
+                 "opacity":1,
+                 "type":"tilelayer",
+                 "visible":true,
+                 "width":8,
+                 "x":0,
+                 "y":0
+                }, 
+                {
+                 "data":[0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0],
+                 "height":13,
+                 "id":9,
+                 "name":"furniture3",
+                 "opacity":1,
+                 "type":"tilelayer",
+                 "visible":true,
+                 "width":8,
+                 "x":0,
+                 "y":0
+                }],
+         "name":"furniture",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":11,
+         "name":"floorLayer",
+         "objects":[],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":14,
+         "layers":[
+                {
+                 "data":[0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0],
+                 "height":13,
+                 "id":12,
+                 "name":"foreground1",
+                 "opacity":1,
+                 "type":"tilelayer",
+                 "visible":true,
+                 "width":8,
+                 "x":0,
+                 "y":0
+                }, 
+                {
+                 "data":[0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0],
+                 "height":13,
+                 "id":13,
+                 "name":"foreground2",
+                 "opacity":1,
+                 "type":"tilelayer",
+                 "visible":true,
+                 "width":8,
+                 "x":0,
+                 "y":0
+                }],
+         "name":"foreground",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":15,
+         "name":"wa_zones",
+         "objects":[],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":16,
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.12.2",
+ "tileheight":32,
+ "tilesets":[
+        {
+         "columns":6,
+         "firstgid":1,
+         "image":"tilesets\/WA_Special_Zones.png",
+         "imageheight":64,
+         "imagewidth":192,
+         "margin":0,
+         "name":"WA_Special_Zones",
+         "properties":[
+                {
+                 "name":"tilesetCopyright",
+                 "type":"string",
+                 "value":"WorkAdventure (https:\/\/workadventu.re) - WorkAdventure specific resources license: https:\/\/github.com\/workadventure\/map-starter-kit\/blob\/1143646a9c02c3928eac4acbb123642c62a48a85\/LICENSE.assets"
+                }],
+         "spacing":0,
+         "tilecount":12,
+         "tileheight":32,
+         "tiles":[
+                {
+                 "id":2,
+                 "properties":[
+                        {
+                         "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }],
+         "tilewidth":32
+        }, 
+        {
+         "columns":25,
+         "firstgid":13,
+         "image":"tilesets\/WA_Room_Builder.png",
+         "imageheight":1280,
+         "imagewidth":800,
+         "margin":0,
+         "name":"WA_Room_Builder",
+         "properties":[
+                {
+                 "name":"tilesetCopyright",
+                 "type":"string",
+                 "value":"WorkAdventure (https:\/\/workadventu.re) - WorkAdventure specific resources license: https:\/\/github.com\/workadventure\/map-starter-kit\/blob\/1143646a9c02c3928eac4acbb123642c62a48a85\/LICENSE.assets"
+                }],
+         "spacing":0,
+         "tilecount":1000,
+         "tileheight":32,
+         "tilewidth":32,
+         "wangsets":[
+                {
+                 "colors":[
+                        {
+                         "color":"#2b2f30",
+                         "name":"wall",
+                         "probability":1,
+                         "tile":104
+                        }, 
+                        {
+                         "color":"#edc489",
+                         "name":"door",
+                         "probability":1,
+                         "tile":64
+                        }],
+                 "name":"walls",
+                 "tile":104,
+                 "type":"edge",
+                 "wangtiles":[
+                        {
+                         "tileid":11,
+                         "wangid":[1, 0, 0, 0, 2, 0, 0, 0]
+                        }, 
+                        {
+                         "tileid":28,
+                         "wangid":[0, 0, 1, 0, 1, 0, 0, 0]
+                        }, 
+                        {
+                         "tileid":29,
+                         "wangid":[0, 0, 0, 0, 1, 0, 1, 0]
+                        }, 
+                        {
+                         "tileid":31,
+                         "wangid":[0, 0, 0, 0, 1, 0, 0, 0]
+                        }, 
+                        {
+                         "tileid":36,
+                         "wangid":[2, 0, 0, 0, 2, 0, 0, 0]
+                        }, 
+                        {
+                         "tileid":53,
+                         "wangid":[1, 0, 1, 0, 0, 0, 0, 0]
+                        }, 
+                        {
+                         "tileid":54,
+                         "wangid":[1, 0, 0, 0, 0, 0, 1, 0]
+                        }, 
+                        {
+                         "tileid":56,
+                         "wangid":[1, 0, 0, 0, 0, 0, 0, 0]
+                        },
+                    
+                        {
+                         "tileid":58,
+                         "wangid":[0, 0, 1, 0, 0, 0, 0, 0]
+                        }, 
+                        {
+                         "tileid":59,
+                         "wangid":[0, 0, 0, 0, 0, 0, 1, 0]
+                        }, 
+                        {
+                         "tileid":61,
+                         "wangid":[2, 0, 0, 0, 1, 0, 0, 0]
+                        }, 
+                        {
+                         "tileid":63,
+                         "wangid":[0, 0, 2, 0, 0, 0, 1, 0]
+                        }, 
+                        {
+                         "tileid":64,
+                         "wangid":[0, 0, 2, 0, 0, 0, 2, 0]
+                        }, 
+                        {
+                         "tileid":65,
+                         "wangid":[0, 0, 1, 0, 0, 0, 2, 0]
+                        }, 
+                        {
+                         "tileid":102,
+                         "wangid":[1, 0, 0, 0, 1, 0, 0, 0]
+                        }, 
+                        {
+                         "tileid":104,
+                         "wangid":[0, 0, 1, 0, 0, 0, 1, 0]
+                        },
+                    
+                        {
+                         "tileid":108,
+                         "wangid":[1, 0, 1, 0, 1, 0, 0, 0]
+                        }, 
+                        {
+                         "tileid":110,
+                         "wangid":[1, 0, 1, 0, 0, 0, 1, 0]
+                        }, 
+                        {
+                         "tileid":137,
+                         "wangid":[1, 0, 1, 0, 1, 0, 1, 0]
+                        }, 
+                        {
+                         "tileid":158,
+                         "wangid":[1, 0, 0, 0, 1, 0, 1, 0]
+                        }, 
+                        {
+                         "tileid":160,
+                         "wangid":[0, 0, 1, 0, 1, 0, 1, 0]
+                        }]
+                }]
+        }, 
+        {
+         "columns":4,
+         "firstgid":1013,
+         "image":"tilesets\/wa-markers.png",
+         "imageheight":128,
+         "imagewidth":128,
+         "margin":0,
+         "name":"wa-markers",
+         "properties":[
+                {
+                 "name":"tilesetCopyright",
+                 "type":"string",
+                 "value":"wa-agent-engine marker tiles (MIT): flat colours for automapping sketches"
+                }],
+         "spacing":0,
+         "tilecount":16,
+         "tileheight":32,
+         "tiles":[
+                {
+                 "id":0,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"red"
+                        }]
+                }, 
+                {
+                 "id":1,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"green"
+                        }]
+                }, 
+                {
+                 "id":2,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"yellow"
+                        }]
+                }, 
+                {
+                 "id":3,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"blue"
+                        }]
+                }, 
+                {
+                 "id":4,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"orange"
+                        }]
+                }, 
+                {
+                 "id":5,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"purple"
+                        }]
+                }, 
+                {
+                 "id":6,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"cyan"
+                        }]
+                }, 
+                {
+                 "id":7,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"magenta"
+                        }]
+                },
+            
+                {
+                 "id":8,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"lime"
+                        }]
+                }, 
+                {
+                 "id":9,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"pink"
+                        }]
+                }, 
+                {
+                 "id":10,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"teal"
+                        }]
+                }, 
+                {
+                 "id":11,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"lavender"
+                        }]
+                }, 
+                {
+                 "id":12,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"brown"
+                        }]
+                }, 
+                {
+                 "id":13,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"beige"
+                        }]
+                }, 
+                {
+                 "id":14,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"maroon"
+                        }]
+                }, 
+                {
+                 "id":15,
+                 "properties":[
+                        {
+                         "name":"colour",
+                         "type":"string",
+                         "value":"navy"
+                        }]
+                }],
+         "tilewidth":32
+        }],
+ "tilewidth":32,
+ "type":"map",
+ "version":"1.10",
+ "width":8
+}

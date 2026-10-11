@@ -230,6 +230,7 @@ What the rules see and write:
 - They may write `walls`, `floor`, `collisions`, `furniture1` to `furniture3`, `foreground1` and `foreground2`. Writing any other layer, or a tile from a tileset that `set.json` does not list (with the same image and tile size), fails the build with `ASSET_SET_INVALID`.
 - They draw collisions themselves: put the set's collision tile on `collisions` under every wall and wall face, or `validate_wa_map` reports `WALL_WITHOUT_COLLISION`.
 - Rule maps are Tiled JSON maps (`.tmj`) whose tilesets embed their images, which must be in the project. The marker tiles in a rule map must come from a tileset with the same image as the marker tileset (for `wa-markers`, `tilesets/wa-markers.png`).
+- Keep the special tiles (`MatchType` Empty, NonEmpty, Other, Ignore, Negate) in a tileset of their own, with its own image. A rule-map tileset with the same image, tile size and tile count as one of the map's tilesets counts as that tileset, in Tiled and in the engine, and its tiles' `MatchType` then comes from the map's copy: special tiles drawn with the marker image would turn into markers.
 - Walls and faces still follow the engine's room model: walls one tile thick, faces in the 2 rows under a wall whose south side is open. The engine treats those cells as solid and hangs north-wall prefabs on those face rows, whatever art the rules draw there.
 
 Checking a set drawn with rules:

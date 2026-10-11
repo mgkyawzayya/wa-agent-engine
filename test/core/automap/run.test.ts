@@ -2,7 +2,7 @@ import { copyFile, mkdir, readFile, realpath, symlink, unlink, writeFile } from 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import { automap, loadRules } from '../../../src/core/automap/index.js';
+import { automap, loadRules, resolveExternalTilesets } from '../../../src/core/automap/index.js';
 import { createRandom, RandomPicker } from '../../../src/core/automap/random.js';
 import { Region } from '../../../src/core/automap/region.js';
 import { readMap, serializeMap } from '../../../src/core/map-io.js';
@@ -203,14 +203,20 @@ describe('working maps and tilesets', () => {
     expect(() => automap(inf, rules, { mapFileName: 'map.tmj', mapAbs })).toThrow(expect.objectContaining({ code: 'AUTOMAP_UNSUPPORTED', details: { feature: 'infinite' } }));
   });
 
-  test('a map an external tileset the engine was told about compares by its source file', async () => {
+  test('an embedded rule tileset stands for a similar external tileset of the map, as in Tiled', async () => {
     const mapAbs = join(project.dir, 'm', 'map.tmj');
     const { map } = await readMap(mapAbs);
+    const colours = map.tilesets[0] as Record<string, unknown>;
+    // The same image and tiles as the rule map's embedded copy, in a .tsj next to the map.
+    await writeFile(join(project.dir, 'm', 'colours.tsj'), JSON.stringify({ ...colours, firstgid: undefined, type: 'tileset' }));
     map.tilesets = [{ firstgid: 1, source: 'colours.tsj' }];
     const rules = await loadRules(project.dir, join(project.dir, 'm', 'rules.txt'));
-    // An embedded rule tileset never equals an external one: nothing matches, nothing is added.
-    const report = automap(map, rules, { mapFileName: 'map.tmj', mapAbs, externalTilesets: { 'colours.tsj': { sourceAbs: join(project.dir, 'm', 'colours.tsj'), tilecount: 8 } } });
-    expect(report.changedCells).toBe(0);
+    const externalTilesets = await resolveExternalTilesets(project.dir, map, mapAbs);
+    expect(automap(structuredClone(map), rules, { mapFileName: 'map.tmj', mapAbs, externalTilesets }).changedCells).toBe(4);
+    // Told only the file, the engine cannot see the likeness: nothing matches, nothing is added.
+    const fileOnly = { 'colours.tsj': { ...externalTilesets['colours.tsj']!, similarity: undefined } };
+    const report = automap(map, rules, { mapFileName: 'map.tmj', mapAbs, externalTilesets: fileOnly });
+    expect([report.changedCells, map.tilesets.length]).toEqual([0, 1]);
   });
 });
 

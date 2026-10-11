@@ -1,0 +1,7 @@
+{
+ "description": "An embedded rule tileset stands for the map's external tileset with the same image",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "21bb27f4fe8502b5b9a53a17427db325a8b68b50a6971bc4645e741a4d5d15c9",
+ "capturedInputsHash": "21bb27f4fe8502b5b9a53a17427db325a8b68b50a6971bc4645e741a4d5d15c9"
+}

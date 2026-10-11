@@ -52,6 +52,8 @@ interface RuleMapDef {
   layers: LayerDef[];
   properties?: Prop[];
   ruleOptions?: RuleOptionsRect[];
+  // This rule map's copy of the rules tileset, with or without MatchType (default: the fixture's).
+  rulesTileset?: 'typed' | 'plain';
 }
 
 interface FixtureDef {
@@ -67,10 +69,15 @@ interface FixtureDef {
   mapFile?: string;
   // A partial run over this rectangle of tiles.
   region?: { x: number; y: number; width: number; height: number };
-  // The colour tileset is an external file (tilesets/colours.tsj) in the map and rule maps.
-  external?: boolean;
+  // The colour tileset is an external file (tilesets/colours.tsj) in the map and rule maps, or
+  // in the map only ('map').
+  external?: boolean | 'map';
   // Map layers placed inside a locked group layer.
   lockedGroup?: string[];
+  // The working map embeds the automap-rules tileset too, with or without its MatchType
+  // properties; the rule maps' copy can leave them out.
+  mapRules?: 'typed' | 'plain';
+  ruleMapRules?: 'typed' | 'plain';
 }
 
 const flags = (suffix: string): number =>
@@ -103,13 +110,13 @@ const colourFields = (image: string) => ({
 const colourTileset = (external: boolean) =>
   external ? { firstgid: COLOUR_FIRSTGID, source: '../tilesets/colours.tsj' } : { firstgid: COLOUR_FIRSTGID, ...colourFields('../tilesets/colours.png') };
 
-const rulesTileset = () => ({
+const rulesTileset = (typed: boolean) => ({
   columns: SPECIALS.length, firstgid: RULES_FIRSTGID, image: '../tilesets/rules.png', imageheight: 32, imagewidth: 32 * SPECIALS.length,
   margin: 0, name: 'automap-rules', spacing: 0, tilecount: SPECIALS.length, tileheight: 32, tilewidth: 32,
-  tiles: SPECIALS.map((match, id) => ({ id, properties: [{ name: 'MatchType', type: 'string', value: match }] })),
+  ...(typed ? { tiles: SPECIALS.map((match, id) => ({ id, properties: [{ name: 'MatchType', type: 'string', value: match }] })) } : {}),
 });
 
-function tmj(layers: LayerDef[], withRules: boolean, extra: { properties?: Prop[] | undefined; ruleOptions?: RuleOptionsRect[] | undefined; external?: boolean; lockedGroup?: string[] | undefined } = {}): unknown {
+function tmj(layers: LayerDef[], withRules: false | 'typed' | 'plain', extra: { properties?: Prop[] | undefined; ruleOptions?: RuleOptionsRect[] | undefined; external?: boolean; lockedGroup?: string[] | undefined } = {}): unknown {
   const { width, height } = size(layers);
   let id = 1;
   const out: unknown[] = layers.map((l) => {
@@ -142,7 +149,7 @@ function tmj(layers: LayerDef[], withRules: boolean, extra: { properties?: Prop[
     compressionlevel: -1, height, infinite: false, layers: out, nextlayerid: id, nextobjectid: objectId, orientation: 'orthogonal',
     ...(extra.properties !== undefined ? { properties: extra.properties } : {}),
     renderorder: 'right-down', tiledversion: '1.12.2', tileheight: 32,
-    tilesets: withRules ? [colourTileset(extra.external === true), rulesTileset()] : [colourTileset(extra.external === true)],
+    tilesets: withRules !== false ? [colourTileset(extra.external === true), rulesTileset(withRules === 'typed')] : [colourTileset(extra.external === true)],
     tilewidth: 32, type: 'map', version: '1.11', width,
   };
 }
@@ -424,7 +431,7 @@ const FIXTURES: FixtureDef[] = [
     }],
   },
   {
-    name: 'locked-group', description: 'A target layer inside a locked group is locked too',
+    name: 'locked-group', description: 'A locked group does not lock the layers in it: only a layer\'s own lock counts',
     map: [{ name: 'ground', rows: ['A.A'] }, { name: 'deco', rows: ['...'] }], lockedGroup: ['deco'],
     ruleMaps: [{ file: 'two.tmj', layers: [{ name: 'input_ground', rows: ['A'] }, { name: 'output_ground', rows: ['B'] }, { name: 'output_deco', rows: ['C'] }] }],
   },
@@ -432,7 +439,44 @@ const FIXTURES: FixtureDef[] = [
     name: 'external-tileset', description: 'Tiles of the same external tileset file match across the map and the rule map', external: true,
     map: [{ name: 'ground', rows: ['A.A'] }],
     ruleMaps: [AtoB()],
-  }
+  },
+  {
+    name: 'special-tileset-in-map',
+    description: 'The map has the rules tileset without MatchType: its tiles are plain tiles, so Empty is written and NonEmpty matches only that tile',
+    mapRules: 'plain',
+    map: [{ name: 'ground', rows: ['ACn'] }, { name: 'marks', rows: ['...'] }],
+    ruleMaps: [{ file: 'specials.tmj', layers: [{ name: 'input_ground', rows: ['A.n'] }, { name: 'output_ground', rows: ['e..'] }, { name: 'output_marks', rows: ['..D'] }] }],
+  },
+  {
+    name: 'external-map-embedded-rules', description: 'An embedded rule tileset stands for the map\'s external tileset with the same image', external: 'map',
+    map: [{ name: 'ground', rows: ['A.A'] }],
+    ruleMaps: [AtoB()],
+  },
+  {
+    name: 'special-types-from-earlier-rule-map',
+    description: 'The second rule map\'s rules tileset has no MatchType; it stands for the first rule map\'s copy, so Empty clears',
+    map: [{ name: 'ground', rows: ['AC.C'] }],
+    ruleMaps: [
+      AtoB('first.tmj'),
+      { file: 'second.tmj', rulesTileset: 'plain', layers: [{ name: 'input_ground', rows: ['C'] }, { name: 'output_ground', rows: ['e'] }] },
+    ],
+  },
+  {
+    name: 'other-with-types-from-map',
+    description: 'The map\'s typed copy makes the rule\'s plain tiles Empty and Other: Other refuses the Empty tile on its layer, so it needs a non-empty cell',
+    mapRules: 'typed',
+    ruleMapRules: 'plain',
+    map: [{ name: 'ground', rows: ['.A..'] }],
+    ruleMaps: [{ file: 'other.tmj', layers: [{ name: 'input_ground', rows: ['eo'] }, { name: 'output_ground', rows: ['.B'] }] }],
+  },
+  {
+    name: 'special-types-from-map',
+    description: 'The rule map\'s rules tileset has no MatchType but the map\'s copy has: the map\'s copy decides, so Empty clears',
+    mapRules: 'typed',
+    ruleMapRules: 'plain',
+    map: [{ name: 'ground', rows: ['A.A'] }],
+    ruleMaps: [{ file: 'empty.tmj', layers: [{ name: 'input_ground', rows: ['A'] }, { name: 'output_ground', rows: ['e'] }] }],
+  },
 ];
 
 async function writePng(path: string, colours: [number, number, number][]): Promise<void> {
@@ -477,9 +521,10 @@ async function main(): Promise<void> {
     // Tiled's captured output (expected.tmj) is kept; every input file is rewritten.
     for (const file of await readdir(dir)) if (file !== 'expected.tmj') await rm(join(dir, file), { force: true });
     const external = f.external === true;
-    await writeFile(join(dir, f.mapFile ?? 'map.tmj'), json(tmj(f.map, false, { external, lockedGroup: f.lockedGroup })));
+    await writeFile(join(dir, f.mapFile ?? 'map.tmj'), json(tmj(f.map, f.mapRules ?? false, { external: f.external !== undefined && f.external !== false, lockedGroup: f.lockedGroup })));
     for (const ruleMap of f.ruleMaps) {
-      await writeFile(join(dir, ruleMap.file), json(tmj(ruleMap.layers, true, { properties: ruleMap.properties, ruleOptions: ruleMap.ruleOptions, external })));
+      const rules = ruleMap.rulesTileset ?? f.ruleMapRules ?? 'typed';
+      await writeFile(join(dir, ruleMap.file), json(tmj(ruleMap.layers, rules, { properties: ruleMap.properties, ruleOptions: ruleMap.ruleOptions, external })));
     }
     await writeFile(join(dir, 'rules.txt'), f.rules ?? f.ruleMaps.map((r) => r.file).join('\n') + '\n');
     for (const [name, content] of Object.entries(f.extraFiles ?? {})) await writeFile(join(dir, name), content);

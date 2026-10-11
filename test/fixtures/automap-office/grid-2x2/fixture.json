@@ -1,0 +1,6 @@
+{
+ "description": "The sketch of rooms/grid-2x2.json before the rules run: Four rooms in a 2x2 grid: cross 137 at the shared centre.",
+ "source": "rooms/grid-2x2.json",
+ "inputsHash": "a948084f09ec1dabe6933fb21361f6e38ea322cfa45c8f17643a8298627177c8",
+ "capturedInputsHash": "a948084f09ec1dabe6933fb21361f6e38ea322cfa45c8f17643a8298627177c8"
+}

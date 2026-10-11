@@ -153,7 +153,7 @@ export function drawWithRules(
 
 type Mark = 'wall' | 'door';
 
-interface Probe {
+export interface CoverageProbe {
   name: string;
   role: TileRole;
   x: number;
@@ -164,7 +164,7 @@ interface Block {
   marks: [number, number, Mark | { floor: string }][];
   // Cells that get a wall style's marker on wa_style.
   styled?: { style: string; cells: [number, number][] };
-  probes: Probe[];
+  probes: CoverageProbe[];
 }
 
 // Each piece in its own 8x8 block, with room around it for the rules' input boxes and faces.
@@ -208,7 +208,7 @@ function coverageBlocks(set: LoadedAutomapSet): Block[] {
       marks: variants.map(([x]): [number, number, Mark] => [x, 2, 'wall']),
       ...(style === undefined ? {} : { styled: { style, cells: faces } }),
       probes: variants.flatMap(([x, variant]) =>
-        [1, 2].map((row): Probe => ({ name: `face ${label}, row ${row}, ${variant}`, role: 'walls', x, y: 2 + row })),
+        [1, 2].map((row): CoverageProbe => ({ name: `face ${label}, row ${row}, ${variant}`, role: 'walls', x, y: 2 + row })),
       ),
     });
   }
@@ -218,18 +218,27 @@ function coverageBlocks(set: LoadedAutomapSet): Block[] {
   return blocks;
 }
 
-// Runs the rules on a sketch of every wall pattern, door, face variant and floor style, and
-// returns the pieces they draw no tile for. Read-only: the sketch lives in memory.
-export async function drawingCoverage(set: LoadedAutomapSet, rules: RuleSet, projectDir: string, mapAbs: string): Promise<string[]> {
+export interface CoverageSketch {
+  // A map with the set's tilesets and one tile layer per role, named as in ROLE_LAYER_NAMES:
+  // the sketch painted, everything else empty.
+  map: TiledMap;
+  // Where each piece must get a tile, in map cells.
+  probes: CoverageProbe[];
+}
+
+// A sketch of every wall pattern, door, face variant and floor style the set's rules must
+// draw, each in its own block. Read-only: the map lives in memory.
+export async function coverageSketch(set: LoadedAutomapSet, projectDir: string, mapAbs: string): Promise<CoverageSketch> {
   const blocks = coverageBlocks(set);
   const width = BLOCK * Math.min(blocks.length, BLOCK_COLUMNS);
   const height = BLOCK * Math.ceil(blocks.length / BLOCK_COLUMNS);
-  const scratch = createEmptyMap(width, height);
-  await embedSetTilesets(projectDir, scratch, mapAbs, set);
-  const markers = scratch.tilesets.find((t) => !isExternalTileset(t) && t.name === set.drawing.markerTileset)!;
+  const map = createEmptyMap(width, height);
+  await embedSetTilesets(projectDir, map, mapAbs, set);
+  const markers = map.tilesets.find((t) => !isExternalTileset(t) && t.name === set.drawing.markerTileset)!;
   const { wall, door, floor, wallStyle } = set.drawing.markers;
   const sketch = new Uint32Array(width * height);
   const style = new Uint32Array(width * height);
+  const probes: CoverageProbe[] = [];
   blocks.forEach((block, i) => {
     const left = (i % BLOCK_COLUMNS) * BLOCK;
     const top = Math.floor(i / BLOCK_COLUMNS) * BLOCK;
@@ -237,13 +246,18 @@ export async function drawingCoverage(set: LoadedAutomapSet, rules: RuleSet, pro
       sketch[(top + y) * width + left + x] = markers.firstgid + (mark === 'wall' ? wall : mark === 'door' ? door : floor[mark.floor]!);
     }
     for (const [x, y] of block.styled?.cells ?? []) style[(top + y) * width + left + x] = markers.firstgid + wallStyle[block.styled!.style]!;
+    for (const p of block.probes) probes.push({ ...p, x: left + p.x, y: top + p.y });
   });
   const empty = new Uint32Array(width * height);
-  const run = drawWithRules(set, scratch, (role) => (role === 'sketch' ? sketch : role === 'sketchStyle' ? style : empty), rules, { mapAbs });
+  map.layers = TILE_ROLES.map((role, i) => scratchLayer(i + 1, ROLE_LAYER_NAMES[role], width, height, role === 'sketch' ? sketch : role === 'sketchStyle' ? style : empty));
+  map.nextlayerid = map.layers.length + 1;
+  return { map, probes };
+}
+
+// Runs the rules on the coverage sketch and returns the pieces they draw no tile for.
+export async function drawingCoverage(set: LoadedAutomapSet, rules: RuleSet, projectDir: string, mapAbs: string): Promise<string[]> {
+  const { map, probes } = await coverageSketch(set, projectDir, mapAbs);
+  const run = drawWithRules(set, map, (role) => readTileData(map.layers.find((l) => l.name === ROLE_LAYER_NAMES[role]) as TiledTileLayer), rules, { mapAbs });
   const drawn = new Set(run.changes.filter((c) => c.raw !== 0).map((c) => `${c.role}:${c.x}:${c.y}`));
-  return blocks.flatMap((block, i) => {
-    const left = (i % BLOCK_COLUMNS) * BLOCK;
-    const top = Math.floor(i / BLOCK_COLUMNS) * BLOCK;
-    return block.probes.filter((p) => !drawn.has(`${p.role}:${left + p.x}:${top + p.y}`)).map((p) => p.name);
-  });
+  return probes.filter((p) => !drawn.has(`${p.role}:${p.x}:${p.y}`)).map((p) => p.name);
 }

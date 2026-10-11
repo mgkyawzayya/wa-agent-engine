@@ -1,0 +1,6 @@
+{
+ "description": "The sketch of rooms/two-share-vertical.json before the rules run: Two rooms sharing one vertical wall column: T-junctions 160 (top) and 110 (bottom); the east room uses yellow faces.",
+ "source": "rooms/two-share-vertical.json",
+ "inputsHash": "38f517c54f752549c437bba029218ff3233f4c96eb4882d975c8213757705958",
+ "capturedInputsHash": "38f517c54f752549c437bba029218ff3233f4c96eb4882d975c8213757705958"
+}

@@ -1,0 +1,7 @@
+{
+ "description": "The map's typed copy makes the rule's plain tiles Empty and Other: Other refuses the Empty tile on its layer, so it needs a non-empty cell",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "c3dd9d09f407cc37cfeb02c3dae62baf9b23267db5e0fc24104eb6a746415036",
+ "capturedInputsHash": "c3dd9d09f407cc37cfeb02c3dae62baf9b23267db5e0fc24104eb6a746415036"
+}

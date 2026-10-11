@@ -58,6 +58,7 @@
     "prepack": "npm run build",
     "gen:prefabs": "tsx scripts/gen-prefab-reference.ts",
     "gen:markers": "tsx scripts/gen-markers.ts",
+    "verify:tiled": "tsx scripts/tiled-automap-capture.ts && vitest run test/core/automap/fixtures.test.ts test/core/automap/office-goldens.test.ts",
     "check-skills": "tsx scripts/check-skills.ts"
   },
   "dependencies": {

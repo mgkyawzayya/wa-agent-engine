@@ -1,0 +1,7 @@
+{
+ "description": "The map has the rules tileset without MatchType: its tiles are plain tiles, so Empty is written and NonEmpty matches only that tile",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "d47092b83169821cf9406b15863bf2098f22a70ff9f1e370e3626597745302df",
+ "capturedInputsHash": "d47092b83169821cf9406b15863bf2098f22a70ff9f1e370e3626597745302df"
+}

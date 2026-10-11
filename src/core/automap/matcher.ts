@@ -61,6 +61,8 @@ export interface MatchEnv {
   resolveInput(name: string): CellSource | undefined;
   // The working-map raw value (gid and flags) of a literal rule tile.
   literal(ruleMap: RuleMap, cell: Extract<RuleCell, { kind: 'tile' }>): number;
+  // A rule cell as this run reads it (see AutomapRun.cell).
+  cell(ruleMap: RuleMap, cell: RuleCell): RuleCell;
 }
 
 // Every literal and Empty tile on the `input` layers of one index and target, inside the
@@ -69,7 +71,7 @@ function collectInputCells(ruleMap: RuleMap, rule: RuleDef, list: InputLayerDef[
   const cells: MatchCell[] = [];
   for (const layer of list) {
     for (const [x, y] of rule.inputCells) {
-      const c = layer.grid.cells[y * ruleMap.width + x]!;
+      const c = env.cell(ruleMap, layer.grid.cells[y * ruleMap.width + x]!);
       if (c.kind === 'tile') appendUnique(cells, { empty: false, raw: env.literal(ruleMap, c), mask: layer.flagsMask });
       else if (c.kind === 'special' && c.match === 'Empty') appendUnique(cells, EMPTY);
     }
@@ -107,7 +109,7 @@ function compileInputSet(ruleMap: RuleMap, rule: RuleDef, set: InputSetDef, env:
       let negate = false;
       const index = y * ruleMap.width + x;
       const visit = (layer: InputLayerDef, yes: boolean): void => {
-        const c = layer.grid.cells[index]!;
+        const c = env.cell(ruleMap, layer.grid.cells[index]!);
         const accept = yes ? any : none;
         const refuse = yes ? none : any;
         if (c.kind === 'none') {

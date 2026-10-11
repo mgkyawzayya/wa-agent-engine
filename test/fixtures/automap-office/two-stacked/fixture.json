@@ -1,0 +1,6 @@
+{
+ "description": "The sketch of rooms/two-stacked.json before the rules run: Two rooms sharing one horizontal wall: side T-junctions 108 and 158; the shared wall faces into the south room.",
+ "source": "rooms/two-stacked.json",
+ "inputsHash": "d78f6878c8bd45b2e0710878824bbfd3f778e511edb101a34b026d2c99460095",
+ "capturedInputsHash": "d78f6878c8bd45b2e0710878824bbfd3f778e511edb101a34b026d2c99460095"
+}

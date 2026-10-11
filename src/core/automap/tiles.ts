@@ -1,16 +1,19 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, relative, sep } from 'node:path';
-import type { AutomapOptions, ExternalTilesetInfo, RuleTileset } from '../../schemas/automap.schema.js';
+import type { AutomapOptions, ExternalTilesetInfo, MatchKind, RuleTileset } from '../../schemas/automap.schema.js';
 import { isExternalTileset, TiledTilesetFileSchema, type TiledEmbeddedTileset, type TiledMap } from '../../schemas/tiled.schema.js';
 import { WaEngineError } from '../errors.js';
 import { tileCountKnown } from '../gid.js';
 import { resolveMapRelative } from '../project-paths.js';
 import { FILE_ONLY_KEYS } from '../tileset-embed.js';
-import { GID_MASK, tilesetIdentity } from './cells.js';
+import { GID_MASK, matchTypesOf, tilesetIdentity } from './cells.js';
 
-// Rule-map tiles are matched to working-map tiles by tileset identity plus local id, never by
-// raw gid or tileset name: Tiled compares tilesets as "the same external file" or "similar
-// embedded tilesets" (same image, tile size, tile count, margin, spacing and offset).
+// Rule-map tiles are matched to working-map tiles by tileset plus local id, never by raw gid or
+// tileset name, as Tiled's unifyTilesets does: an external rule-map tileset is the working
+// map's tileset from the same file, and an embedded one is the first "similar" tileset (same
+// image, tile size, tile count, margin, spacing and offset; embedded or external) of the working
+// map, or else of the tilesets earlier rule maps bring. The rule-map tileset then is that
+// tileset, tile properties (MatchType) included.
 
 // Gids handed out for tilesets the working map does not have yet start here (or above the
 // map's own tilesets) and are renumbered when the tilesets are added at the end of a run.
@@ -18,18 +21,20 @@ const PROVISIONAL_BASE = 0x08000000;
 // Room left for an external tileset whose size is unknown.
 const UNKNOWN_EXTERNAL_SIZE = 0x10000;
 
-interface WorkingTileset {
+// A tileset rule-map tilesets can stand for: its identities (file and image) and its MatchTypes.
+interface Candidate {
   firstgid: number;
-  identity: string | undefined;
+  ids: string[];
+  matchTypes: ReadonlyMap<number, MatchKind>;
 }
 
-interface Provisional {
-  identity: string;
-  firstgid: number;
+interface Provisional extends Candidate {
   tilecount: number;
   source: RuleTileset;
   order: number;
 }
+
+const idsOf = (...ids: (string | undefined)[]): string[] => [...new Set(ids.filter((id): id is string => id !== undefined))];
 
 // Reads the working map's external JSON tilesets for the core (which is synchronous). XML
 // tilesets are left out: their tiles cannot be compared, and adding a tileset to such a map
@@ -42,7 +47,9 @@ export async function resolveExternalTilesets(projectDir: string, map: TiledMap,
       const sourceAbs = await resolveMapRelative(projectDir, mapAbs, ts.source, { ext: ['.tsj', '.json'] });
       const file = TiledTilesetFileSchema.parse(JSON.parse(await readFile(sourceAbs, 'utf8')));
       const tilecount = tileCountKnown({ ...file, firstgid: 1 });
-      if (tilecount !== undefined) out[ts.source] = { sourceAbs, tilecount };
+      if (tilecount !== undefined) {
+        out[ts.source] = { sourceAbs, tilecount, similarity: tilesetIdentity(file, dirname(sourceAbs)), matchTypes: Object.fromEntries(matchTypesOf(file)) };
+      }
     } catch {
       // Unreadable: its tiles never match, and no tileset can be added after it.
     }
@@ -53,8 +60,8 @@ export async function resolveExternalTilesets(projectDir: string, map: TiledMap,
 export class TileTranslator {
   private readonly map: TiledMap;
   private readonly options: AutomapOptions;
-  private readonly working: WorkingTileset[];
-  private readonly provisional = new Map<string, Provisional>();
+  private readonly working: Candidate[];
+  private readonly provisional: Provisional[] = [];
   private nextProvisional: number;
 
   constructor(map: TiledMap, options: AutomapOptions) {
@@ -66,45 +73,62 @@ export class TileTranslator {
       if (isExternalTileset(ts)) {
         const info = options.externalTilesets?.[ts.source];
         end = Math.max(end, ts.firstgid + (info?.tilecount ?? UNKNOWN_EXTERNAL_SIZE));
-        return { firstgid: ts.firstgid, identity: info === undefined ? `unresolved:${ts.source}` : `source:${info.sourceAbs}` };
+        const matchTypes = new Map(Object.entries(info?.matchTypes ?? {}).map(([id, m]): [number, MatchKind] => [Number(id), m]));
+        const ids = info === undefined ? [`unresolved:${ts.source}`] : idsOf(`source:${info.sourceAbs}`, info.similarity);
+        return { firstgid: ts.firstgid, ids, matchTypes };
       }
       end = Math.max(end, ts.firstgid + Math.max(tileCountKnown(ts) ?? 0, 1));
-      return { firstgid: ts.firstgid, identity: tilesetIdentity(ts, mapDir) };
+      return { firstgid: ts.firstgid, ids: idsOf(tilesetIdentity(ts, mapDir)), matchTypes: matchTypesOf(ts) };
     });
     this.nextProvisional = Math.max(PROVISIONAL_BASE, end);
+  }
+
+  // The tileset a rule-map tileset stands for: the working map's first, then those of earlier
+  // rule maps, in order.
+  private find(ts: RuleTileset): Candidate | undefined {
+    const key = ts.identity;
+    if (key === undefined) return undefined;
+    return this.working.find((w) => w.ids.includes(key)) ?? this.provisional.find((p) => p.ids.includes(key));
   }
 
   // Registers a rule map's tilesets in run order, like Tiled's unifyTilesets in prepareAutoMap.
   register(tilesets: readonly RuleTileset[]): void {
     for (const ts of tilesets) {
-      if (ts.identity === undefined || ts.unusable !== undefined) continue;
-      if (this.working.some((w) => w.identity === ts.identity) || this.provisional.has(ts.identity)) continue;
-      const entry: Provisional = { identity: ts.identity, firstgid: this.nextProvisional, tilecount: Math.max(ts.tilecount, 1), source: ts, order: this.provisional.size };
+      if (ts.identity === undefined || ts.unusable !== undefined || this.find(ts) !== undefined) continue;
+      const entry: Provisional = {
+        firstgid: this.nextProvisional,
+        ids: idsOf(ts.identity, ts.similarity),
+        matchTypes: ts.matchTypes,
+        tilecount: Math.max(ts.tilecount, 1),
+        source: ts,
+        order: this.provisional.length,
+      };
       this.nextProvisional += entry.tilecount;
       if (this.nextProvisional > GID_MASK) throw new WaEngineError('AUTOMAP_RULES_INVALID', 'rule-map tilesets have too many tiles for this map', { tileset: ts.name });
-      this.provisional.set(ts.identity, entry);
+      this.provisional.push(entry);
     }
+  }
+
+  // The MatchType of a rule-map tileset's tiles: those of the tileset it stands for.
+  matchTypes(ts: RuleTileset): ReadonlyMap<number, MatchKind> {
+    return this.find(ts)?.matchTypes ?? ts.matchTypes;
   }
 
   // The working-map gid (without flags) of a rule-map tile.
   gid(ts: RuleTileset, localId: number): number {
-    const identity = ts.identity!;
-    const found = this.working.find((w) => w.identity === identity);
-    if (found !== undefined) return found.firstgid + localId;
-    const provisional = this.provisional.get(identity);
-    if (provisional === undefined) throw new WaEngineError('INTERNAL', `tileset "${ts.name}" was not registered`);
-    return provisional.firstgid + localId;
+    const found = this.find(ts);
+    if (found === undefined) throw new WaEngineError('INTERNAL', `tileset "${ts.name}" was not registered`);
+    return found.firstgid + localId;
   }
 
   isProvisional(gid: number): boolean {
-    for (const p of this.provisional.values()) if (gid >= p.firstgid && gid < p.firstgid + p.tilecount) return true;
-    return false;
+    return this.provisional.some((p) => gid >= p.firstgid && gid < p.firstgid + p.tilecount);
   }
 
   // Plans adding the provisional tilesets the result uses. Throws before anything is changed
   // when one cannot be added; `apply` then adds them.
   planCommit(usedGids: ReadonlySet<number>): { remap: (gid: number) => number; apply: () => void } {
-    const used = [...this.provisional.values()]
+    const used = this.provisional
       .filter((p) => [...usedGids].some((g) => g >= p.firstgid && g < p.firstgid + p.tilecount))
       .sort((a, b) => a.order - b.order);
     if (used.length === 0) return { remap: (g) => g, apply: () => {} };

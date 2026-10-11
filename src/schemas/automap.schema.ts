@@ -9,9 +9,11 @@ import type { Rect } from './dsl.schema.js';
 export type MatchKind = 'Empty' | 'NonEmpty' | 'Other' | 'Negate' | 'Ignore';
 
 // What one rule-map cell holds: nothing, a special tile, or a literal tile of a rule-map tileset.
+// A special tile keeps where it came from: when its tileset turns out to be the same as one the
+// working map has, that tileset's properties decide what it is (see TileTranslator.matchTypes).
 export type RuleCell =
   | { kind: 'none' }
-  | { kind: 'special'; match: MatchKind }
+  | { kind: 'special'; match: MatchKind; tileset: number; localId: number; flags: number }
   | { kind: 'tile'; tileset: number; localId: number; flags: number };
 
 // Options a rule takes from the map properties, then from `rule_options` rectangles.
@@ -102,11 +104,19 @@ export interface RuleTileset {
   name: string;
   firstgid: number;
   tilecount: number;
+  // How the tileset is found in a working map, as Tiled finds it: an external tileset by its
+  // file ("source:<real path>"), an embedded one by image, tile size, tile count, margin,
+  // spacing and offset (see tilesetIdentity).
   identity: string | undefined;
+  // For an external tileset, its file's image identity: an embedded tileset of a later rule map
+  // with that identity is replaced by this one. For an embedded tileset, its identity.
+  similarity: string | undefined;
   // The tileset as it would be embedded into a working map, with the image path absolute.
   embed: TiledTilesetFile | undefined;
   // Why the tileset cannot be used for literal tiles, when it cannot.
   unusable: string | undefined;
+  // The MatchType of its tiles that have one, by local id.
+  matchTypes: ReadonlyMap<number, MatchKind>;
 }
 
 export interface RuleMap {
@@ -150,6 +160,11 @@ export interface RuleSet {
 export interface ExternalTilesetInfo {
   sourceAbs: string;
   tilecount: number;
+  // Its file's image identity (see tilesetIdentity): an embedded rule-map tileset with this
+  // identity is replaced by this tileset, as Tiled does.
+  similarity: string | undefined;
+  // The MatchType of its tiles that have one, by local id.
+  matchTypes: Readonly<Record<number, MatchKind>>;
 }
 
 export interface AutomapOptions {

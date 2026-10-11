@@ -172,6 +172,7 @@ npm run typecheck
 npm run build
 npm run smoke           # runs the built CLI
 npm run check-skills    # checks the skills and these docs against the tool table
+npm run verify:tiled    # with Tiled 1.12 installed and closed, after fetch-assets: records Tiled's automapping output again, then compares the engine with it
 ```
 
-The tests use the cached starter kit and store only hashes of rendered images, never the images. To try a local build in an agent, `npm pack` and point the MCP command at the tarball: `npx -y --package=/absolute/path/wa-agent-engine-0.2.0.tgz wa-agent-engine mcp`.
+The tests use the cached starter kit and store only hashes of rendered images, never the images. The automapping tests compare the engine with Tiled 1.12's own output, recorded under `test/fixtures/automap/` and `test/fixtures/automap-office/`; `verify:tiled` opens the Tiled app for a moment to record it again over the committed `expected.tmj` files (set `TILED` to its binary if it is not in `/Applications`; `git diff` then shows any change in Tiled's output), and prints `skipped` without Tiled. To try a local build in an agent, `npm pack` and point the MCP command at the tarball: `npx -y --package=/absolute/path/wa-agent-engine-0.2.0.tgz wa-agent-engine mcp`.
