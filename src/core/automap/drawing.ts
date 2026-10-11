@@ -215,6 +215,25 @@ function coverageBlocks(set: LoadedAutomapSet): Block[] {
   for (const floor of Object.keys(set.drawing.markers.floor)) {
     blocks.push({ marks: [[3, 3, { floor }]], probes: [{ name: `floor ${floor}`, role: 'floor', x: 3, y: 3 }] });
   }
+  // Each floor on a door, from a room on one side only: horizontal doors with the room to the
+  // north and to the south, vertical ones with the room to the west and to the east.
+  for (const floor of Object.keys(set.drawing.markers.floor)) {
+    const doors: [string, [number, number], [number, number], [number, number]][] = [
+      ['north', [2, 2], [1, 0], [2, 1]],
+      ['south', [5, 1], [1, 0], [5, 2]],
+      ['west', [2, 5], [0, 1], [1, 5]],
+      ['east', [5, 5], [0, 1], [6, 5]],
+    ];
+    blocks.push({
+      marks: doors.flatMap(([, [x, y], [dx, dy], [fx, fy]]): Block['marks'] => [
+        [x - dx, y - dy, 'wall'],
+        [x, y, 'door'],
+        [x + dx, y + dy, 'wall'],
+        [fx, fy, { floor }],
+      ]),
+      probes: doors.map(([room, [x, y]]) => ({ name: `floor ${floor} on a door, room to the ${room}`, role: 'floor', x, y })),
+    });
+  }
   return blocks;
 }
 
@@ -226,8 +245,8 @@ export interface CoverageSketch {
   probes: CoverageProbe[];
 }
 
-// A sketch of every wall pattern, door, face variant and floor style the set's rules must
-// draw, each in its own block. Read-only: the map lives in memory.
+// A sketch of every wall pattern, door, face variant and floor style (on floors and on
+// doors) the set's rules must draw, each in its own block. Read-only: the map lives in memory.
 export async function coverageSketch(set: LoadedAutomapSet, projectDir: string, mapAbs: string): Promise<CoverageSketch> {
   const blocks = coverageBlocks(set);
   const width = BLOCK * Math.min(blocks.length, BLOCK_COLUMNS);

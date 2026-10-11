@@ -82,7 +82,7 @@ Write the tilesets and check the collision tile (steps 1 and 3 above) first, the
    Without `assetSet` the template has one wall style and one floor style, both `plain`. To get rules for several styles, pass an existing set with those styles as `assetSet`: a set drawn with rules keeps its markers, and any other set may have at most 14 floor styles. The tool refuses to replace the files (`MAP_EXISTS`) unless the user asks for `"overwrite": true`, which loses what they painted; it never replaces files it did not write.
 2. **Paint in Tiled.** The user opens `walls.tmj` in Tiled 1.12 or newer and paints their tiles into the output layers at each rule's anchor cell, as the written `README.md` explains: wall tops and faces on `output_walls` with the collision tile on `output_collisions`, lintels on `output_foreground1`, floors on `output_floor`, and each lintel once more over the Empty tile on `input1_foreground1` in the two rules that clear old lintels (a set without lintels leaves the Empty tiles). Each rule's rectangle on `rule_options` is named after its piece. The tool's `rules` output lists every anchor cell and the layers to paint there, which helps when you check the painted map.
 3. **Write set.json** with `drawing`: copy `markerTileset`, `markers`, `wallStyles` and `floorStyles` from the tool's output (the README shows the block; a floor style keeps its tile only when its tileset was in `tilesets`), set `drawing.rules` to the rules file relative to `set.json` (`automap/rules.txt` for the command above), and add the tilesets with their copyright, `collisionTile`, `startTile`, `mapCopyright` and any prefabs. Leave out `wallTerrain`, `doorLintelTiles` and `faceRules`.
-4. **Prove the set** with the steps of section 4. The coverage check names the wall tops, lintels, faces and floors the rules draw nothing for with the name of the rectangle in `walls.tmj`. It does not cover the floors of doors or the walls between two doors, so check those in the render.
+4. **Prove the set** with the steps of section 4. The coverage check names the wall tops, lintels, faces, floors and door floors the rules draw nothing for with the name of the rectangle in `walls.tmj`. It does not cover the walls between two doors, which rooms need only beside a door drawn by hand, so check those in the render.
 
 ## 4. Prove the set
 
@@ -97,7 +97,7 @@ Run these checks in order, and fix each problem before going on.
 
 `validate_wa_map` alone does not prove a set: when the set fails to load, it only warns `ASSET_SET_NOT_FOUND` and skips the coverage and wall checks. Always scaffold and build with the set too.
 
-For a set drawn with automapping rules, the coverage check runs the rules on every wall pattern, lintel, face variant and floor style, and names the pieces they draw nothing for (`face of wall style white, row 2, open east`). `WALL_PIECE_MISSING` does not apply: a piece the rules miss is simply not drawn, so look at the render.
+For a set drawn with automapping rules, the coverage check runs the rules on every wall pattern, lintel, face variant and floor style, and on each floor style's doors, and names the pieces they draw nothing for (`face of wall style white, row 2, open east`). `WALL_PIECE_MISSING` does not apply: a piece the rules miss is simply not drawn, so look at the render.
 
 ## Worked example
 

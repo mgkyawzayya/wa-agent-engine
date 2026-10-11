@@ -362,6 +362,6 @@ ${setJson}
 
 ## 3. Prove the set
 
-Follow section 4 of the wa-asset-set-onboarding skill: scaffold a test map with the set, run \`validate_wa_map\` (its \`ASSET_SET_INCOMPLETE\` warning names the wall tops, lintels, faces and floors your rules draw nothing for, with the names of the rectangles here), build the test room, then render the map and look at it. The check does not cover the floors of doors or the walls between two doors: look for those in the render.
+Follow section 4 of the wa-asset-set-onboarding skill: scaffold a test map with the set, run \`validate_wa_map\` (its \`ASSET_SET_INCOMPLETE\` warning names the wall tops, lintels, faces, floors and door floors your rules draw nothing for, with the names of the rectangles here), build the test room, then render the map and look at it. The check does not cover the walls between two doors, which rooms need only beside a door drawn by hand.
 `;
 }

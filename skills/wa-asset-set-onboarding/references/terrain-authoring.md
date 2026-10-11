@@ -237,7 +237,7 @@ What the rules see and write:
 
 Checking a set drawn with rules:
 
-- `validate_wa_map` runs the rules on a sketch of every piece rooms can need: the 16 wall-neighbour patterns (`wall N1 E0 S1 W0`), the walls beside both kinds of door, both lintels, the 4 variants of both face rows for each wall style and outside rooms (`face of wall style white, row 1, open west`), and each floor style. Pieces the rules draw no tile for come back as an `ASSET_SET_INCOMPLETE` warning.
+- `validate_wa_map` runs the rules on a sketch of every piece rooms can need: the 16 wall-neighbour patterns (`wall N1 E0 S1 W0`), the walls beside both kinds of door, both lintels, the 4 variants of both face rows for each wall style and outside rooms (`face of wall style white, row 1, open west`), each floor style, and each floor style on doors with the room to the north, south, west or east (`floor wood-light on a door, room to the north`). Pieces the rules draw no tile for come back as an `ASSET_SET_INCOMPLETE` warning.
 - When the rules change after a map was built, `validate_wa_map` warns `ENGINE_STATE_INVALID`: build the rooms again to draw them with the new rules.
 - A set that extends a set with `drawing` draws with its rules. Built-in sets cannot use `drawing`.
 

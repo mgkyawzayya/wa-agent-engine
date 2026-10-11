@@ -124,7 +124,7 @@ describe('the written template', () => {
 
   test('before it is painted, every piece the coverage check names is a rule of the template', async () => {
     const missing = await coverage();
-    expect(missing.length).toBe(16 + 2 * 3 + 8 * 3 + 4);
+    expect(missing.length).toBe(16 + 2 * 3 + 8 * 3 + 4 + 4 * 4);
     const names = new Set(written.rules.map((r) => r.name));
     expect(missing.filter((m) => !names.has(m))).toEqual([]);
   });
