@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { TOOLS } from '../../src/tools/registry.js';
+import { VERSION } from '../../src/version.js';
 import { makeFullProject, type TempProject } from '../helpers/project.js';
 
 // Every CLI example in the map-design skill runs, in the order the docs give, and every
@@ -10,7 +11,8 @@ import { makeFullProject, type TempProject } from '../helpers/project.js';
 
 const SKILL = fileURLToPath(new URL('../../skills/wa-map-design/', import.meta.url));
 const PLACEHOLDER = '/path/to/map-starter-kit';
-const COMMAND = /npx -y wa-agent-engine@0\.2\.0 ([a-z]+) (?:--input '([\s\S]*?)'|--input-file (\S+))/g;
+// Pinned to this package's version, as the docs are.
+const COMMAND = new RegExp(`npx -y wa-agent-engine@${VERSION.replaceAll('.', '\\.')} ([a-z]+) (?:--input '([\\s\\S]*?)'|--input-file (\\S+))`, 'g');
 
 interface Step {
   command: string;

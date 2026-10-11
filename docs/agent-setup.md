@@ -7,11 +7,11 @@ wa-agent-engine reaches an agent in two ways:
   - `wa-map-design` turns a venue brief into a validated map;
   - `wa-asset-set-onboarding` describes a new tileset for the engine.
 
-An agent that can run shell commands can also use the CLI (`npx -y wa-agent-engine@0.2.0 <command> --input '<json>'`) without MCP. The skills explain both ways.
+An agent that can run shell commands can also use the CLI (`npx -y wa-agent-engine@0.3.0 <command> --input '<json>'`) without MCP. The skills explain both ways.
 
 Every tool call takes `projectDir`, the absolute path of your WorkAdventure map project (the folder with `tilesets/`). Agents start the server from different working directories, so the server never guesses the project from its own location.
 
-Setup has three steps: make sure agents find Node.js 26, register the MCP server, and install the skills. When several agents work on the same map project, give them all the same engine version: a map built by a newer version may keep information an older one drops. Always pin the version (`@0.2.0`, `v0.2.0`), as the snippets do, so an update never changes a working setup by surprise.
+Setup has three steps: make sure agents find Node.js 26, register the MCP server, and install the skills. When several agents work on the same map project, give them all the same engine version: a map built by a newer version may keep information an older one drops. Always pin the version (`@0.3.0`, `v0.3.0`), as the snippets do, so an update never changes a working setup by surprise.
 
 ## 1. Node version
 
@@ -24,7 +24,7 @@ nvm install 26
 nvm alias default 26
 ```
 
-If an agent still starts an older Node, give it the Node 26 binary explicitly. With the package installed globally (`npm install -g wa-agent-engine@0.2.0` under Node 26), the server command becomes:
+If an agent still starts an older Node, give it the Node 26 binary explicitly. With the package installed globally (`npm install -g wa-agent-engine@0.3.0` under Node 26), the server command becomes:
 
 ```json
 { "command": "/Users/you/.nvm/versions/node/v26.11.1/bin/node", "args": ["/Users/you/.nvm/versions/node/v26.11.1/bin/wa-agent-engine", "mcp"] }
@@ -37,20 +37,20 @@ The first start downloads the package with `npx`, which can take a few seconds.
 ### Claude Code
 
 ```bash
-claude mcp add --transport stdio --scope user wa-agent-engine -- npx -y wa-agent-engine@0.2.0 mcp
+claude mcp add --transport stdio --scope user wa-agent-engine -- npx -y wa-agent-engine@0.3.0 mcp
 claude mcp list        # wa-agent-engine: … - ✔ Connected
 ```
 
 For one project only, put this in `.mcp.json` at the project root instead:
 
 ```json
-{ "mcpServers": { "wa-agent-engine": { "type": "stdio", "command": "npx", "args": ["-y", "wa-agent-engine@0.2.0", "mcp"] } } }
+{ "mcpServers": { "wa-agent-engine": { "type": "stdio", "command": "npx", "args": ["-y", "wa-agent-engine@0.3.0", "mcp"] } } }
 ```
 
 ### Codex
 
 ```bash
-codex mcp add wa-agent-engine -- npx -y wa-agent-engine@0.2.0 mcp
+codex mcp add wa-agent-engine -- npx -y wa-agent-engine@0.3.0 mcp
 codex mcp list         # wa-agent-engine … enabled
 ```
 
@@ -59,7 +59,7 @@ Or add this to `~/.codex/config.toml` (or `.codex/config.toml` in a trusted proj
 ```toml
 [mcp_servers.wa-agent-engine]
 command = "npx"
-args = ["-y", "wa-agent-engine@0.2.0", "mcp"]
+args = ["-y", "wa-agent-engine@0.3.0", "mcp"]
 startup_timeout_sec = 60
 ```
 
@@ -70,7 +70,7 @@ startup_timeout_sec = 60
 Put this in `~/.cursor/mcp.json` (all projects) or `.cursor/mcp.json` (one project):
 
 ```json
-{ "mcpServers": { "wa-agent-engine": { "type": "stdio", "command": "npx", "args": ["-y", "wa-agent-engine@0.2.0", "mcp"] } } }
+{ "mcpServers": { "wa-agent-engine": { "type": "stdio", "command": "npx", "args": ["-y", "wa-agent-engine@0.3.0", "mcp"] } } }
 ```
 
 Check it with the Cursor Agent CLI:
@@ -85,28 +85,28 @@ cursor-agent mcp list-tools wa-agent-engine    # the tools and their arguments
 Pi's default `codemode` exposure wraps MCP tools in code. `direct` makes the tools first-class:
 
 ```bash
-pi mcp add wa-agent-engine --exposure direct -- npx -y wa-agent-engine@0.2.0 mcp
+pi mcp add wa-agent-engine --exposure direct -- npx -y wa-agent-engine@0.3.0 mcp
 pi mcp list            # wa-agent-engine: connected, 9 tools (direct, global)
 ```
 
 The same in `~/.pi/agent/mcp.json`, or in `.pi/mcp.json` in a trusted project (`pi mcp add -l` writes there):
 
 ```json
-{ "mcpServers": { "wa-agent-engine": { "command": "npx", "args": ["-y", "wa-agent-engine@0.2.0", "mcp"], "exposure": "direct" } } }
+{ "mcpServers": { "wa-agent-engine": { "command": "npx", "args": ["-y", "wa-agent-engine@0.3.0", "mcp"], "exposure": "direct" } } }
 ```
 
 ## 3. Install the skills
 
 ### With the skills CLI
 
-[`skills`](https://github.com/vercel-labs/skills) installs both skills from the `v0.2.0` release of this repository:
+[`skills`](https://github.com/vercel-labs/skills) installs both skills from the `v0.3.0` release of this repository:
 
 ```bash
 # for all your projects
-npx skills add https://github.com/mgkyawzayya/wa-agent-engine/tree/v0.2.0/skills --agent claude-code --global --yes
+npx skills add https://github.com/mgkyawzayya/wa-agent-engine/tree/v0.3.0/skills --agent claude-code --global --yes
 
 # for the current project only (writes .claude/skills/)
-npx skills add https://github.com/mgkyawzayya/wa-agent-engine/tree/v0.2.0/skills --agent claude-code --yes
+npx skills add https://github.com/mgkyawzayya/wa-agent-engine/tree/v0.3.0/skills --agent claude-code --yes
 ```
 
 Use `--agent codex`, `--agent cursor` or `--agent pi` for the other agents (several `--agent` flags are allowed). `--list` shows the skills without installing them.
@@ -126,7 +126,7 @@ For example, for Claude Code:
 
 ```bash
 cd "$(mktemp -d)"
-npm pack wa-agent-engine@0.2.0 && tar -xzf wa-agent-engine-0.2.0.tgz
+npm pack wa-agent-engine@0.3.0 && tar -xzf wa-agent-engine-0.3.0.tgz
 mkdir -p ~/.claude/skills
 cp -R package/skills/wa-map-design package/skills/wa-asset-set-onboarding ~/.claude/skills/
 ```

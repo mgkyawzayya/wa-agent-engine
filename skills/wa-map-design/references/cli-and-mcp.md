@@ -4,16 +4,16 @@ The engine has nine tools. The MCP server and the CLI are both built from one to
 
 ## Calling the tools
 
-**MCP.** When the `wa-agent-engine` MCP server is connected, call the tools by name with the input object as arguments. The server is started with `npx -y wa-agent-engine@0.2.0 mcp`, or `wa-agent-engine mcp` when the package is installed, and talks over stdio.
+**MCP.** When the `wa-agent-engine` MCP server is connected, call the tools by name with the input object as arguments. The server is started with `npx -y wa-agent-engine@0.3.0 mcp`, or `wa-agent-engine mcp` when the package is installed, and talks over stdio.
 
 **CLI.** Otherwise run the command with Node.js 26 or newer. With the package installed, `wa-agent-engine <command>` works the same as the `npx` form below:
 
 ```bash
-npx -y wa-agent-engine@0.2.0 <command> --input '<json>'
-npx -y wa-agent-engine@0.2.0 <command> --input-file <path.json>
-npx -y wa-agent-engine@0.2.0 <command> --input -
-npx -y wa-agent-engine@0.2.0 <command> --help
-npx -y wa-agent-engine@0.2.0 --help
+npx -y wa-agent-engine@0.3.0 <command> --input '<json>'
+npx -y wa-agent-engine@0.3.0 <command> --input-file <path.json>
+npx -y wa-agent-engine@0.3.0 <command> --input -
+npx -y wa-agent-engine@0.3.0 <command> --help
+npx -y wa-agent-engine@0.3.0 --help
 ```
 
 Pass the input exactly once: inline, from a file, or on stdin with `--input -`. `<command> --help` (or `-h`) prints the description and the input as a JSON Schema. On its own, `--help` lists the commands and `--version` (or `-v`) prints the version. Commands take no other flags.

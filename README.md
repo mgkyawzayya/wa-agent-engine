@@ -6,6 +6,7 @@ wa-agent-engine lets a coding agent such as Claude Code draw [WorkAdventure](htt
 - a name and details on every room's wall, so people find their way;
 - furniture from a catalog of 69 prefabs (desks, stages, sofas, plants, trees, phone booths and more), plus furniture made from your own prop images;
 - whole worlds: separate buildings on grass, joined by roads and plazas, with rivers, bridges and forests;
+- Tiled automapping: the engine applies a map's `rules.txt` and draws the same tiles as Tiled 1.12, and an asset set can draw its rooms with rules you paint in Tiled, starting from a ready-made template;
 - WorkAdventure zones for meetings, websites, audio, exits and entry points;
 - a check against WorkAdventure's rules;
 - a PNG preview, so the agent can see what it built and fix it.
@@ -13,6 +14,15 @@ wa-agent-engine lets a coding agent such as Claude Code draw [WorkAdventure](htt
 The result is an ordinary `.tmj` file that WorkAdventure loads and that you can keep editing in [Tiled](https://www.mapeditor.org/).
 
 The engine reaches agents through an MCP server, a CLI and two agent skills. It is tested with Claude Code; [docs/agent-setup.md](docs/agent-setup.md) also covers Codex, Cursor and Pi.
+
+## What's new in 0.3.0
+
+Since 0.1.0:
+
+- **Room labels.** Every room shows its name and details on its top wall, in WorkAdventure and in the preview. `validate_wa_map` warns when a label is too long or covered.
+- **Your own props.** `import_prop_set` turns prop images into furniture, including screens, plaques and windows that hang on a wall, from one or more hints files.
+- **Worlds.** A layout can have a ground style, paths and plazas, rivers and ponds with bridges, and scattered trees, bushes and flowers. The map skill has recipes for worlds and event halls.
+- **Tiled automapping.** `automap_map` applies a Tiled rules file with the semantics of Tiled 1.12's AutoMap, checked against output recorded from Tiled itself. An asset set can draw its walls, faces, lintels, floors and collisions with automapping rules, and `automap_template` writes the rule map to paint in Tiled for a new tileset.
 
 ## Quick start
 
@@ -35,8 +45,8 @@ If `npm install` stops because `pngquant failed to build`, see [Troubleshooting]
 Register the MCP server and install the skills:
 
 ```bash
-claude mcp add --transport stdio --scope user wa-agent-engine -- npx -y wa-agent-engine@0.2.0 mcp
-npx skills add https://github.com/mgkyawzayya/wa-agent-engine/tree/v0.2.0/skills --agent claude-code --global --yes
+claude mcp add --transport stdio --scope user wa-agent-engine -- npx -y wa-agent-engine@0.3.0 mcp
+npx skills add https://github.com/mgkyawzayya/wa-agent-engine/tree/v0.3.0/skills --agent claude-code --global --yes
 ```
 
 `claude mcp list` should show `wa-agent-engine: … ✔ Connected`. Setup for Codex, Cursor and Pi is in [docs/agent-setup.md](docs/agent-setup.md).
@@ -71,7 +81,7 @@ your brief ──▶ agent + wa-map-design skill ──▶ MCP tools ──▶ c
 
 The agent writes the venue as a small JSON layout: rooms with bounds, doors, furniture and zone properties. Rooms share walls; doors sit on a wall at an offset. The engine turns the layout into tiles using an **asset set**, a description of which tile in the tilesets is a wall piece, a face, a floor or a lintel, plus the furniture prefabs.
 
-The package ships one asset set, `wa-starter-office`, for the starter kit's tilesets. It holds tile ids only, no pixels: the art always comes from your map project. The `wa-asset-set-onboarding` skill shows an agent how to describe another tileset, either with a Wang wall terrain like the starter set's or with Tiled automapping rules, which can draw walls the starter kit's model cannot.
+The package ships one asset set, `wa-starter-office`, for the starter kit's tilesets. It holds tile ids only, no pixels: the art always comes from your map project. The `wa-asset-set-onboarding` skill shows an agent how to describe another tileset, either with a Wang wall terrain like the starter set's or with Tiled automapping rules, which can draw walls the starter kit's model cannot. For the rules, `automap_template` writes a rule map with every piece a room needs, ready to paint in Tiled.
 
 For a campus, a park or a village, the layout also takes a `ground` style, `paths` and plazas, `water` for rivers and ponds (bridges appear where a path crosses), and `scatter` areas of trees, bushes and flowers; the skill's [world recipe](skills/wa-map-design/references/world-recipe.md) shows how to plan one.
 
@@ -97,10 +107,10 @@ Every failure carries a code from a closed list (`ERROR_CODES`, plus `VALIDATION
 
 ## Using the CLI
 
-Agents that can run shell commands, and people, can use the CLI without MCP. Every command reads one JSON object (`--input '<json>'`, `--input-file <path>`, or `--input -` for stdin) and prints JSON. `npx -y wa-agent-engine@0.2.0 <command> --help` shows a command's input schema.
+Agents that can run shell commands, and people, can use the CLI without MCP. Every command reads one JSON object (`--input '<json>'`, `--input-file <path>`, or `--input -` for stdin) and prints JSON. `npx -y wa-agent-engine@0.3.0 <command> --help` shows a command's input schema.
 
 ```bash
-npm install -g wa-agent-engine@0.2.0     # or prefix each command with npx -y wa-agent-engine@0.2.0
+npm install -g wa-agent-engine@0.3.0     # or prefix each command with npx -y wa-agent-engine@0.3.0
 P=/absolute/path/to/my-venue
 
 wa-agent-engine scaffold --input "{\"projectDir\":\"$P\",\"mapPath\":\"venue.tmj\",\"width\":24,\"height\":16,\"spawn\":{\"x\":3,\"y\":13}}"
@@ -119,6 +129,9 @@ wa-agent-engine render   --input "{\"projectDir\":\"$P\",\"mapPath\":\"venue.tmj
 
 # with a rules.txt next to the map: apply its Tiled automapping rules (dryRun reports only)
 wa-agent-engine automap  --input "{\"projectDir\":\"$P\",\"mapPath\":\"venue.tmj\",\"dryRun\":true}"
+
+# for your own tileset: write a rule map to paint in Tiled (see the asset-set onboarding skill)
+wa-agent-engine automap-template --input "{\"projectDir\":\"$P\",\"outDir\":\".wa-asset-sets/mine/automap\",\"tilesets\":[\".wa-asset-sets/mine/tilesets/Mine.tsj\"]}"
 ```
 
 `projectDir` is always the absolute path of the map project (the folder with `tilesets/`). A room's bounds include its walls, and neighbouring rooms share one wall line, which is why the hall starts at `y` 8 where the talk room ends.
@@ -133,7 +146,7 @@ Exit codes: 0 means success; 1 means a tool error or invalid input, with a JSON 
 examples/varcamp-venue.commands.sh /absolute/path/to/my-venue
 ```
 
-It writes `varcamp-venue.tmj` (pass another map path as the second argument) and uses `wa-agent-engine` when installed, `npx -y wa-agent-engine@0.2.0` otherwise, or the command in `WA_AGENT_ENGINE`. The lounge's `playAudio` URL is a placeholder on example.com; point it at real audio before you use the map.
+It writes `varcamp-venue.tmj` (pass another map path as the second argument) and uses `wa-agent-engine` when installed, `npx -y wa-agent-engine@0.3.0` otherwise, or the command in `WA_AGENT_ENGINE`. The lounge's `playAudio` URL is a placeholder on example.com; point it at real audio before you use the map.
 
 ## Working alongside Tiled
 
@@ -142,6 +155,7 @@ The engine writes a map only if the file on disk is still the version it read, a
 - Save in Tiled before an agent edits the map, and reload in Tiled afterwards.
 - If an agent gets `MAP_CHANGED_ON_DISK`, it should read the map again and retry.
 - A map with Tiled automapping rules (`rules.txt`) can be automapped by the engine with `automap_map`; deterministic rules give the same tiles as Map > AutoMap in Tiled. On a map with an engine build record it warns `AUTOMAP_ON_ENGINE_MAP`: a rebuild does not re-run the rules.
+- To draw rooms with your own tileset, `automap_template` writes a rule map to paint in Tiled 1.12 or newer; the asset-set onboarding skill walks through it, and `validate_wa_map` names any piece the painted rules draw nothing for.
 - Rooms built from the layout belong to the engine: a rebuild redraws them. Furniture placed with `place_prefab` is put back after a rebuild, or removed with a warning if the new rooms leave no space for it. If you edited such a piece in Tiled, the engine leaves your version alone.
 
 Add `.wa-preview/` and `.*.tmj.lock` to your map project's `.gitignore`.
@@ -158,7 +172,7 @@ Add `.wa-preview/` and `.*.tmj.lock` to your map project's `.gitignore`.
 The engine ships no artwork. It draws with the tileset images in your map project. Don't commit or redistribute the starter kit's tileset PNGs, or previews rendered from them, outside a WorkAdventure map project. Previews go to `.wa-preview/` in your project.
 
 - **Tilesets:** WorkAdventure, from the [map-starter-kit](https://github.com/workadventure/map-starter-kit) at commit `1143646a`, under its [assets licence](https://github.com/workadventure/map-starter-kit/blob/1143646a9c02c3928eac4acbb123642c62a48a85/LICENSE.assets). Each embedded tileset carries this notice in its `tilesetCopyright` property, and every map the engine scaffolds carries a `mapCopyright`.
-- **Furniture arrangements:** 26 of the 35 prefabs adapt arrangements from the starter kit's `office.tmj` and `conference.tmj` ([CC-BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)). Those prefabs carry `credit` and `license` properties. This describes what the files hold; it is not legal advice.
+- **Furniture arrangements:** 26 of the 69 prefabs adapt arrangements from the starter kit's `office.tmj` and `conference.tmj` ([CC-BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)). Those prefabs carry `credit` and `license` properties. This describes what the files hold; it is not legal advice.
 - **The engine:** the code, skills and docs are under the [MIT licence](LICENSE). The asset data above keeps its own terms.
 
 ## Development
@@ -169,6 +183,7 @@ cd wa-agent-engine
 npm ci
 npm run fetch-assets    # downloads the pinned starter-kit maps and tilesets into .cache/ (gitignored)
 npm test                # unit, end-to-end and packaging tests
+npm run test:coverage   # the automapping tests, with a 90% line coverage floor on src/core/automap/
 npm run typecheck
 npm run build
 npm run smoke           # runs the built CLI
@@ -176,4 +191,4 @@ npm run check-skills    # checks the skills and these docs against the tool tabl
 npm run verify:tiled    # with Tiled 1.12 installed and closed, after fetch-assets: records Tiled's automapping output again, then compares the engine with it
 ```
 
-The tests use the cached starter kit and store only hashes of rendered images, never the images. The automapping tests compare the engine with Tiled 1.12's own output, recorded under `test/fixtures/automap/` and `test/fixtures/automap-office/`; `verify:tiled` opens the Tiled app for a moment to record it again over the committed `expected.tmj` files (set `TILED` to its binary if it is not in `/Applications`; `git diff` then shows any change in Tiled's output), and prints `skipped` without Tiled. To try a local build in an agent, `npm pack` and point the MCP command at the tarball: `npx -y --package=/absolute/path/wa-agent-engine-0.2.0.tgz wa-agent-engine mcp`.
+The tests use the cached starter kit and store only hashes of rendered images, never the images. The automapping tests compare the engine with Tiled 1.12's own output, recorded under `test/fixtures/automap/` and `test/fixtures/automap-office/`; `verify:tiled` opens the Tiled app for a moment to record it again over the committed `expected.tmj` files (set `TILED` to its binary if it is not in `/Applications`; `git diff` then shows any change in Tiled's output), and prints `skipped` without Tiled. To try a local build in an agent, `npm pack` and point the MCP command at the tarball: `npx -y --package=/absolute/path/wa-agent-engine-0.3.0.tgz wa-agent-engine mcp`.
