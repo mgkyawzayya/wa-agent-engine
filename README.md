@@ -3,7 +3,9 @@
 wa-agent-engine lets a coding agent such as Claude Code draw [WorkAdventure](https://workadventu.re) maps. You describe a venue in plain words; the agent lays out the rooms, and the engine turns that layout into a real Tiled map:
 
 - walls, wall faces, floors, collisions and doors, drawn with the tilesets of your WorkAdventure map project;
-- furniture from a catalog of 35 prefabs (desks, stages, sofas, plants, phone booths and more);
+- a name and details on every room's wall, so people find their way;
+- furniture from a catalog of 69 prefabs (desks, stages, sofas, plants, trees, phone booths and more), plus furniture made from your own prop images;
+- whole worlds: separate buildings on grass, joined by roads and plazas, with rivers, bridges and forests;
 - WorkAdventure zones for meetings, websites, audio, exits and entry points;
 - a check against WorkAdventure's rules;
 - a PNG preview, so the agent can see what it built and fix it.
@@ -71,6 +73,8 @@ The agent writes the venue as a small JSON layout: rooms with bounds, doors, fur
 
 The package ships one asset set, `wa-starter-office`, for the starter kit's tilesets. It holds tile ids only, no pixels: the art always comes from your map project. The `wa-asset-set-onboarding` skill shows an agent how to describe another tileset.
 
+For a campus, a park or a village, the layout also takes a `ground` style, `paths` and plazas, `water` for rivers and ponds (bridges appear where a path crosses), and `scatter` areas of trees, bushes and flowers; the skill's [world recipe](skills/wa-map-design/references/world-recipe.md) shows how to plan one.
+
 The layout format, the prefab catalog and the zone properties are documented in the skill's references: [layout](skills/wa-map-design/references/dsl-reference.md), [prefabs](skills/wa-map-design/references/prefab-catalog.md), [zones](skills/wa-map-design/references/zone-properties.md).
 
 ## The tools
@@ -80,7 +84,7 @@ The MCP server (`wa-agent-engine mcp`, over stdio) and the CLI expose the same s
 | MCP tool | CLI command | What it does |
 |---|---|---|
 | `scaffold_map` | `scaffold` | Creates an empty map with the standard layers, the embedded tilesets and a spawn tile. It never replaces an existing map unless asked to. |
-| `build_room_from_dsl` | `build` | Draws rooms from the layout. Each build replaces the previous one exactly, and keeps hand-drawn tiles. |
+| `build_room_from_dsl` | `build` | Draws the rooms from the layout, and the world around them when the layout has one. Each build replaces the previous one exactly; tiles drawn by hand outside rooms, paths and water stay. |
 | `place_prefab` | `prefab` | Places one furniture prefab without overwriting anything or blocking a door. |
 | `configure_wa_zone` | `zone` | Creates or updates a named WorkAdventure area with checked properties. |
 | `validate_wa_map` | `validate` | Checks any Tiled map against WorkAdventure's rules. Read-only. |
