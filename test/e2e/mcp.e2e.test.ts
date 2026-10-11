@@ -38,9 +38,9 @@ const VENUE = {
   ],
 };
 
-test('the server lists exactly the eight map tools, with schemas', async () => {
+test('the server lists exactly the nine tools, with schemas', async () => {
   const { tools } = await client.listTools();
-  expect(tools.map((t) => t.name)).toEqual(['scaffold_map', 'build_room_from_dsl', 'place_prefab', 'configure_wa_zone', 'validate_wa_map', 'render_map_preview', 'automap_map', 'import_prop_set']);
+  expect(tools.map((t) => t.name)).toEqual(['scaffold_map', 'build_room_from_dsl', 'place_prefab', 'configure_wa_zone', 'validate_wa_map', 'render_map_preview', 'automap_map', 'import_prop_set', 'automap_template']);
   for (const tool of tools) {
     expect(tool.inputSchema.type).toBe('object');
     expect(tool.outputSchema?.type).toBe('object');

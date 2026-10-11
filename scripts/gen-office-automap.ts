@@ -22,8 +22,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { BUILTIN_SETS_DIR, loadAssetSet, wangSet, type LoadedWangSet, type WallNeighbour } from '../src/core/asset-set-registry.js';
-import { MARKER_IMAGE, MARKER_PALETTE, MARKER_TILESET } from '../src/core/markers.js';
-import { encodePng } from '../src/core/png.js';
+import { MARKER_IMAGE, MARKER_PALETTE, MARKER_TILESET, RULE_TILES, RULE_TILES_IMAGE, RULE_TILES_TILESET } from '../src/core/markers.js';
 import { DEFAULT_ASSET_SET } from '../src/core/zones.js';
 import type { FaceRow } from '../src/schemas/asset-set.schema.js';
 import type { TiledEmbeddedTileset, TiledMap, TiledTileLayer, TiledTilesetFile } from '../src/schemas/tiled.schema.js';
@@ -40,20 +39,7 @@ const MARKERS = {
 };
 // From the rule maps (.wa-asset-sets/office-automap/automap/) to the project root.
 const TO_PROJECT = '../../../';
-const SPECIALS = ['Empty', 'Ignore', 'NonEmpty', 'Other'] as const;
-// The special tiles' own image, in the project's tilesets/. They must not share the marker
-// image: a rule-map tileset with the image and tile size of a map's tileset is that tileset to
-// Tiled and to the engine, and its tiles lose their MatchType.
-export const SPECIAL_IMAGE = 'tilesets/wa-automap-rules.png';
-
-// The special tiles' image: one flat 32x32 square each, in SPECIALS order.
-export function specialTilesPng(): Uint8Array {
-  const colours = [[255, 255, 255], [200, 200, 200], [40, 40, 40], [255, 0, 255]];
-  const width = 32 * SPECIALS.length;
-  const data = new Uint8ClampedArray(width * 32 * 4);
-  for (let y = 0; y < 32; y++) for (let x = 0; x < width; x++) data.set([...colours[Math.floor(x / 32)]!, 255], (y * width + x) * 4);
-  return encodePng({ width, height: 32, data });
-}
+const SPECIALS = RULE_TILES;
 
 // ---- rule tiles: markers 1-16, the special tiles, then the two art tilesets ----
 
@@ -306,9 +292,9 @@ export async function officeAutomapFiles(): Promise<Map<string, string>> {
     embedded(markersTsj, MARKER_FIRST, MARKER_IMAGE),
     // The special tiles of the rules (MatchType), in a tileset of their own.
     embedded(
-      { columns: SPECIALS.length, imageheight: 32, imagewidth: 32 * SPECIALS.length, margin: 0, name: 'wa-automap-rules', spacing: 0, tilecount: SPECIALS.length, tileheight: 32, tilewidth: 32 },
+      { columns: SPECIALS.length, imageheight: 32, imagewidth: 32 * SPECIALS.length, margin: 0, name: RULE_TILES_TILESET, spacing: 0, tilecount: SPECIALS.length, tileheight: 32, tilewidth: 32 },
       SPECIAL_FIRST,
-      SPECIAL_IMAGE,
+      RULE_TILES_IMAGE,
       SPECIALS.map((m, id) => ({ id, properties: [{ name: 'MatchType', type: 'string', value: m }] })),
     ),
     embedded(builder.tsj, builderFirst, builder.image),

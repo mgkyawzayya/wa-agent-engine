@@ -66,6 +66,23 @@ export function markerTsj(): TiledTilesetFile {
   };
 }
 
+// The special tiles of rule maps (MatchType), in a tileset of their own with its own image in
+// the project. They must not share the marker image: a rule-map tileset with the image and
+// tile size of a map's tileset is that tileset to Tiled and to the engine, and its tiles lose
+// their MatchType.
+export const RULE_TILES = ['Empty', 'Ignore', 'NonEmpty', 'Other'] as const;
+export const RULE_TILES_TILESET = 'wa-automap-rules';
+export const RULE_TILES_IMAGE = 'tilesets/wa-automap-rules.png';
+
+// One flat 32x32 square per special tile, in RULE_TILES order.
+export function ruleTilesPng(): Uint8Array {
+  const colours = [[255, 255, 255], [200, 200, 200], [40, 40, 40], [255, 0, 255]];
+  const width = TILE * RULE_TILES.length;
+  const data = new Uint8ClampedArray(width * TILE * 4);
+  for (let y = 0; y < TILE; y++) for (let x = 0; x < width; x++) data.set([...colours[Math.floor(x / TILE)]!, 255], (y * width + x) * 4);
+  return encodePng({ width, height: TILE, data });
+}
+
 export function markerPng(): Uint8Array {
   const width = COLUMNS * TILE;
   const height = ROWS * TILE;
@@ -102,12 +119,12 @@ async function createIfAbsent(abs: string, bytes: Uint8Array): Promise<void> {
   }
 }
 
-// Writes the marker image into the project when it is not there yet. An existing file is left
-// as it is: rules match the marker tileset by its image path, not by its colours.
-export async function ensureMarkerImage(projectDir: string): Promise<void> {
-  const abs = await resolveInProject(projectDir, MARKER_IMAGE, { ext: '.png' });
+// Writes an engine image into the project when it is not there yet. An existing file is left
+// as it is: rules match a tileset by its image path, not by its colours.
+async function ensureImage(projectDir: string, rel: string, what: string, png: () => Uint8Array): Promise<void> {
+  const abs = await resolveInProject(projectDir, rel, { ext: '.png' });
   const failed = (err: unknown): WaEngineError =>
-    new WaEngineError('IO_ERROR', `cannot write the marker image ${MARKER_IMAGE} (${errnoOf(err) ?? 'error'})`, { errno: errnoOf(err) });
+    new WaEngineError('IO_ERROR', `cannot write the ${what} ${rel} (${errnoOf(err) ?? 'error'})`, { errno: errnoOf(err) });
   try {
     await stat(abs);
     return;
@@ -116,8 +133,11 @@ export async function ensureMarkerImage(projectDir: string): Promise<void> {
   }
   try {
     await mkdir(dirname(abs), { recursive: true });
-    await createIfAbsent(abs, markerPng());
+    await createIfAbsent(abs, png());
   } catch (err) {
     throw failed(err);
   }
 }
+
+export const ensureMarkerImage = (projectDir: string): Promise<void> => ensureImage(projectDir, MARKER_IMAGE, 'marker image', markerPng);
+export const ensureRuleTilesImage = (projectDir: string): Promise<void> => ensureImage(projectDir, RULE_TILES_IMAGE, 'special tiles image', ruleTilesPng);

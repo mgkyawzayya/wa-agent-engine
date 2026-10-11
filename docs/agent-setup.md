@@ -2,7 +2,7 @@
 
 wa-agent-engine reaches an agent in two ways:
 
-- **The MCP server** gives the agent eight tools: six that draw and check maps (`scaffold_map`, `build_room_from_dsl`, `place_prefab`, `configure_wa_zone`, `validate_wa_map`, `render_map_preview`), `automap_map`, which applies Tiled automapping rules to a map, and `import_prop_set`, which turns your own prop images into furniture.
+- **The MCP server** gives the agent nine tools: six that draw and check maps (`scaffold_map`, `build_room_from_dsl`, `place_prefab`, `configure_wa_zone`, `validate_wa_map`, `render_map_preview`), `automap_map`, which applies Tiled automapping rules to a map, `import_prop_set`, which turns your own prop images into furniture, and `automap_template`, which writes a rule map for you to paint in Tiled when you onboard your own tileset.
 - **Two skills** teach the agent how to use them:
   - `wa-map-design` turns a venue brief into a validated map;
   - `wa-asset-set-onboarding` describes a new tileset for the engine.
@@ -86,7 +86,7 @@ Pi's default `codemode` exposure wraps MCP tools in code. `direct` makes the too
 
 ```bash
 pi mcp add wa-agent-engine --exposure direct -- npx -y wa-agent-engine@0.2.0 mcp
-pi mcp list            # wa-agent-engine: connected, 8 tools (direct, global)
+pi mcp list            # wa-agent-engine: connected, 9 tools (direct, global)
 ```
 
 The same in `~/.pi/agent/mcp.json`, or in `.pi/mcp.json` in a trusted project (`pi mcp add -l` writes there):

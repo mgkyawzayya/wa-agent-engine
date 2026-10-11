@@ -79,7 +79,7 @@ The layout format, the prefab catalog and the zone properties are documented in 
 
 ## The tools
 
-The MCP server (`wa-agent-engine mcp`, over stdio) and the CLI expose the same eight tools from one table, with the same results and error codes.
+The MCP server (`wa-agent-engine mcp`, over stdio) and the CLI expose the same nine tools from one table, with the same results and error codes.
 
 | MCP tool | CLI command | What it does |
 |---|---|---|
@@ -91,6 +91,7 @@ The MCP server (`wa-agent-engine mcp`, over stdio) and the CLI expose the same e
 | `render_map_preview` | `render` | Renders a PNG preview into `.wa-preview/`. Over MCP it also returns the image. |
 | `automap_map` | `automap` | Applies a Tiled automapping rules file (`rules.txt` and its rule maps) to a map with Tiled 1.12's AutoMap semantics: deterministic rules draw the same tiles as Tiled. `dryRun` reports without writing. |
 | `import_prop_set` | `import-props` | Turns your own prop images (PNGs in 32 px tile multiples) into furniture prefabs, in a set that extends the starter kit's. |
+| `automap_template` | `automap-template` | Writes a Tiled rule map to paint for an asset set drawn with automapping rules: every wall pattern, lintel, face and floor a room needs, with its markers in place and its outputs empty, plus `rules.txt` and a README with the three onboarding steps. |
 
 Every failure carries a code from a closed list (`ERROR_CODES`, plus `VALIDATION_CODES` for validation issues), so an agent can act on the code instead of the message.
 

@@ -218,6 +218,8 @@ Instead of a Wang set and face rules, a set can draw its rooms with [Tiled autom
 | `markerTileset` | `wa-markers`, the engine's 16 flat colours (ids 0 to 15), or the name of one of the set's own tilesets. The engine writes the `wa-markers` image into the project as `tilesets/wa-markers.png` the first time a map uses the set, and leaves an existing file alone. |
 | `markers` | The marker tile of a wall, a door, each floor style (every style needs one) and each wall style (every name in `wallStyles` needs one). Wall, door and floor markers must all differ; so must the wall-style markers. With `wa-markers` that leaves room for 14 floor styles. |
 
+`automap_template` writes a rule map with a rule for every piece below, whose inputs already hold the markers and whose outputs the user paints in Tiled; see the automapping path in the skill and `automap_template` in the CLI reference of the wa-map-design skill.
+
 How a build draws:
 
 1. The engine works out the rooms as with a Wang set, with every check: overlaps, thick walls, doors at junctions or onto wall faces, walkable doors.

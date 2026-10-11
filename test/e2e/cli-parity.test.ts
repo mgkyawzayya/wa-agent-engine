@@ -1,8 +1,10 @@
 import type { Client } from '@modelcontextprotocol/client';
 import { afterAll, beforeAll, expect, test } from 'vitest';
+import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { writeStartRule } from '../helpers/automap.js';
 import { makeFullProject, type TempProject } from '../helpers/project.js';
-import { connectMcp, errorOf, runCli } from './helpers.js';
+import { connectMcp, errorOf, REPO_ROOT, runCli } from './helpers.js';
 
 // The CLI and the MCP server are two adapters over one tool table: the same input gives the
 // same JSON on both. Each surface works in its own project, and project paths are masked.
@@ -63,6 +65,14 @@ test('successes and coded errors are identical on both surfaces, in workflow ord
   await writeStartRule(cliProject.dir, 'p.tmj', '.');
   await writeStartRule(mcpProject.dir, 'p.tmj', '.');
   await check(['automap_map', 'automap', { mapPath: 'p.tmj' }, 0]);
+  // automap-template: written, then refused without overwrite.
+  const plain = { outDir: 'rules/template', tilesets: ['tilesets/WA_Room_Builder.tsj'] };
+  await check(['automap_template', 'automap-template', { ...plain, assetSet: 'wa-starter-office' }, 1]);
+  // The starter set's tileset, next to its image.
+  const tsj = JSON.parse(await readFile(join(REPO_ROOT, 'assets/sets/wa-starter-office/tilesets/WA_Room_Builder.tsj'), 'utf8')) as object;
+  for (const project of [cliProject, mcpProject]) await writeFile(join(project.dir, 'tilesets/WA_Room_Builder.tsj'), JSON.stringify({ ...tsj, image: 'WA_Room_Builder.png' }));
+  await check(['automap_template', 'automap-template', plain, 0]);
+  await check(['automap_template', 'automap-template', plain, 1]);
 });
 
 test('shape errors are rejected on both surfaces', async () => {

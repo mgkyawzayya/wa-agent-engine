@@ -1,6 +1,6 @@
 ---
 name: wa-asset-set-onboarding
-description: Adds a tileset to wa-agent-engine as a project-local asset set, so the WorkAdventure map tools can draw walls, wall faces, floors, doors and furniture with it (through a Wang wall terrain or Tiled automapping rules), or turns single prop images (stages, banners, boards, games) into furniture with import_prop_set. Use it when a user wants to build WorkAdventure maps with their own or third-party tiles or props, or asks to create, fix or check an asset set in .wa-asset-sets, its Tiled .tsj wall terrain or automapping rule maps, its set.json, or its prefab .tmj files.
+description: Adds a tileset to wa-agent-engine as a project-local asset set, so the WorkAdventure map tools can draw walls, wall faces, floors, doors and furniture with it (through a Wang wall terrain, or Tiled automapping rules painted in a rule map from automap_template), or turns single prop images (stages, banners, boards, games) into furniture with import_prop_set. Use it when a user wants to build WorkAdventure maps with their own or third-party tiles or props, or asks to create, fix or check an asset set in .wa-asset-sets, its Tiled .tsj wall terrain or automapping rule maps, its set.json, or its prefab .tmj files.
 compatibility: Needs Node.js 26 or newer, a WorkAdventure map project that holds the tileset images, and the wa-agent-engine MCP server or the CLI through npx -y wa-agent-engine@0.2.0. Tiled helps for drawing the Wang set but is optional.
 ---
 
@@ -59,15 +59,30 @@ A project-local set lives in the user's map project:
 A set draws its walls in one of two ways:
 
 - **Wall terrain** (as `wa-starter-office` does): an edge Wang set for wall tops and lintels, and face rules for the 2 rows of face under north walls. Enough when the art follows the starter kit's wall model.
-- **Automapping rules** (`drawing` in `set.json`): Tiled rule maps that turn the engine's markers into walls, faces, lintels, floors and collisions. Use this for anything beyond the starter kit's wall model. It is described in [references/terrain-authoring.md](references/terrain-authoring.md#drawing-with-automapping-rules); with it, step 2 below is the rule maps, and `set.json` has `drawing` instead of the wall terrain, lintels and face rules.
+- **Automapping rules** (`drawing` in `set.json`): Tiled rule maps that turn the engine's markers into walls, faces, lintels, floors and collisions. Use this for anything beyond the starter kit's wall model. It is described in [references/terrain-authoring.md](references/terrain-authoring.md#drawing-with-automapping-rules); with it, `set.json` has `drawing` instead of the wall terrain, lintels and face rules. Follow the automapping path below for steps 2 and 4.
 
 Then write the files, in this order:
 
 1. **Tilesets.** One `.tsj` per image, with 32 × 32 px tiles, made in Tiled or by hand. Its `name` is the name `set.json` uses.
-2. **Wall terrain.** One edge Wang set in the wall tileset, with a wall colour and a door colour, that covers all 21 wall and door patterns in the coverage table of [references/terrain-authoring.md](references/terrain-authoring.md). Walls are one tile thick. With automapping rules, write the rules file and its rule maps instead.
+2. **Wall terrain.** One edge Wang set in the wall tileset, with a wall colour and a door colour, that covers all 21 wall and door patterns in the coverage table of [references/terrain-authoring.md](references/terrain-authoring.md). Walls are one tile thick. With automapping rules, paint the template's rule map instead.
 3. **Collision tile.** One tile with the bool tile property `collides` set to `true`. Every `collides` property must be a bool, never a string.
 4. **set.json.** The tilesets with their copyright, the wall terrain, the door lintels, the face rules (two rows of face per wall, with end variants), the wall and floor styles, the collision and start tiles, and `mapCopyright`.
 5. **Prefabs.** One small Tiled map per piece of furniture, with its tiles split over the sub-layers `furniture1` to `furniture3` (under the avatar), `foreground1` and `foreground2` (over the avatar), and `collisions`. Its properties (`category`, `placement`, `faceRow` for north-wall pieces, `use`, and `credit` and `license` where needed) must match its entry in `set.json`.
+
+### The automapping path
+
+Write the tilesets and check the collision tile (steps 1 and 3 above) first, then:
+
+1. **Run the template.** `automap_template` (CLI `automap-template`) writes a rule map to paint, with one rule for every piece a room needs, whose inputs already hold the engine's markers. Pass every tileset the user paints with, including the one with the collision tile, and the set's own folder as `outDir`:
+
+   ```bash
+   npx -y wa-agent-engine@0.2.0 automap-template --input '{"projectDir": "/path/to/map-starter-kit", "outDir": ".wa-asset-sets/dungeon/automap", "tilesets": [".wa-asset-sets/dungeon/tilesets/Dungeon.tsj", ".wa-asset-sets/dungeon/tilesets/WA_Special_Zones.tsj"]}'
+   ```
+
+   Without `assetSet` the template has one wall style and one floor style, both `plain`. To get rules for several styles, pass an existing set with those styles as `assetSet`: a set drawn with rules keeps its markers, and any other set may have at most 14 floor styles. The tool refuses to replace the files (`MAP_EXISTS`) unless the user asks for `"overwrite": true`, which loses what they painted; it never replaces files it did not write.
+2. **Paint in Tiled.** The user opens `walls.tmj` in Tiled 1.12 or newer and paints their tiles into the output layers at each rule's anchor cell, as the written `README.md` explains: wall tops and faces on `output_walls` with the collision tile on `output_collisions`, lintels on `output_foreground1`, floors on `output_floor`, and each lintel once more over the Empty tile on `input1_foreground1` in the two rules that clear old lintels (a set without lintels leaves the Empty tiles). Each rule's rectangle on `rule_options` is named after its piece. The tool's `rules` output lists every anchor cell and the layers to paint there, which helps when you check the painted map.
+3. **Write set.json** with `drawing`: copy `markerTileset`, `markers`, `wallStyles` and `floorStyles` from the tool's output (the README shows the block; a floor style keeps its tile only when its tileset was in `tilesets`), set `drawing.rules` to the rules file relative to `set.json` (`automap/rules.txt` for the command above), and add the tilesets with their copyright, `collisionTile`, `startTile`, `mapCopyright` and any prefabs. Leave out `wallTerrain`, `doorLintelTiles` and `faceRules`.
+4. **Prove the set** with the steps of section 4. The coverage check names the wall tops, lintels, faces and floors the rules draw nothing for with the name of the rectangle in `walls.tmj`. It does not cover the floors of doors or the walls between two doors, so check those in the render.
 
 ## 4. Prove the set
 
@@ -154,6 +169,7 @@ With your own art, the steps are the same: write the files, then scaffold, build
 | `ASSET_SET_INVALID` | The message lists every problem: a schema error in `set.json`, an `id` that differs from the folder, a `.tsj` whose name or tile size is wrong, a tile id past the end of its tileset, a missing or non-edge Wang set, equal or unknown wall and door colours, or a collision tile without `collides` = `true`. With `drawing`: a style without a marker, two markers alike, missing rules, or rules that draw on another layer or with a tileset the set does not list. |
 | `ASSET_IMAGE_MISSING` | An `image` path in `set.json` does not point at a PNG in the project. Fix the path; ask the user for the image if it is really missing. |
 | `PATH_OUTSIDE_PROJECT`, `PATH_BAD_EXTENSION` | A path in the set leaves the project, or a file has the wrong extension (`.tsj` or `.json` for tilesets, `.tmj` for prefabs). |
+| `MAP_EXISTS` | From `automap_template`: `outDir` already has the template's files. Pick another `outDir`, or pass `overwrite: true` only when the user wants to lose what is painted in them. |
 | `ASSET_SET_INCOMPLETE` | The set has no tile for the listed wall or door patterns. Add them to the Wang set (see the coverage table). For automapping rules: add rules for the listed pieces, or fix the rules the message says cannot be loaded. |
 | `AUTOMAP_RULES_INVALID`, `AUTOMAP_RULES_NOT_FOUND`, `AUTOMAP_UNSUPPORTED` | A build cannot run the set's rules: the message names the rule map, layer or tileset. Save rule maps as JSON (`.tmj`) with embedded tilesets whose images are in the project. |
 | `WALL_PIECE_MISSING` | The Wang set lacks the pattern the named cell needs. Find it in the coverage table and add a tile for it. |

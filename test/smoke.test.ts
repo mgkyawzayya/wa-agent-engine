@@ -17,3 +17,9 @@ test('the automap command prints its input schema', async () => {
   expect(help.stdout).toContain('"dryRun"');
   expect(help.stdout).toContain('"rules"');
 });
+
+test('the automap-template command prints its input schema', async () => {
+  const help = await promisify(execFile)(process.execPath, ['--import', 'tsx', 'src/cli/index.ts', 'automap-template', '--help'], { cwd: REPO_ROOT });
+  expect(help.stdout).toContain('"outDir"');
+  expect(help.stdout).toContain('"tilesets"');
+});

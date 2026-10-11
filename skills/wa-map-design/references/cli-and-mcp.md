@@ -1,6 +1,6 @@
 # CLI and MCP reference
 
-The engine has eight tools. The MCP server and the CLI are both built from one tool table, so the same input gives the same result and the same coded errors on both, with one exception for malformed input, described below.
+The engine has nine tools. The MCP server and the CLI are both built from one tool table, so the same input gives the same result and the same coded errors on both, with one exception for malformed input, described below.
 
 ## Calling the tools
 
@@ -219,6 +219,28 @@ Output: `setId`, `extends`, `image` (the atlas, `tilesets/<setId>.png`) and `pre
 The images are copied pixel for pixel into one atlas; each prop's rows go on `furniture1`, or `foreground1` for its foreground rows, and its collision cells block walking. Use `setId` as the `assetSet` of the DSL and of `place_prefab`. A map built with the base set can be rebuilt with the new set; the other way fails with `ASSET_SET_MISMATCH`.
 
 The atlas is named after its content (`tilesets/<setId>-<hash>.png`). Importing changed props again with `overwrite` writes a new atlas and leaves the old one in place, so maps built with it still show their furniture; their next build draws every prop, DSL and placed ones alike, from the new atlas. Delete an old atlas only when no map uses it. Two imports of the same set at once: the second fails with `ASSET_SET_LOCKED`. A bad hints file fails with `INVALID_INPUT`; bad images (wrong size, fully transparent, unreadable) fail with `INVALID_INPUT` and are listed in `details.problems`. An atlas taller than 4096 px fails with `IMAGE_TOO_LARGE`: split the props into several sets.
+
+### `automap_template` (CLI command `automap-template`)
+
+Writes a ready-to-paint Tiled rule map for an asset set drawn with automapping rules (`drawing` in `set.json`), so a user onboards a tileset by painting tiles in Tiled instead of typing tile ids. The asset-set onboarding skill walks through it.
+
+| Input | Type | Required | Meaning |
+|---|---|---|---|
+| `projectDir` | string | yes | See above. |
+| `assetSet` | string | no | A set whose wall styles and floor styles get rules; a set drawn with rules keeps its markers, any other set gets `wa-markers` tiles in order (wall 0, door 1, the floors from 2, then the wall styles). The 16 markers hold at most 14 floor styles (`INVALID_INPUT`). Without it: one wall style and one floor style, both `plain`. |
+| `outDir` | string | yes | Folder for the files, relative to `projectDir`, usually inside the set's folder, for example `.wa-asset-sets/dungeon/automap`. |
+| `tilesets` | list of strings | yes | 1 to 32 Tiled tilesets (`.tsj` or `.json`, `PATH_BAD_EXTENSION`) relative to `projectDir`, with 32 × 32 px tiles and their image in the project (`TILESET_IMAGE_MISSING`): every tileset the walls, faces, lintels and floors are painted with, and the one with the collision tile. Two different tilesets with one name fail with `INVALID_INPUT`; the same tileset twice is attached once. |
+| `overwrite` | boolean | no | Replace the files. Without it, existing files fail with `MAP_EXISTS`, and `details.files` lists them. A file the tool did not write (or a link) is never replaced, even with `overwrite` (`MAP_EXISTS`). |
+
+It writes three files into `outDir`:
+
+- `walls.tmj`, the rule map. Its input layers hold the markers a room build paints on `wa_sketch` and `wa_style` for every wall pattern (the 16 of walls and open cells, a wall beside a door in each direction, and a wall between two doors), both lintels, the 4 variants of both face rows outside rooms and for each wall style, and each floor style on floors and on doors. Its outputs are empty, apart from the Empty tiles that clear the wall and collision under each lintel and those of the clean-up rules (old faces under a new door, the lintel of a door a wall now closes; the user paints that lintel over an Empty tile on `input1_foreground1`, and until then the rule changes nothing). Each rule has a rectangle on `rule_options` named after its piece, with the names `validate_wa_map` uses in `ASSET_SET_INCOMPLETE`; that check does not cover the floors of doors or the walls between two doors. The marker tileset, the special tiles' tileset `wa-automap-rules` and the named tilesets are embedded.
+- `rules.txt`, which lists `walls.tmj`.
+- `README.md`: paint in Tiled, write `set.json` with `drawing`, prove the set.
+
+The images of `wa-markers` and the special tiles are written to `tilesets/wa-markers.png` and `tilesets/wa-automap-rules.png` when they are missing, so Tiled shows them; existing files are left alone.
+
+Output: `ruleMap`, `rulesFile` and `readme` (relative to `projectDir`), `rules` (every rule in the order it runs: `name`, its anchor cell `x` and `y` in the rule map, and `paint`, the layers to paint there, such as `output_walls` and `output_collisions`, or none when the rule is complete), and `markerTileset`, `markers`, `wallStyles` and `floorStyles` for `set.json` (a floor style keeps its tile only when its tileset is one of `tilesets`). `drawing.rules` in `set.json` is `rulesFile` relative to `set.json`.
 
 ## Exit codes
 

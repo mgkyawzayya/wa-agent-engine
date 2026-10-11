@@ -51,7 +51,7 @@
     "clean": "node -e \"process.getBuiltinModule('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage test/core/automap test/tools/automap-map",
+    "test:coverage": "vitest run --coverage test/core/automap test/tools/automap-map test/tools/automap-template",
     "fetch-assets": "tsx scripts/fetch-starter-kit.ts",
     "dev:mcp": "tsx src/cli/index.ts mcp",
     "smoke": "node dist/cli/index.js --version && node dist/cli/index.js --help",

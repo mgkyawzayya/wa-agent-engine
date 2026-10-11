@@ -14,6 +14,8 @@ import { VERSION } from '../version.js';
 // How long a stopping MCP server waits for running tool calls to finish their write.
 const SHUTDOWN_GRACE_MS = 5000;
 
+const COMMAND_WIDTH = Math.max(...TOOLS.map((t) => t.command.length));
+
 const USAGE = `wa-agent-engine ${VERSION}: draw WorkAdventure maps from a room layout.
 
 Usage:
@@ -24,10 +26,10 @@ Usage:
   wa-agent-engine mcp                          (start the MCP server on stdio)
 
 Commands:
-${TOOLS.map((t) => `  ${t.command.padEnd(10)} ${t.title} (MCP tool ${t.name})`).join('\n')}
+${TOOLS.map((t) => `  ${t.command.padEnd(COMMAND_WIDTH)} ${t.title} (MCP tool ${t.name})`).join('\n')}
 
-Every input takes "projectDir" (absolute path to the map project, the folder with tilesets/)
-and "mapPath" (the .tmj file, relative to projectDir).`;
+Every input takes "projectDir" (absolute path to the map project, the folder with tilesets/);
+the map commands also take "mapPath" (the .tmj file, relative to projectDir).`;
 
 function print(value: unknown): void {
   process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);

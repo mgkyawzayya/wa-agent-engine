@@ -23,9 +23,9 @@ import { coverageSketch } from '../src/core/automap/drawing.js';
 import { buildRooms, scaffoldMap } from '../src/core/compiler.js';
 import { readTileData, resolveRole, writeTileData, type TileRole } from '../src/core/layers.js';
 import { readMap } from '../src/core/map-io.js';
-import { MARKER_IMAGE, markerPng } from '../src/core/markers.js';
+import { MARKER_IMAGE, markerPng, RULE_TILES_IMAGE, ruleTilesPng } from '../src/core/markers.js';
 import type { TiledMap } from '../src/schemas/tiled.schema.js';
-import { OFFICE_AUTOMAP_DIR, SPECIAL_IMAGE, specialTilesPng, tiledJson } from './gen-office-automap.js';
+import { OFFICE_AUTOMAP_DIR, tiledJson } from './gen-office-automap.js';
 
 export const OFFICE_GOLDENS_DIR = fileURLToPath(new URL('../test/fixtures/automap-office/', import.meta.url));
 const ROOMS_DIR = fileURLToPath(new URL('../test/fixtures/rooms/', import.meta.url));
@@ -54,7 +54,7 @@ export async function makeOfficeProject(): Promise<OfficeProject> {
     await mkdir(join(dir, 'tilesets'));
     for (const image of IMAGES) await copyFile(join(cache, image), join(dir, 'tilesets', image));
     await writeFile(join(dir, MARKER_IMAGE), markerPng());
-    await writeFile(join(dir, SPECIAL_IMAGE), specialTilesPng());
+    await writeFile(join(dir, RULE_TILES_IMAGE), ruleTilesPng());
     await cp(OFFICE_AUTOMAP_DIR, join(dir, '.wa-asset-sets', SET_ID), { recursive: true });
   } catch (err) {
     await cleanup();
