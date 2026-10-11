@@ -24,13 +24,16 @@ All positions and sizes are whole tiles of 32 px. `x` grows to the east and `y` 
 | Field | Type | Required | Meaning |
 |---|---|---|---|
 | `id` | 1 to 64 letters, digits, `_` or `-`, starting with a letter or digit | yes | Unique in the layout (`DUPLICATE_ROOM_ID`). It is also the name of the room's area, so no other zone may use it. |
-| `name` | string | no | A label for people. The engine keeps it in its build record and draws nothing with it. |
+| `name` | string, up to 60 characters | no, but give every room one | The room's label: WorkAdventure shows it on the wall at the top of the room, and the preview draws it there too. Keep it to 2–4 words ("Main Hall", "Q&A Room 2"). A room without a name has no label. |
+| `details` | string, up to 120 characters | no | One or two short lines under the name: what happens in the room, for example "Talks 10:00–17:00, Q&A after each talk". |
 | `bounds` | `{"x", "y", "width", "height"}` | yes | The room rectangle, walls included. It must lie inside the map (`ROOM_OUT_OF_BOUNDS`) and be at least 3 wide and 5 high (`ROOM_TOO_SMALL`). |
 | `wallStyle` | string | no | The look of the wall faces inside the room. The built-in set has `white` (the default) and `yellow`. |
 | `floorStyle` | string | no | The floor of the room. The built-in set has 14 styles; `wood-light` is the default. An unknown style fails with `UNKNOWN_STYLE`. |
 | `doors` | array of doors, up to 16 | no | Openings in the room's walls. |
 | `furniture` | array of prefabs, up to 100 | no | Furniture the build stamps and owns. |
 | `waProperties` | object of string, number or boolean values | no | WorkAdventure zone properties for the room's area, for example `{"jitsiRoom": "VarCamp Daisy track"}`. They are checked like `configure_wa_zone` properties (`INVALID_ZONE_PROPERTY`, `BAD_URL`); see [zone-properties.md](zone-properties.md). |
+
+**Labels.** The name (16 px, or 13 or 11 px when the room is narrow) and the details (11 px) are dark text on the room's top wall face, left-aligned on the widest stretch of that wall that no door or wall-mounted furniture covers (over a door gap if it must). Every build and every `place_prefab` rewrites them, reading the furniture that is on the wall at that moment; text objects you add yourself are kept. If furniture covers the whole wall, `validate_wa_map` warns `LABEL_COVERED`. A label that cannot fit its wall even at 11 px makes `validate_wa_map` warn `LABEL_TOO_LONG`: shorten the name or details, or widen the room.
 
 Both style lists are at the end of [prefab-catalog.md](prefab-catalog.md#wall-and-floor-styles). Wall faces outside every room use the `brick` style, which cannot be chosen as a `wallStyle`.
 
@@ -111,8 +114,8 @@ Building next to walls drawn by hand works: walls touching the new rooms join th
 Three rooms: a workshop and a lounge side by side, sharing wall column 13 and joined by a side door, above a hall that has an exit door in the bottom map edge. The map was scaffolded at 30 × 16.
 
 ```bash
-npx -y wa-agent-engine@0.1.0 scaffold --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "workshop.tmj", "width": 30, "height": 16, "spawn": {"x": 24, "y": 13}}'
-npx -y wa-agent-engine@0.1.0 build --input '{
+npx -y wa-agent-engine@0.2.0 scaffold --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "workshop.tmj", "width": 30, "height": 16, "spawn": {"x": 24, "y": 13}}'
+npx -y wa-agent-engine@0.2.0 build --input '{
   "projectDir": "/path/to/map-starter-kit",
   "mapPath": "workshop.tmj",
   "dsl": {
@@ -156,8 +159,8 @@ npx -y wa-agent-engine@0.1.0 build --input '{
     "variables": [{"name": "doorsOpen", "default": true, "persist": true}]
   }
 }'
-npx -y wa-agent-engine@0.1.0 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "workshop.tmj", "name": "exit", "x": 20, "y": 15, "width": 2, "height": 1, "properties": {"exitUrl": "venue.tmj#entry"}}'
-npx -y wa-agent-engine@0.1.0 validate --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "workshop.tmj"}'
+npx -y wa-agent-engine@0.2.0 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "workshop.tmj", "name": "exit", "x": 20, "y": 15, "width": 2, "height": 1, "properties": {"exitUrl": "venue.tmj#entry"}}'
+npx -y wa-agent-engine@0.2.0 validate --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "workshop.tmj"}'
 ```
 
 How the rules apply here:

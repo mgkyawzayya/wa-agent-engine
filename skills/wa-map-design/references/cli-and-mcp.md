@@ -1,19 +1,19 @@
 # CLI and MCP reference
 
-The engine has six tools. The MCP server and the CLI are both built from one tool table, so the same input gives the same result and the same coded errors on both, with one exception for malformed input, described below.
+The engine has seven tools. The MCP server and the CLI are both built from one tool table, so the same input gives the same result and the same coded errors on both, with one exception for malformed input, described below.
 
 ## Calling the tools
 
-**MCP.** When the `wa-agent-engine` MCP server is connected, call the tools by name with the input object as arguments. The server is started with `npx -y wa-agent-engine@0.1.0 mcp`, or `wa-agent-engine mcp` when the package is installed, and talks over stdio.
+**MCP.** When the `wa-agent-engine` MCP server is connected, call the tools by name with the input object as arguments. The server is started with `npx -y wa-agent-engine@0.2.0 mcp`, or `wa-agent-engine mcp` when the package is installed, and talks over stdio.
 
 **CLI.** Otherwise run the command with Node.js 26 or newer. With the package installed, `wa-agent-engine <command>` works the same as the `npx` form below:
 
 ```bash
-npx -y wa-agent-engine@0.1.0 <command> --input '<json>'
-npx -y wa-agent-engine@0.1.0 <command> --input-file <path.json>
-npx -y wa-agent-engine@0.1.0 <command> --input -
-npx -y wa-agent-engine@0.1.0 <command> --help
-npx -y wa-agent-engine@0.1.0 --help
+npx -y wa-agent-engine@0.2.0 <command> --input '<json>'
+npx -y wa-agent-engine@0.2.0 <command> --input-file <path.json>
+npx -y wa-agent-engine@0.2.0 <command> --input -
+npx -y wa-agent-engine@0.2.0 <command> --help
+npx -y wa-agent-engine@0.2.0 --help
 ```
 
 Pass the input exactly once: inline, from a file, or on stdin with `--input -`. `<command> --help` (or `-h`) prints the description and the input as a JSON Schema. On its own, `--help` lists the commands and `--version` (or `-v`) prints the version. Commands take no other flags.
@@ -85,7 +85,7 @@ Stamps one prefab, with its collisions, at a tile position. It never overwrites 
 | `projectDir`, `mapPath` | string | yes | See above. |
 | `prefabId` | string | yes | An id from [prefab-catalog.md](prefab-catalog.md). A wrong id fails with `PREFAB_NOT_FOUND`, and `details.available` lists the ids. |
 | `x`, `y` | whole number | yes | The map tile of the prefab's top-left cell. |
-| `assetSet` | string | no | The set to use on a map the engine has not built on yet. On an engine-built map it must be the map's set (`ASSET_SET_MISMATCH`). |
+| `assetSet` | string | no | The set to use on a map the engine has not built on yet. On an engine-built map it must be the map's set, or a set that extends it (`ASSET_SET_MISMATCH`). |
 
 Output: `instance` (such as `p1`), `cells` (tiles stamped) and `collisions` (collision cells the prefab carries).
 
@@ -146,6 +146,8 @@ Output: `ok` (false when there is any error), `errors` and `warnings`. Each issu
 | `ORPHAN_ZONE` | warning | An area with no WorkAdventure property, in a map without a script. |
 | `INVALID_ZONE_PROPERTY` | error or warning | A known zone key with a bad value. Templates on areas that are not dynamic, and unknown `openWebsitePolicy` features, are warnings. |
 | `BAD_URL` | error | A URL WorkAdventure would refuse, in a zone or the map script. |
+| `LABEL_TOO_LONG` | warning | A room's name or details need more room than its top wall has; shorten them or widen the room. |
+| `LABEL_COVERED` | warning | Furniture stands where a room's label is; leave 2 tiles of the wall free and build again, or widen the room. |
 | `SCRIPT_EXTERNAL` | warning | The map script is loaded from outside the project. |
 | `SCRIPT_NOT_FOUND` | warning | The map script file is not in the project. |
 | `SCRIPT_WHITESPACE` | warning | The map script value has leading or trailing spaces. |
@@ -164,6 +166,24 @@ Renders the map to a PNG from the tileset images in the project, the way WorkAdv
 Output: `pngPath` (absolute path of the file), `width` and `height` (pixels), `bytes`, and `sha256` of the PNG.
 
 The file is written to `.wa-preview/` in the project, named after the map's path and the scale, for example `.wa-preview/venue@1x.png` or `.wa-preview/maps__venue@0.5x.png`. Keep that folder out of version control. Over MCP the image comes back as an image block when it is 3.75 MB or smaller; otherwise, or when your client shows no image, open `pngPath`. A missing tileset image fails with `TILESET_IMAGE_MISSING`.
+
+### `import_prop_set` (CLI command `import-props`)
+
+Turns single-image props into furniture prefabs: a project asset set that extends another set, so a map gets that set's walls, floors and furniture plus the props.
+
+| Input | Type | Required | Meaning |
+|---|---|---|---|
+| `projectDir` | string | yes | See above. |
+| `setId` | string | yes | The new set's id: lowercase letters, digits and `-`, for example `varcamp`. |
+| `source` | string | yes | The props hints JSON, relative to `projectDir`. Each prop has `id`, `image` (a PNG relative to the hints file, exactly `sizeTiles` × 32 px) and `sizeTiles` `[width, height]`, and optionally `collisionGrid` (rows of 0/1), `foregroundRows` (rows drawn above players), `use`, `name`, `tags` and `license`. |
+| `extends` | string | no | The set the props are added to; `wa-starter-office` by default. |
+| `overwrite` | boolean | no | Replace an existing set with this id. Without it, an existing set fails with `ASSET_SET_EXISTS`. |
+
+Output: `setId`, `extends`, `image` (the atlas, `tilesets/<setId>.png`) and `prefabs`: every prefab's `id` (the prop id in lowercase, `_` as `-`), `width`, `height`, `category` and `use`.
+
+The images are copied pixel for pixel into one atlas; each prop's rows go on `furniture1`, or `foreground1` for its foreground rows, and its collision cells block walking. Use `setId` as the `assetSet` of the DSL and of `place_prefab`. A map built with the base set can be rebuilt with the new set; the other way fails with `ASSET_SET_MISMATCH`.
+
+The atlas is named after its content (`tilesets/<setId>-<hash>.png`). Importing changed props again with `overwrite` writes a new atlas and leaves the old one in place, so maps built with it still show their furniture; their next build draws every prop, DSL and placed ones alike, from the new atlas. Delete an old atlas only when no map uses it. Two imports of the same set at once: the second fails with `ASSET_SET_LOCKED`. A bad hints file fails with `INVALID_INPUT`; bad images (wrong size, fully transparent, unreadable) fail with `INVALID_INPUT` and are listed in `details.problems`. An atlas taller than 4096 px fails with `IMAGE_TOO_LARGE`: split the props into several sets.
 
 ## Exit codes
 

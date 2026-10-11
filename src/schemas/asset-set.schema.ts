@@ -27,22 +27,35 @@ export type FaceRow = z.infer<typeof FaceRowSchema>;
 export const FaceStyleSchema = z.strictObject({ row1: FaceRowSchema, row2: FaceRowSchema });
 export type FaceStyle = z.infer<typeof FaceStyleSchema>;
 
+const TilesetEntrySchema = z.strictObject({
+  name: z.string().min(1),
+  tsj: relPath.describe('Path of the .tsj file, relative to set.json'),
+  image: relPath.describe('Path of the tileset image, relative to the user project root'),
+  tilesetCopyright: z.string().min(1),
+});
+
+export const PREFAB_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
+
+const PrefabEntrySchema = z.strictObject({
+  id: z.string().regex(PREFAB_ID_PATTERN),
+  path: relPath.describe('Path of the prefab .tmj, relative to set.json'),
+  width: int.min(1),
+  height: int.min(1),
+  category: z.enum(PREFAB_CATEGORIES),
+  placement: z.enum(PREFAB_PLACEMENTS),
+  faceRow: z.enum(PREFAB_FACE_ROWS).exactOptional(),
+  use: z.string().min(1),
+  license: z.string().min(1).exactOptional(),
+});
+export type PrefabEntry = z.infer<typeof PrefabEntrySchema>;
+
 export const AssetSetSchema = z
   .strictObject({
     id: AssetSetIdSchema,
     title: z.string().min(1),
     starterKitSha: z.string().regex(/^[0-9a-f]{40}$/).exactOptional(),
     mapCopyright: z.string().min(1).exactOptional(),
-    tilesets: z
-      .array(
-        z.strictObject({
-          name: z.string().min(1),
-          tsj: relPath.describe('Path of the .tsj file, relative to set.json'),
-          image: relPath.describe('Path of the tileset image, relative to the user project root'),
-          tilesetCopyright: z.string().min(1),
-        }),
-      )
-      .min(1),
+    tilesets: z.array(TilesetEntrySchema).min(1),
     wallTerrain: z.strictObject({
       tileset: z.string().min(1),
       wangset: z.string().min(1),
@@ -64,19 +77,7 @@ export const AssetSetSchema = z
     floorStyles: z.strictObject({ default: z.string().min(1), styles: z.record(z.string(), TileRefSchema) }),
     collisionTile: TileRefSchema,
     startTile: TileRefSchema,
-    prefabs: z.array(
-      z.strictObject({
-        id: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/),
-        path: relPath.describe('Path of the prefab .tmj, relative to set.json'),
-        width: int.min(1),
-        height: int.min(1),
-        category: z.enum(PREFAB_CATEGORIES),
-        placement: z.enum(PREFAB_PLACEMENTS),
-        faceRow: z.enum(PREFAB_FACE_ROWS).exactOptional(),
-        use: z.string().min(1),
-        license: z.string().min(1).exactOptional(),
-      }),
-    ),
+    prefabs: z.array(PrefabEntrySchema),
   })
   .superRefine((set, ctx) => {
     const tilesets = new Set(set.tilesets.map((t) => t.name));
@@ -120,3 +121,25 @@ export const AssetSetSchema = z
   });
 
 export type AssetSet = z.infer<typeof AssetSetSchema>;
+
+// A set that extends another: it adds tilesets and prefabs (furniture, for example) to the base
+// set and takes everything else from it: walls, faces, floors, collision and start tiles. The
+// base must be a full set, not another extending one.
+export const ExtendingAssetSetSchema = z
+  .strictObject({
+    id: AssetSetIdSchema,
+    title: z.string().min(1),
+    extends: AssetSetIdSchema.describe('The id of the set this one adds to, for example "wa-starter-office"'),
+    mapCopyright: z.string().min(1).exactOptional(),
+    tilesets: z.array(TilesetEntrySchema).min(1),
+    prefabs: z.array(PrefabEntrySchema),
+  })
+  .superRefine((set, ctx) => {
+    if (set.extends === set.id) ctx.addIssue({ code: 'custom', path: ['extends'], message: 'a set cannot extend itself' });
+    set.prefabs.forEach((p, i) => {
+      if (p.placement === 'north-wall' && p.faceRow === undefined) {
+        ctx.addIssue({ code: 'custom', path: ['prefabs', i, 'faceRow'], message: 'faceRow is required for north-wall prefabs' });
+      }
+    });
+  });
+export type ExtendingAssetSet = z.infer<typeof ExtendingAssetSetSchema>;

@@ -101,13 +101,17 @@ export const PREFAB_ORIGINS = ['build', 'tool'] as const;
 // Every DSL furniture item, plus room for tool-placed prefabs; a longer list is damage.
 const MAX_STATE_PREFABS = MAX_ROOMS * MAX_FURNITURE_PER_ROOM + 10_000;
 
+// Rooms as stored in the build record: the DSL room without the input-only name length limit,
+// so maps built before the limit stay readable.
+const StoredRoomSchema = DslRoomSchema.extend({ name: z.string().exactOptional() });
+
 const EngineStateSchema = z.object({
   v: z.literal(2),
   assetSet: z.string(),
   // The map size and tileset first ids when the state was written: restoring needs both.
   size: z.object({ width: z.number().int().min(1).max(MAX_MAP_DIMENSION), height: z.number().int().min(1).max(MAX_MAP_DIMENSION) }),
   tilesets: z.array(z.tuple([z.string(), z.number().int().min(1)])),
-  rooms: z.array(DslRoomSchema).max(MAX_ROOMS),
+  rooms: z.array(StoredRoomSchema).max(MAX_ROOMS),
   footprint: z.string(),
   writes: WritesSchema,
   prefabs: z.array(
@@ -131,6 +135,10 @@ const EngineStateSchema = z.object({
     }),
   ),
   variables: z.array(z.object({ name: z.string(), objectId: z.number().int() })),
+  // Room label text objects; maps built before labels existed have none.
+  labels: z.array(z.object({ name: z.string(), objectId: z.number().int() })).default([]),
+  // Room details by room id. Kept out of `rooms`, whose strict schema 0.1.0 also reads.
+  roomDetails: z.record(z.string(), z.string()).default({}),
   nextPrefab: z.number().int(),
 });
 export type EngineState = z.infer<typeof EngineStateSchema>;
@@ -153,6 +161,8 @@ export function emptyState(assetSet: string, map: TiledMap): EngineState {
     prefabs: [],
     zones: [],
     variables: [],
+    labels: [],
+    roomDetails: {},
     nextPrefab: 1,
   };
 }
@@ -176,7 +186,7 @@ export function readState(map: TiledMap): EngineState | undefined {
   // The recorded rooms were a valid layout when they were built; checking them again keeps a
   // damaged door or room from reaching the door checks (a huge door width would exhaust memory).
   try {
-    parseDsl({ mapWidth: size.width, mapHeight: size.height, assetSet: state.assetSet, rooms: state.rooms });
+    parseDsl({ mapWidth: size.width, mapHeight: size.height, assetSet: state.assetSet, rooms: state.rooms.map(({ name: _name, details: _details, ...room }) => room) });
   } catch (err) {
     throw damaged(`its rooms are not a valid layout (${err instanceof WaEngineError ? err.code : 'invalid'})`);
   }

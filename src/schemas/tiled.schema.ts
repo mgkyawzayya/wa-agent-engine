@@ -32,6 +32,20 @@ export interface TiledTileLayer extends LayerBase {
   chunks?: unknown[];
 }
 
+// A Tiled text object's text. WorkAdventure draws it with its size, font, colour, wrap and
+// horizontal alignment.
+export interface TiledText {
+  text: string;
+  pixelsize?: number;
+  fontfamily?: string;
+  color?: string;
+  wrap?: boolean;
+  halign?: 'left' | 'center' | 'right' | 'justify';
+  valign?: 'top' | 'center' | 'bottom';
+  bold?: boolean;
+  [key: string]: unknown;
+}
+
 export interface TiledObject {
   id: number;
   name?: string;
@@ -43,6 +57,7 @@ export interface TiledObject {
   height?: number;
   gid?: number;
   properties?: TiledProperty[];
+  text?: TiledText;
   [key: string]: unknown;
 }
 
@@ -161,6 +176,18 @@ export const TiledObjectSchema: z.ZodType<TiledObject> = z.looseObject({
   height: z.number().exactOptional(),
   gid: z.number().exactOptional(),
   properties: z.array(TiledPropertySchema).exactOptional(),
+  text: z
+    .looseObject({
+      text: z.string(),
+      pixelsize: z.number().exactOptional(),
+      fontfamily: z.string().exactOptional(),
+      color: z.string().exactOptional(),
+      wrap: z.boolean().exactOptional(),
+      halign: z.enum(['left', 'center', 'right', 'justify']).exactOptional(),
+      valign: z.enum(['top', 'center', 'bottom']).exactOptional(),
+      bold: z.boolean().exactOptional(),
+    })
+    .exactOptional(),
 });
 
 const TileLayerSchema: z.ZodType<TiledTileLayer> = z.looseObject({

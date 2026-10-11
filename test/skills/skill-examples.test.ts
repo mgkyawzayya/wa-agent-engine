@@ -10,7 +10,7 @@ import { makeFullProject, type TempProject } from '../helpers/project.js';
 
 const SKILL = fileURLToPath(new URL('../../skills/wa-map-design/', import.meta.url));
 const PLACEHOLDER = '/path/to/map-starter-kit';
-const COMMAND = /npx -y wa-agent-engine@0\.1\.0 ([a-z]+) (?:--input '([\s\S]*?)'|--input-file (\S+))/g;
+const COMMAND = /npx -y wa-agent-engine@0\.2\.0 ([a-z]+) (?:--input '([\s\S]*?)'|--input-file (\S+))/g;
 
 interface Step {
   command: string;

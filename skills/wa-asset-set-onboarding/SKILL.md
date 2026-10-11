@@ -1,7 +1,7 @@
 ---
 name: wa-asset-set-onboarding
-description: Adds a tileset to wa-agent-engine as a project-local asset set, so the WorkAdventure map tools can draw walls, wall faces, floors, doors and furniture with it. Use it when a user wants to build WorkAdventure maps with their own or third-party tiles, or asks to create, fix or check an asset set in .wa-asset-sets, its Tiled .tsj wall terrain, its set.json, or its prefab .tmj files.
-compatibility: Needs Node.js 26 or newer, a WorkAdventure map project that holds the tileset images, and the wa-agent-engine MCP server or the CLI through npx -y wa-agent-engine@0.1.0. Tiled helps for drawing the Wang set but is optional.
+description: Adds a tileset to wa-agent-engine as a project-local asset set, so the WorkAdventure map tools can draw walls, wall faces, floors, doors and furniture with it, or turns single prop images (stages, banners, boards, games) into furniture with import_prop_set. Use it when a user wants to build WorkAdventure maps with their own or third-party tiles or props, or asks to create, fix or check an asset set in .wa-asset-sets, its Tiled .tsj wall terrain, its set.json, or its prefab .tmj files.
+compatibility: Needs Node.js 26 or newer, a WorkAdventure map project that holds the tileset images, and the wa-agent-engine MCP server or the CLI through npx -y wa-agent-engine@0.2.0. Tiled helps for drawing the Wang set but is optional.
 ---
 
 # Asset set onboarding
@@ -19,9 +19,26 @@ Do this before anything else, and stop if the answer is unclear.
 - Some licences are non-commercial, such as those of images generated with FLUX non-commercial models. Write that into the set and tell the user before anything is published.
 - Record the licence and author of each image in its `tilesetCopyright`, and a credit for maps made with the set in `mapCopyright`. The engine copies both into every map it scaffolds.
 - If a prefab copies an arrangement from someone else's map, give it a `credit` and a `license` property.
-- Never copy, commit, upload or embed the PNG images. The set's JSON files hold tile ids and arrangements only; the images stay where the user keeps them in the project.
+- Never copy, commit, upload or embed the PNG images. The set's JSON files hold tile ids and arrangements only; the images stay where the user keeps them in the project. The one exception is `import_prop_set`, which copies the user's own prop images into the project's `tilesets/` folder as one atlas.
 
-## 2. Create the set
+## 2. Props only: import_prop_set
+
+When the user has furniture as single images (one PNG per prop, such as a stage, a banner or a pinball machine) and wants to keep the walls and floors of an existing set, do not write a set by hand: `import_prop_set` makes one.
+
+1. The images must be PNGs exactly `sizeTiles` × 32 px, inside the map project (for example `props/varcamp/images/`). Check the licence first (section 1) and write it into each prop's `license`.
+2. Write a hints JSON next to them: an array with one entry per prop, `id`, `image` (relative to the hints file), `sizeTiles` `[width, height]`, and if possible `collisionGrid` (one row of 0/1 per tile row; 1 blocks walking), `foregroundRows` (rows drawn above players, such as the top of a tall cabinet), `use` (one sentence an agent can pick the prop by), `name`, `tags` and `license`.
+3. Import it:
+
+   ```bash
+   npx -y wa-agent-engine@0.2.0 import-props --input '{"projectDir": "/path/to/map-starter-kit", "setId": "varcamp", "source": "props/varcamp/props.json"}'
+   ```
+
+4. The result lists every prefab id (the prop id in lowercase, `_` as `-`), size, category and use. The set extends `wa-starter-office`, so maps built with `"assetSet": "varcamp"` have the starter walls and floors and all the furniture of both sets. A map built with `wa-starter-office` can switch to it at the next build.
+5. Prove it like any set (section 4): a test map with a few props, `validate_wa_map`, `render_map_preview`.
+
+The tool copies the images, pixel for pixel, into one atlas `tilesets/<setId>.png` in the project; that is the only copy to make. It refuses to replace an existing set (`ASSET_SET_EXISTS`) unless the user asks for `"overwrite": true`, and lists every bad image or hint in `details.problems` (`INVALID_INPUT`).
+
+## 3. Create the set
 
 A project-local set lives in the user's map project:
 
@@ -47,7 +64,7 @@ Then write the files, in this order:
 4. **set.json.** The tilesets with their copyright, the wall terrain, the door lintels, the face rules (two rows of face per wall, with end variants), the wall and floor styles, the collision and start tiles, and `mapCopyright`.
 5. **Prefabs.** One small Tiled map per piece of furniture, with its tiles split over the sub-layers `furniture1` to `furniture3` (under the avatar), `foreground1` and `foreground2` (over the avatar), and `collisions`. Its properties (`category`, `placement`, `faceRow` for north-wall pieces, `use`, and `credit` and `license` where needed) must match its entry in `set.json`.
 
-## 3. Prove the set
+## 4. Prove the set
 
 Run these checks in order, and fix each problem before going on.
 
@@ -64,7 +81,7 @@ Run these checks in order, and fix each problem before going on.
 
 This makes `office-mini`, a minimal copy of the starter set with four tilesets, one wall style, two floors and the phone pod, then proves it. The full `set.json` is in [references/terrain-authoring.md](references/terrain-authoring.md).
 
-1. Get the starter set's definition files. They ship in the wa-agent-engine package. With the package installed globally, they are under `$(npm root -g)/wa-agent-engine/`; otherwise `npm pack wa-agent-engine@0.1.0` fetches them as a tarball:
+1. Get the starter set's definition files. They ship in the wa-agent-engine package. With the package installed globally, they are under `$(npm root -g)/wa-agent-engine/`; otherwise `npm pack wa-agent-engine@0.2.0` fetches them as a tarball:
 
    ```bash
    cd "$(mktemp -d)"
@@ -87,13 +104,13 @@ This makes `office-mini`, a minimal copy of the starter set with four tilesets, 
 3. Scaffold a test map with the set:
 
    ```bash
-   npx -y wa-agent-engine@0.1.0 scaffold --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj", "width": 20, "height": 14, "assetSet": "office-mini", "spawn": {"x": 4, "y": 4}}'
+   npx -y wa-agent-engine@0.2.0 scaffold --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj", "width": 20, "height": 14, "assetSet": "office-mini", "spawn": {"x": 4, "y": 4}}'
    ```
 
 4. Build the test room. The four rooms meet at the crossing (9, 6); the doors at (9, 3) and (9, 9) are vertical, and those at (4, 6) and (14, 6) horizontal.
 
    ```bash
-   npx -y wa-agent-engine@0.1.0 build --input '{
+   npx -y wa-agent-engine@0.2.0 build --input '{
      "projectDir": "/path/to/map-starter-kit",
      "mapPath": "set-test.tmj",
      "dsl": {
@@ -113,9 +130,9 @@ This makes `office-mini`, a minimal copy of the starter set with four tilesets, 
 5. Place the prefab, validate, and render:
 
    ```bash
-   npx -y wa-agent-engine@0.1.0 prefab --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj", "prefabId": "phone-pod-2x2", "x": 2, "y": 10}'
-   npx -y wa-agent-engine@0.1.0 validate --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj"}'
-   npx -y wa-agent-engine@0.1.0 render --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj"}'
+   npx -y wa-agent-engine@0.2.0 prefab --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj", "prefabId": "phone-pod-2x2", "x": 2, "y": 10}'
+   npx -y wa-agent-engine@0.2.0 validate --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj"}'
+   npx -y wa-agent-engine@0.2.0 render --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj"}'
    ```
 
    Validate returns `{"ok": true, "errors": [], "warnings": []}`, and the preview shows four rooms with joined walls, white faces under each north wall, red carpet in the north-west room, four doors with lintels, and the phone pod.
@@ -141,7 +158,7 @@ With your own art, the steps are the same: write the files, then scaffold, build
 - Never change the built-in set inside the installed package. Make a project-local set instead, under a new id, or under the built-in id to replace it in one project.
 - Keep images out of the set folder and out of version control; the set refers to them where they are.
 - Write licences down where the engine carries them into maps: `tilesetCopyright`, `mapCopyright`, and prefab `credit` and `license`.
-- Prove every change to a set with the steps in section 3 before using it for a real map.
+- Prove every change to a set with the steps in section 4 before using it for a real map.
 
 ## Reference
 

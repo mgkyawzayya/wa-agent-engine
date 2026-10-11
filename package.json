@@ -1,6 +1,6 @@
 {
   "name": "wa-agent-engine",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Lets coding agents draw WorkAdventure maps: an MCP server, a CLI and agent skills that turn a room layout into a validated Tiled map with a preview.",
   "keywords": [
     "workadventure",

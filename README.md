@@ -33,8 +33,8 @@ If `npm install` stops because `pngquant failed to build`, see [Troubleshooting]
 Register the MCP server and install the skills:
 
 ```bash
-claude mcp add --transport stdio --scope user wa-agent-engine -- npx -y wa-agent-engine@0.1.0 mcp
-npx skills add https://github.com/mgkyawzayya/wa-agent-engine/tree/v0.1.0/skills --agent claude-code --global --yes
+claude mcp add --transport stdio --scope user wa-agent-engine -- npx -y wa-agent-engine@0.2.0 mcp
+npx skills add https://github.com/mgkyawzayya/wa-agent-engine/tree/v0.2.0/skills --agent claude-code --global --yes
 ```
 
 `claude mcp list` should show `wa-agent-engine: … ✔ Connected`. Setup for Codex, Cursor and Pi is in [docs/agent-setup.md](docs/agent-setup.md).
@@ -75,7 +75,7 @@ The layout format, the prefab catalog and the zone properties are documented in 
 
 ## The tools
 
-The MCP server (`wa-agent-engine mcp`, over stdio) and the CLI expose the same six tools from one table, with the same results and error codes.
+The MCP server (`wa-agent-engine mcp`, over stdio) and the CLI expose the same seven tools from one table, with the same results and error codes.
 
 | MCP tool | CLI command | What it does |
 |---|---|---|
@@ -85,15 +85,16 @@ The MCP server (`wa-agent-engine mcp`, over stdio) and the CLI expose the same s
 | `configure_wa_zone` | `zone` | Creates or updates a named WorkAdventure area with checked properties. |
 | `validate_wa_map` | `validate` | Checks any Tiled map against WorkAdventure's rules. Read-only. |
 | `render_map_preview` | `render` | Renders a PNG preview into `.wa-preview/`. Over MCP it also returns the image. |
+| `import_prop_set` | `import-props` | Turns your own prop images (PNGs in 32 px tile multiples) into furniture prefabs, in a set that extends the starter kit's. |
 
 Every failure carries a code from a closed list (`ERROR_CODES`, plus `VALIDATION_CODES` for validation issues), so an agent can act on the code instead of the message.
 
 ## Using the CLI
 
-Agents that can run shell commands, and people, can use the CLI without MCP. Every command reads one JSON object (`--input '<json>'`, `--input-file <path>`, or `--input -` for stdin) and prints JSON. `npx -y wa-agent-engine@0.1.0 <command> --help` shows a command's input schema.
+Agents that can run shell commands, and people, can use the CLI without MCP. Every command reads one JSON object (`--input '<json>'`, `--input-file <path>`, or `--input -` for stdin) and prints JSON. `npx -y wa-agent-engine@0.2.0 <command> --help` shows a command's input schema.
 
 ```bash
-npm install -g wa-agent-engine@0.1.0     # or prefix each command with npx -y wa-agent-engine@0.1.0
+npm install -g wa-agent-engine@0.2.0     # or prefix each command with npx -y wa-agent-engine@0.2.0
 P=/absolute/path/to/my-venue
 
 wa-agent-engine scaffold --input "{\"projectDir\":\"$P\",\"mapPath\":\"venue.tmj\",\"width\":24,\"height\":16,\"spawn\":{\"x\":3,\"y\":13}}"
@@ -123,7 +124,7 @@ Exit codes: 0 means success; 1 means a tool error or invalid input, with a JSON 
 examples/varcamp-venue.commands.sh /absolute/path/to/my-venue
 ```
 
-It writes `varcamp-venue.tmj` (pass another map path as the second argument) and uses `wa-agent-engine` when installed, `npx -y wa-agent-engine@0.1.0` otherwise, or the command in `WA_AGENT_ENGINE`. The lounge's `playAudio` URL is a placeholder on example.com; point it at real audio before you use the map.
+It writes `varcamp-venue.tmj` (pass another map path as the second argument) and uses `wa-agent-engine` when installed, `npx -y wa-agent-engine@0.2.0` otherwise, or the command in `WA_AGENT_ENGINE`. The lounge's `playAudio` URL is a placeholder on example.com; point it at real audio before you use the map.
 
 ## Working alongside Tiled
 
@@ -164,4 +165,4 @@ npm run smoke           # runs the built CLI
 npm run check-skills    # checks the skills and these docs against the tool table
 ```
 
-The tests use the cached starter kit and store only hashes of rendered images, never the images. To try a local build in an agent, `npm pack` and point the MCP command at the tarball: `npx -y --package=/absolute/path/wa-agent-engine-0.1.0.tgz wa-agent-engine mcp`.
+The tests use the cached starter kit and store only hashes of rendered images, never the images. To try a local build in an agent, `npm pack` and point the MCP command at the tarball: `npx -y --package=/absolute/path/wa-agent-engine-0.2.0.tgz wa-agent-engine mcp`.

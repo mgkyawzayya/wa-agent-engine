@@ -2,7 +2,7 @@ import { access, readFile, stat } from 'node:fs/promises';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as z from 'zod';
-import { AssetSetIdSchema, AssetSetSchema, type AssetSet } from '../schemas/asset-set.schema.js';
+import { AssetSetIdSchema, AssetSetSchema, ExtendingAssetSetSchema, type AssetSet } from '../schemas/asset-set.schema.js';
 import { TiledTilesetFileSchema, type TiledTilesetFile } from '../schemas/tiled.schema.js';
 import { WaEngineError } from './errors.js';
 import { assertProjectDir, resolveInProject } from './project-paths.js';
@@ -42,6 +42,8 @@ export interface LoadedTileset {
 export interface LoadedAssetSet {
   id: string;
   source: 'project' | 'builtin';
+  // The base set's id when this set extends one; `set` then holds both sets merged.
+  extends?: string;
   set: AssetSet;
   tilesets: ReadonlyMap<string, LoadedTileset>;
   walls: WallLookup;
@@ -137,7 +139,9 @@ function checkReferences(id: string, set: AssetSet, tilesets: ReadonlyMap<string
 }
 
 // Callers pass the project folder as given; it is validated here like everywhere else.
-export async function loadAssetSet(id: string, projectDirInput: string): Promise<LoadedAssetSet> {
+// `asBaseOf` names the set being loaded that extends this one: a base must itself be a full set,
+// which is checked before anything recurses (so a cycle of sets cannot loop).
+export async function loadAssetSet(id: string, projectDirInput: string, asBaseOf?: string): Promise<LoadedAssetSet> {
   const projectDir = await assertProjectDir(projectDirInput);
   if (!AssetSetIdSchema.safeParse(id).success) {
     throw new WaEngineError('ASSET_SET_NOT_FOUND', `"${id}" is not a valid asset set id`);
@@ -160,7 +164,12 @@ export async function loadAssetSet(id: string, projectDirInput: string): Promise
       ? resolveInProject(projectDir, posix.join(projectRel, rel), { ext })
       : Promise.resolve(join(builtinDir, rel));
 
-  const parsed = AssetSetSchema.safeParse(await readJson(await resolveFile('set.json', '.json'), id, 'set.json'));
+  const raw = await readJson(await resolveFile('set.json', '.json'), id, 'set.json');
+  if (typeof raw === 'object' && raw !== null && 'extends' in raw) {
+    if (asBaseOf !== undefined) throw invalid(asBaseOf, `it extends "${id}", which extends another set; extend a full set instead`);
+    return loadExtendingSet(id, source, projectDir, raw, resolveFile);
+  }
+  const parsed = AssetSetSchema.safeParse(raw);
   if (!parsed.success) {
     throw invalid(id, `set.json is invalid:\n${z.prettifyError(parsed.error)}`, {
       issues: parsed.error.issues.slice(0, 20).map((i) => ({ path: i.path, message: i.message })),
@@ -169,8 +178,17 @@ export async function loadAssetSet(id: string, projectDirInput: string): Promise
   const set = parsed.data;
   if (set.id !== id) throw invalid(id, `set.json declares id "${set.id}"`);
 
+  const tilesets = await loadTilesets(id, set.tilesets, resolveFile);
+  checkReferences(id, set, tilesets);
+
+  return { id, source, set, tilesets, walls: buildWallLookup(id, set, tilesets), resolveFile };
+}
+
+type ResolveFile = LoadedAssetSet['resolveFile'];
+
+async function loadTilesets(id: string, entries: AssetSet['tilesets'], resolveFile: ResolveFile): Promise<Map<string, LoadedTileset>> {
   const tilesets = new Map<string, LoadedTileset>();
-  for (const entry of set.tilesets) {
+  for (const entry of entries) {
     const tsjPath = await resolveFile(entry.tsj, ['.tsj', '.json']);
     const raw = await readJson(tsjPath, id, entry.tsj);
     const tsj = TiledTilesetFileSchema.safeParse(raw);
@@ -185,9 +203,56 @@ export async function loadAssetSet(id: string, projectDirInput: string): Promise
       tilesetCopyright: entry.tilesetCopyright,
     });
   }
-  checkReferences(id, set, tilesets);
+  return tilesets;
+}
 
-  return { id, source, set, tilesets, walls: buildWallLookup(id, set, tilesets), resolveFile };
+// A set that extends a base set: the base's walls, faces, floors and special tiles, with both
+// sets' tilesets and prefabs. Each file resolves in the folder of the set that lists it, so
+// the two sets may not list the same path.
+async function loadExtendingSet(
+  id: string,
+  source: LoadedAssetSet['source'],
+  projectDir: string,
+  raw: unknown,
+  resolveOwn: ResolveFile,
+): Promise<LoadedAssetSet> {
+  const parsed = ExtendingAssetSetSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw invalid(id, `set.json is invalid:\n${z.prettifyError(parsed.error)}`, {
+      issues: parsed.error.issues.slice(0, 20).map((i) => ({ path: i.path, message: i.message })),
+    });
+  }
+  const own = parsed.data;
+  if (own.id !== id) throw invalid(id, `set.json declares id "${own.id}"`);
+  const base = await loadAssetSet(own.extends, projectDir, id);
+
+  const clashes: string[] = [];
+  for (const t of own.tilesets) if (base.tilesets.has(t.name)) clashes.push(`tileset "${t.name}"`);
+  const baseIds = new Set(base.set.prefabs.map((p) => p.id));
+  for (const p of own.prefabs) if (baseIds.has(p.id)) clashes.push(`prefab "${p.id}"`);
+  const basePaths = new Set([...base.set.prefabs.map((p) => p.path), ...base.set.tilesets.map((t) => t.tsj)]);
+  for (const rel of [...own.prefabs.map((p) => p.path), ...own.tilesets.map((t) => t.tsj)]) if (basePaths.has(rel)) clashes.push(`path ${rel}`);
+  if (clashes.length > 0) throw invalid(id, `it repeats names or paths of "${base.id}": ${clashes.join(', ')}`, { clashes });
+
+  const ownTilesets = await loadTilesets(id, own.tilesets, resolveOwn);
+  const ownPaths = new Set(['set.json', ...own.prefabs.map((p) => p.path), ...own.tilesets.map((t) => t.tsj)]);
+  const set: AssetSet = {
+    ...base.set,
+    id,
+    title: own.title,
+    tilesets: [...base.set.tilesets, ...own.tilesets],
+    prefabs: [...base.set.prefabs, ...own.prefabs],
+  };
+  if (own.mapCopyright !== undefined) set.mapCopyright = own.mapCopyright;
+  return {
+    id,
+    source,
+    extends: base.id,
+    set,
+    tilesets: new Map([...base.tilesets, ...ownTilesets]),
+    walls: base.walls,
+    resolveFile: (rel, ext) => (ownPaths.has(rel) ? resolveOwn(rel, ext) : base.resolveFile(rel, ext)),
+  };
 }
 
 // Absolute paths of the set's tileset images inside the user's project.

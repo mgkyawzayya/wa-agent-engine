@@ -1,6 +1,6 @@
 import { access } from 'node:fs/promises';
 import { interiorOf, MAX_MAP_TILES, parseDsl, type Dsl } from '../schemas/dsl.schema.js';
-import { setProperty, type TiledMap, type TiledObject } from '../schemas/tiled.schema.js';
+import { isExternalTileset, setProperty, type TiledMap, type TiledObject } from '../schemas/tiled.schema.js';
 import { NPC_WRITABLE_BY, type WaVariable } from '../schemas/wa.schema.js';
 import { loadAssetSet, type LoadedAssetSet } from './asset-set-registry.js';
 import { autotile, faceStyleOf } from './autotiler.js';
@@ -17,9 +17,10 @@ import {
   type Writes,
 } from './engine-state.js';
 import { assertWhole, WaEngineError, isWaEngineError, type ErrorCode } from './errors.js';
-import { decodeGid } from './gid.js';
+import { decodeGid, tilesetForGid } from './gid.js';
 import { CellSet } from './grid.js';
-import { allocObjectId, ensureStandardLayers, forEachObjectGroup, resolveRole, type TileRole } from './layers.js';
+import { allocObjectId, ensureStandardLayers, forEachObjectGroup, removeOwnedObjects, resolveRole, type TileRole } from './layers.js';
+import { writeLabels } from './labels.js';
 import { createEmptyMap, readMap, withMapLock, writeMap } from './map-io.js';
 import { editMap, resolveMap } from './map-session.js';
 import { loadPrefab, type LoadedPrefab } from './prefab-registry.js';
@@ -284,15 +285,31 @@ export interface PlacePrefabResult {
   collisions: number;
 }
 
+// A map keeps the asset set it was built with, or moves to a set that extends that set (which
+// has everything the map already uses, plus more prefabs). Any other set is a mismatch, even
+// one that does not exist.
+async function loadSetFor(current: string | undefined, requested: string, projectDir: string): Promise<LoadedAssetSet> {
+  if (current === undefined || current === requested) return loadAssetSet(requested, projectDir);
+  const mismatch = (): WaEngineError =>
+    new WaEngineError('ASSET_SET_MISMATCH', `this map uses asset set "${current}", not "${requested}"; a map can only move to a set that extends the one it uses`);
+  let set: LoadedAssetSet;
+  try {
+    set = await loadAssetSet(requested, projectDir);
+  } catch (err) {
+    if (isWaEngineError(err) && err.code === 'ASSET_SET_NOT_FOUND') throw mismatch();
+    throw err;
+  }
+  if (set.extends !== current) throw mismatch();
+  return set;
+}
+
 export async function placePrefab(options: PlacePrefabOptions): Promise<PlacePrefabResult> {
   assertWhole({ x: options.x, y: options.y });
   return editMap(options.projectDir, options.mapPath, async (session) => {
     const { map } = session;
-    if (options.assetSet !== undefined && session.state !== undefined && session.state.assetSet !== options.assetSet) {
-      throw new WaEngineError('ASSET_SET_MISMATCH', `this map uses asset set "${session.state.assetSet}", not "${options.assetSet}"`);
-    }
     const state = session.state ?? emptyState(options.assetSet ?? DEFAULT_ASSET_SET, map);
-    const set = await loadAssetSet(state.assetSet, session.projectDir);
+    const set = await loadSetFor(session.state?.assetSet, options.assetSet ?? state.assetSet, session.projectDir);
+    state.assetSet = set.id;
     const prefab = await loadPrefab(set, options.prefabId);
     ensureStandardLayers(map);
     await embedSetTilesets(session.projectDir, map, session.mapAbs, set, prefabTilesets(prefab, set));
@@ -310,6 +327,8 @@ export async function placePrefab(options: PlacePrefabOptions): Promise<PlacePre
     const instance = `p${state.nextPrefab}`;
     state.nextPrefab += 1;
     state.prefabs.push({ instance, prefabId: prefab.id, x: options.x, y: options.y, origin: 'tool', writes: recorder.toWrites() });
+    // A prefab on a wall face may sit where a room's label was.
+    writeLabels(map, state, set.set.faceRules.height, TILE);
     const cells = Object.values(prefab.layers).reduce((n, list) => n + (list?.length ?? 0), 0);
     return { result: { instance, cells, collisions: prefab.collisions.length }, write: { state } };
   });
@@ -341,14 +360,6 @@ function findVariables(map: TiledMap, name: string): TiledObject[] {
   return found;
 }
 
-// Removes engine-owned objects, checking each still carries the name and type recorded.
-function removeOwned(map: TiledMap, owned: readonly { objectId: number; name: string }[], type: string): void {
-  const match = new Map(owned.map((o) => [o.objectId, o.name]));
-  forEachObjectGroup(map.layers, (layer) => {
-    layer.objects = layer.objects.filter((o) => !(match.get(o.id) === o.name && (o.type ?? o.class) === type));
-  });
-}
-
 function defaultProperty(value: WaVariable['default']): { type: string; value: unknown; asText: boolean } {
   if (typeof value === 'boolean') return { type: 'bool', value, asText: false };
   if (typeof value === 'number') return { type: Number.isInteger(value) ? 'int' : 'float', value, asText: false };
@@ -360,7 +371,7 @@ function defaultProperty(value: WaVariable['default']): { type: string; value: u
 function upsertVariables(map: TiledMap, state: EngineState, variables: Dsl['variables'], warnings: WaEngineError[]): string[] {
   const owned = new Map(state.variables.map((v) => [v.name, v.objectId]));
   const keep = new Set(variables.map((v) => v.name));
-  removeOwned(map, state.variables.filter((v) => !keep.has(v.name)), 'variable');
+  removeOwnedObjects(map, state.variables.filter((v) => !keep.has(v.name)), 'variable');
   const records: EngineState['variables'] = [];
   for (const variable of variables) {
     const existing = findVariables(map, variable.name);
@@ -456,6 +467,9 @@ function prefabCondition(
   collision: number,
   // Every cell any record wrote (this prefab's included), as cellKey strings.
   recorded: ReadonlySet<string>,
+  // Tiles of an older atlas of the same prop set, which a re-import replaced: they count as
+  // this prefab's own, so the rebuild puts it back with the new art.
+  olderAtlas: (raw: number) => boolean,
 ): 'intact' | 'erased' | 'edited' {
   const expected = new Map<string, number>();
   for (const [role, cells] of Object.entries(prefab.layers) as [TileRole, LoadedPrefab['layers'][keyof LoadedPrefab['layers']]][]) {
@@ -470,7 +484,7 @@ function prefabCondition(
       if (now === w.original) tally.hiddenGone += 1;
     } else {
       tally.visible += 1;
-      if (now === expected.get(cellKey(w.role, w.x, w.y))) tally.visibleSame += 1;
+      if (now === expected.get(cellKey(w.role, w.x, w.y)) || (now !== 0 && olderAtlas(now))) tally.visibleSame += 1;
       if (now === w.original) tally.visibleGone += 1;
     }
   }
@@ -506,10 +520,7 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
     if (dsl.mapWidth !== map.width || dsl.mapHeight !== map.height) {
       throw new WaEngineError('INVALID_INPUT', `the DSL is ${dsl.mapWidth}x${dsl.mapHeight} but the map is ${map.width}x${map.height}`);
     }
-    if (session.state !== undefined && session.state.assetSet !== dsl.assetSet) {
-      throw new WaEngineError('ASSET_SET_MISMATCH', `this map uses asset set "${session.state.assetSet}", not "${dsl.assetSet}"`);
-    }
-    const set = await loadAssetSet(dsl.assetSet, projectDir);
+    const set = await loadSetFor(session.state?.assetSet, dsl.assetSet, projectDir);
     const previous = session.state ?? emptyState(dsl.assetSet, map);
     const size = previous.size;
     ensureStandardLayers(map);
@@ -532,6 +543,14 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
     const collision = writer.gid(set.set.collisionTile.tileset, set.set.collisionTile.tile);
     const faces = probe(map, writer, set);
     const toolPrefabs: { record: PrefabRecord; prefab: LoadedPrefab }[] = [];
+    // Atlases an import of this set wrote before (named <set>-<hash>) that the set no longer uses.
+    const older = new Set(
+      map.tilesets.filter((t) => !isExternalTileset(t) && String(t.name).startsWith(`${set.id}-`) && !set.tilesets.has(String(t.name))).map((t) => String(t.name)),
+    );
+    const olderAtlas = (raw: number): boolean => {
+      const hit = tilesetForGid(map.tilesets, decodeGid(raw).gid);
+      return hit !== undefined && older.has(String(hit.tileset.name));
+    };
     // Every cell some record wrote: the build's and every prefab's.
     const recorded = new Set<string>();
     for (const writes of [previous.writes, ...previous.prefabs.map((p) => p.writes)]) {
@@ -547,7 +566,7 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
         warnings.push(untrackedWarning(record, 'not-in-set'));
         continue;
       }
-      const condition = prefabCondition(map, writer, faces, prefab, record, collision, recorded);
+      const condition = prefabCondition(map, writer, faces, prefab, record, collision, recorded, olderAtlas);
       if (condition === 'intact') {
         toolPrefabs.push({ record, prefab });
         continue;
@@ -588,7 +607,9 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
     const state: EngineState = {
       ...previous,
       assetSet: set.id,
-      rooms: dsl.rooms,
+      // Details are stored apart from the rooms, which 0.1.0 reads with a strict schema.
+      rooms: dsl.rooms.map(({ details: _details, ...room }) => room),
+      roomDetails: Object.fromEntries(dsl.rooms.flatMap((r) => (r.details === undefined ? [] : [[r.id, r.details]]))),
       footprint: encodeCells(tiles.footprint.sorted()),
       writes: recorder.toWrites(),
       prefabs: [],
@@ -614,7 +635,7 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
     }
     if (zoneErrors.length > 0) firstError(zoneErrors);
     const staleZones = state.zones.filter((z) => z.origin === 'build' && !zoneNames.includes(z.name));
-    removeOwned(map, staleZones, 'area');
+    removeOwnedObjects(map, staleZones, 'area');
     state.zones = state.zones.filter((z) => !staleZones.includes(z));
 
     const variables = upsertVariables(map, state, dsl.variables, warnings);
@@ -661,6 +682,8 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
     }
     state.prefabs = [...buildPrefabs, ...replaced];
     writer.flush();
+    // Labels last, so they see every piece of furniture now on the walls.
+    writeLabels(map, state, faceRows, TILE);
     // The whole map, furniture included, must leave every door walkable.
     checkDoors(map, dsl.rooms);
     return {

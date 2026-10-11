@@ -211,6 +211,15 @@ export function allocObjectId(map: TiledMap): number {
   return id;
 }
 
+// Removes engine-owned objects, checking each still carries the name and type recorded, so an
+// object a user renamed or retyped is left alone.
+export function removeOwnedObjects(map: TiledMap, owned: readonly { objectId: number; name: string }[], type: string): void {
+  const match = new Map(owned.map((o) => [o.objectId, o.name]));
+  forEachObjectGroup(map.layers, (layer) => {
+    layer.objects = layer.objects.filter((o) => !(match.get(o.id) === o.name && (o.type ?? o.class) === type));
+  });
+}
+
 function newTileLayer(map: TiledMap, name: string): TiledTileLayer {
   return {
     data: new Array<number>(map.width * map.height).fill(0),

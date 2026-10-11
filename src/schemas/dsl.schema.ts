@@ -17,6 +17,9 @@ export const MAX_ROOMS = 200;
 export const MAX_DOORS_PER_ROOM = 16;
 export const MAX_FURNITURE_PER_ROOM = 100;
 export const MAX_VARIABLES = 100;
+// Room labels: the name and the details shown on the wall at the top of a room.
+export const MAX_ROOM_NAME = 60;
+export const MAX_ROOM_DETAILS = 120;
 // The cell between two doors on one wall line must hold a straight wall piece (63 or 65)
 // for each door, so distinct doors need at least 2 wall cells between them.
 export const MIN_DOOR_GAP = 2;
@@ -53,7 +56,16 @@ export const DslRoomSchema = z.strictObject({
     .string()
     .regex(/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/, 'room ids are 1-64 letters, digits, "_" or "-"')
     .describe('Unique room id; also the name of the room area'),
-  name: z.string().exactOptional().describe('Display name, for people reading the DSL'),
+  name: z
+    .string()
+    .max(MAX_ROOM_NAME)
+    .exactOptional()
+    .describe('Room name shown on the wall at the top of the room, 2-4 words, for example "Main Hall"; a room without a name gets no label'),
+  details: z
+    .string()
+    .max(MAX_ROOM_DETAILS)
+    .exactOptional()
+    .describe('One or two short lines under the name: what happens there, for example "Talks 10:00-17:00, Q&A after each talk"'),
   bounds: RectSchema.describe('Room rectangle in tiles, including its walls; at least 3 wide and 5 tall'),
   wallStyle: z.string().exactOptional().describe('Wall style of the asset set, for example "white" or "yellow"'),
   floorStyle: z.string().exactOptional().describe('Floor style of the asset set, for example "wood-dark"'),

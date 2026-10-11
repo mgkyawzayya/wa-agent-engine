@@ -15,6 +15,7 @@ import { WaEngineError } from './errors.js';
 import { decodeGid, tilesetForGid } from './gid.js';
 import { CellSet } from './grid.js';
 import { forEachObjectGroup, readTileData, tryResolveRole, type LayerRole } from './layers.js';
+import { estimateTextHeight, furnitureCells, LABEL_TYPE } from './labels.js';
 import { readMap } from './map-io.js';
 import { resolveMap } from './map-session.js';
 import { resolveMapRelative } from './project-paths.js';
@@ -59,6 +60,8 @@ export const VALIDATION_CODES = [
   'ORPHAN_ZONE',
   'INVALID_ZONE_PROPERTY',
   'BAD_URL',
+  'LABEL_TOO_LONG',
+  'LABEL_COVERED',
   // map script
   'SCRIPT_EXTERNAL',
   'SCRIPT_NOT_FOUND',
@@ -343,12 +346,38 @@ async function checkObjects(ctx: Context): Promise<void> {
   const hasScript = getProperty(map, 'script') !== undefined;
   const names = new Map<string, number>();
   const areas: TiledObject[] = [];
+  const furniture = furnitureCells(map);
   forEachObjectGroup(map.layers, (layer) => {
     for (const o of layer.objects) {
       const objectName = o.name ?? `#${o.id}`;
       if (o.x < 0 || o.y < 0) add(ctx.errors, { code: 'NEGATIVE_COORDS', message: 'object has negative coordinates', layer: layer.name, objectName });
       else if (o.x + (o.width ?? 0) > widthPx || o.y + (o.height ?? 0) > heightPx) {
         add(ctx.errors, { code: 'OUT_OF_BOUNDS_OBJECT', message: 'object extends past the map edge', layer: layer.name, objectName });
+      }
+      if ((o.type ?? o.class) === LABEL_TYPE && o.text !== undefined && o.width !== undefined && o.height !== undefined) {
+        const x0 = Math.max(0, Math.floor(o.x / map.tilewidth));
+        const x1 = Math.min(map.width, Math.ceil((o.x + o.width) / map.tilewidth));
+        const y0 = Math.max(0, Math.floor(o.y / map.tileheight));
+        const y1 = Math.min(map.height, Math.ceil((o.y + o.height) / map.tileheight));
+        let covered = false;
+        for (let y = y0; y < y1 && !covered; y++) for (let x = x0; x < x1 && !covered; x++) covered = furniture.has(y * map.width + x);
+        if (covered) {
+          add(ctx.warnings, {
+            code: 'LABEL_COVERED',
+            message: 'furniture stands where this label is: leave 2 tiles of the wall free (move the screen, board or booth along it) and build again, or widen the room',
+            layer: layer.name,
+            objectName,
+          });
+        }
+        const needed = estimateTextHeight(o.text.text, o.text.pixelsize ?? 16, o.width);
+        if (needed > o.height + 0.5) {
+          add(ctx.warnings, {
+            code: 'LABEL_TOO_LONG',
+            message: `the label needs about ${Math.ceil(needed)} px but its wall has ${o.height} px: shorten the room name or details, or widen the room`,
+            layer: layer.name,
+            objectName,
+          });
+        }
       }
       if (!isArea(o)) continue;
       areas.push(o);

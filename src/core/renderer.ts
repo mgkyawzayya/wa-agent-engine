@@ -3,6 +3,8 @@ import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, relative, sep } from 'node:path';
 import { getProperty, isExternalTileset, type TiledEmbeddedTileset, type TiledMap, type TiledObject } from '../schemas/tiled.schema.js';
 import { WaEngineError } from './errors.js';
+import { GLYPH_ADVANCE, GLYPH_HEIGHT, GLYPH_WIDTH, glyph, wrapText } from './bitmap-font.js';
+import { TEXT_EM_WIDTH, TEXT_LINE_HEIGHT } from './labels.js';
 import { decodeGid, tilesetForGid } from './gid.js';
 import { forEachObjectGroup, forEachTileLayer, readTileData } from './layers.js';
 import { readFileBounded, readMap, sha256Hex } from './map-io.js';
@@ -173,6 +175,77 @@ function outlineZones(canvas: Rgba8, map: TiledMap, scale: number): void {
   });
 }
 
+// ---- text objects ----
+
+const MAX_TEXT_PIXELSIZE = 256;
+const MAX_TEXT_CHARS = 2000;
+
+// A Tiled colour, "#RRGGBB" or "#AARRGGBB"; black when missing or unreadable, as in WorkAdventure.
+export function parseTextColour(value: string | undefined): [number, number, number, number] {
+  const hex = (value ?? '').replace(/^#/, '');
+  const byte = (i: number): number => Number.parseInt(hex.slice(i, i + 2), 16);
+  if (/^[0-9a-fA-F]{6}$/.test(hex)) return [byte(0), byte(2), byte(4), 255];
+  if (/^[0-9a-fA-F]{8}$/.test(hex)) return [byte(2), byte(4), byte(6), byte(0)];
+  return [0, 0, 0, 255];
+}
+
+function blendPixel(canvas: Rgba8, x: number, y: number, [r, g, b, a]: readonly number[]): void {
+  if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height) return;
+  const i = (y * canvas.width + x) * 4;
+  const k = a! / 255;
+  canvas.data[i] = Math.round(r! * k + canvas.data[i]! * (1 - k));
+  canvas.data[i + 1] = Math.round(g! * k + canvas.data[i + 1]! * (1 - k));
+  canvas.data[i + 2] = Math.round(b! * k + canvas.data[i + 2]! * (1 - k));
+  canvas.data[i + 3] = Math.max(canvas.data[i + 3]!, a!);
+}
+
+// Text objects as WorkAdventure places them: from the object's top-left corner, wrapped to its
+// width when wrap is on, in its colour. The glyphs are a 5x7 dot-matrix font scaled to the size,
+// so the preview shows where text is and roughly how much room it takes, not its typeface.
+function drawTexts(canvas: Rgba8, map: TiledMap, scale: number): void {
+  forEachObjectGroup(map.layers, (layer) => {
+    if (layer.visible === false) return;
+    for (const o of layer.objects) {
+      if (o.text === undefined || o.visible === false || typeof o.text.text !== 'string') continue;
+      // Bounded work whatever the map says: sizes up to 256 px, at most MAX_TEXT_CHARS characters.
+      const size = Math.min(MAX_TEXT_PIXELSIZE, Math.max(1, o.text.pixelsize ?? 16));
+      // Characters as wide as the validator's estimate (0.55 em), glyphs 0.7 em tall, lines 1.25
+      // em apart, at the preview's scale: small text gets blurry but keeps its true extent, so
+      // the preview never shows text spilling out of a box it fits in.
+      const advance = Math.max(2, Math.round(TEXT_EM_WIDTH * size * scale));
+      const glyphWidth = Math.max(1, advance - Math.max(1, Math.round(advance / GLYPH_ADVANCE)));
+      const glyphHeight = Math.max(2, Math.round(0.7 * size * scale));
+      const lineHeight = Math.max(glyphHeight + 1, Math.round(TEXT_LINE_HEIGHT * size * scale));
+      // Like WorkAdventure, wrap only when wrap is on and the object has a width.
+      const maxChars = o.text.wrap === true && (o.width ?? 0) > 0 ? Math.floor(o.width! / (TEXT_EM_WIDTH * size)) : Number.MAX_SAFE_INTEGER;
+      const colour = parseTextColour(o.text.color);
+      wrapText(o.text.text.slice(0, MAX_TEXT_CHARS), maxChars).forEach((line, row) => {
+        let left = Math.round(o.x * scale);
+        const top = Math.round(o.y * scale) + row * lineHeight + Math.floor((lineHeight - glyphHeight) / 2);
+        if (top >= canvas.height || top + glyphHeight <= 0) return;
+        for (const char of line) {
+          if (left >= canvas.width) break;
+          if (left + glyphWidth > 0) {
+            const columns = glyph(char);
+            const dy0 = Math.max(0, -top);
+            const dy1 = Math.min(glyphHeight, canvas.height - top);
+            const dx0 = Math.max(0, -left);
+            const dx1 = Math.min(glyphWidth, canvas.width - left);
+            for (let dy = dy0; dy < dy1; dy++) {
+              const cy = Math.floor((dy * GLYPH_HEIGHT) / glyphHeight);
+              for (let dx = dx0; dx < dx1; dx++) {
+                const cx = Math.floor((dx * GLYPH_WIDTH) / glyphWidth);
+                if (((columns[cx]! >> cy) & 1) === 1) blendPixel(canvas, left + dx, top + dy, colour);
+              }
+            }
+          }
+          left += advance;
+        }
+      });
+    }
+  });
+}
+
 // ---- composition ----
 
 export function checkScale(scale: number): RenderScale {
@@ -192,8 +265,9 @@ export function previewSize(map: TiledMap, scale: number): { width: number; heig
   return { width: map.width * cellWidth, height: map.height * cellHeight };
 }
 
-// Composes a map from already-decoded tileset images. Pure and deterministic. Like WA, only
-// each tile layer's own visibility and opacity count; group attributes are ignored.
+// Composes a map from already-decoded tileset images, then its text objects. Pure and
+// deterministic. Like WA, only each tile layer's own visibility and opacity count; group
+// attributes are ignored.
 export function composeMap(map: TiledMap, sheets: Sheets, options: { scale?: number; overlays?: readonly 'zones'[] } = {}): Rgba8 {
   const scale = checkScale(options.scale ?? 1);
   const size = previewSize(map, scale);
@@ -218,6 +292,7 @@ export function composeMap(map: TiledMap, sheets: Sheets, options: { scale?: num
       drawTile(canvas, grid, hit.localId, flags, x * cellWidth, (y + 1) * cellHeight, scale, opacity);
     });
   });
+  drawTexts(canvas, map, scale);
   if (options.overlays?.includes('zones') === true) outlineZones(canvas, map, scale);
   return canvas;
 }

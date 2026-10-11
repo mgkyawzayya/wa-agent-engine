@@ -17,7 +17,10 @@ function builtinPrefabs(): string {
       .filter((p) => p.placement === placement)
       .map((p) => p.id)
       .join(', ');
-  return `Prefabs of ${DEFAULT_ASSET_SET} (the id ends in its size, width x height): floor prefabs ${ids('free')}; wall-mounted ${ids('north-wall')}.`;
+  return (
+    `Prefabs of ${DEFAULT_ASSET_SET} (the id ends in its size, width x height): floor prefabs ${ids('free')}; wall-mounted ${ids('north-wall')}. ` +
+    'A prop set made with import_prop_set adds its own prefabs: read their ids in .wa-asset-sets/<id>/set.json and pass that id as assetSet.'
+  );
 }
 
 const input = z.strictObject({

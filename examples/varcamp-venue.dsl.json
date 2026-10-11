@@ -6,6 +6,7 @@
     {
       "id": "daisy-talks",
       "name": "Daisy track: talks",
+      "details": "Talks all day, Q&A after each talk",
       "bounds": {
         "x": 0,
         "y": 0,
@@ -65,6 +66,7 @@
     {
       "id": "padauk-workshop",
       "name": "Padauk track: workshop",
+      "details": "Hands-on workshops",
       "bounds": {
         "x": 15,
         "y": 0,
@@ -112,6 +114,7 @@
     {
       "id": "sabal-lounge",
       "name": "Sabal lounge",
+      "details": "Coffee, snacks and chats",
       "bounds": {
         "x": 28,
         "y": 0,
@@ -161,6 +164,7 @@
     {
       "id": "registration",
       "name": "Registration hall",
+      "details": "Badges, help desk and the schedule",
       "bounds": {
         "x": 0,
         "y": 11,
@@ -200,6 +204,7 @@
     {
       "id": "thazin-games",
       "name": "Thazin game corner",
+      "details": "Board games and werewolf",
       "bounds": {
         "x": 23,
         "y": 11,
@@ -270,6 +275,7 @@
     {
       "id": "sponsors",
       "name": "Sponsor booths",
+      "details": "Meet our sponsors",
       "bounds": {
         "x": 35,
         "y": 16,

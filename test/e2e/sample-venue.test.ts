@@ -9,7 +9,7 @@ import { REPO_ROOT } from './helpers.js';
 
 // The VarCamp sample venue is drawn only through CLI commands (examples/varcamp-venue.commands.sh).
 // Its preview is derived from licensed art, so only its hash is committed.
-const GOLDEN_PREVIEW_SHA256 = '043d985cf8b49f99b738c71f53b1bdb6b7cb4c76ef61853bddbf1698b8a8991f';
+const GOLDEN_PREVIEW_SHA256 = '0725f40dc0a653106f7888ca09c875b0bccfaba73ca197ae320a82ddf9dad118';
 
 let project: TempProject;
 let steps: { command: string; result: Record<string, unknown> }[];
