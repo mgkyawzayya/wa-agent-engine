@@ -1,0 +1,1078 @@
+{
+  "comment": "One-off transcription of the project's VarCamp prefab research notes. Cells: '.' empty, '<id>' in the layer's default tileset, '<code>:<id>' to override it, trailing 'h' = flipped horizontally. Prefabs with a credit adapt CC-BY-SA 3.0 arrangements and are marked with that licence. After bootstrap the .tmj files are the source of truth.",
+  "tilesetCodes": {
+    "SZ": "WA_Special_Zones",
+    "DE": "WA_Decoration",
+    "MI": "WA_Miscellaneous",
+    "OF": "WA_Other_Furniture",
+    "RB": "WA_Room_Builder",
+    "SE": "WA_Seats",
+    "TA": "WA_Tables",
+    "UI": "WA_User_Interface"
+  },
+  "credits": {
+    "office": "Arrangement adapted from the WorkAdventure map-starter-kit office.tmj (https://github.com/workadventure/map-starter-kit), licensed CC-BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/)",
+    "conference": "Arrangement adapted from the WorkAdventure map-starter-kit conference.tmj (https://github.com/workadventure/map-starter-kit), licensed CC-BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+  },
+  "prefabs": [
+    {
+      "id": "stage-light-4x3",
+      "category": "talks",
+      "placement": "free",
+      "credit": "conference",
+      "use": "Speaker stage with steps at the front centre; walkable",
+      "layers": {
+        "furniture1": {
+          "ts": "OF",
+          "rows": [
+            "88,89,90,91",
+            "100,101,102,103",
+            "112,113,114,115"
+          ]
+        }
+      },
+      "collisions": []
+    },
+    {
+      "id": "stage-dark-4x3",
+      "category": "talks",
+      "placement": "free",
+      "credit": "conference",
+      "use": "Darker speaker stage variant; walkable",
+      "layers": {
+        "furniture1": {
+          "ts": "OF",
+          "rows": [
+            "84,85,86,87",
+            "96,97,98,99",
+            "108,109,110,111"
+          ]
+        }
+      },
+      "collisions": []
+    },
+    {
+      "id": "lectern-1x1",
+      "category": "talks",
+      "placement": "free",
+      "use": "Speaker lectern with microphone, on or beside a stage",
+      "layers": {
+        "furniture1": {
+          "ts": "OF",
+          "rows": [
+            "104"
+          ]
+        }
+      },
+      "collisions": [
+        "0,0"
+      ]
+    },
+    {
+      "id": "audience-row-2x1",
+      "category": "talks",
+      "placement": "free",
+      "credit": "conference",
+      "use": "Audience seats facing north; stack rows with one empty row between",
+      "layers": {
+        "furniture1": {
+          "ts": "SE",
+          "rows": [
+            "99,99"
+          ]
+        }
+      },
+      "collisions": []
+    },
+    {
+      "id": "audience-row-4x1",
+      "category": "talks",
+      "placement": "free",
+      "credit": "conference",
+      "use": "Audience seats facing north; stack rows with one empty row between",
+      "layers": {
+        "furniture1": {
+          "ts": "SE",
+          "rows": [
+            "99,99,99,99"
+          ]
+        }
+      },
+      "collisions": []
+    },
+    {
+      "id": "audience-row-6x1",
+      "category": "talks",
+      "placement": "free",
+      "credit": "conference",
+      "use": "Audience seats facing north; stack rows with one empty row between",
+      "layers": {
+        "furniture1": {
+          "ts": "SE",
+          "rows": [
+            "99,99,99,99,99,99"
+          ]
+        }
+      },
+      "collisions": []
+    },
+    {
+      "id": "whiteboard-easel-3x3",
+      "category": "talks",
+      "placement": "free",
+      "credit": "office",
+      "use": "Flip-chart or session board",
+      "layers": {
+        "furniture1": {
+          "ts": "MI",
+          "rows": [
+            ".,.,.",
+            ".,.,.",
+            "53,54,55"
+          ]
+        },
+        "foreground1": {
+          "ts": "MI",
+          "rows": [
+            "33,34,35",
+            "43,44,45",
+            ".,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "0,2",
+        "1,2",
+        "2,2"
+      ]
+    },
+    {
+      "id": "wall-screen-3x2",
+      "category": "talks",
+      "placement": "north-wall",
+      "faceRow": "upper",
+      "use": "Projector screen or display; place on the 2 face rows of a north wall",
+      "layers": {
+        "furniture1": {
+          "ts": "MI",
+          "rows": [
+            "40,41,42",
+            "50,51,52"
+          ]
+        }
+      },
+      "collisions": []
+    },
+    {
+      "id": "info-screen-stand-1x3",
+      "category": "talks",
+      "placement": "free",
+      "credit": "conference",
+      "use": "Schedule or info display stand",
+      "layers": {
+        "furniture1": {
+          "ts": "TA",
+          "rows": [
+            ".",
+            "12",
+            "22"
+          ]
+        },
+        "furniture2": {
+          "ts": "MI",
+          "rows": [
+            ".",
+            "30",
+            "."
+          ]
+        },
+        "foreground1": {
+          "ts": "TA",
+          "rows": [
+            "2",
+            ".",
+            "."
+          ]
+        },
+        "foreground2": {
+          "ts": "MI",
+          "rows": [
+            "20",
+            ".",
+            "."
+          ]
+        }
+      },
+      "collisions": [
+        "0,1",
+        "0,2"
+      ]
+    },
+    {
+      "id": "executive-desk-3x2",
+      "category": "work",
+      "placement": "free",
+      "credit": "conference",
+      "use": "Organiser or host desk with a monitor",
+      "layers": {
+        "furniture1": {
+          "ts": "TA",
+          "rows": [
+            "95,96,97",
+            "105,106,107"
+          ]
+        },
+        "furniture2": {
+          "ts": "MI",
+          "rows": [
+            ".,0,.",
+            ".,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "0,0",
+        "0,1",
+        "1,0",
+        "1,1",
+        "2,0",
+        "2,1"
+      ]
+    },
+    {
+      "id": "executive-desk-chair-3x3",
+      "category": "work",
+      "placement": "free",
+      "credit": "conference",
+      "use": "Desk with a seat behind it",
+      "layers": {
+        "furniture1": {
+          "ts": "TA",
+          "rows": [
+            ".,SE:117,.",
+            "95,96,97",
+            "105,106,107"
+          ]
+        },
+        "furniture2": {
+          "ts": "MI",
+          "rows": [
+            ".,.,.",
+            ".,0,.",
+            ".,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "0,1",
+        "0,2",
+        "1,1",
+        "1,2",
+        "2,1",
+        "2,2"
+      ]
+    },
+    {
+      "id": "table-long-6x3",
+      "category": "work",
+      "placement": "free",
+      "credit": "office",
+      "use": "Workshop or hack table",
+      "layers": {
+        "furniture1": {
+          "ts": "TA",
+          "rows": [
+            ".,.,.,.,.,.",
+            "10,13,13,13,13,11",
+            "20,23,23,23,23,21"
+          ]
+        },
+        "foreground1": {
+          "ts": "TA",
+          "rows": [
+            "0,3,3,3,3,1",
+            ".,.,.,.,.,.",
+            ".,.,.,.,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "0,1",
+        "0,2",
+        "1,1",
+        "1,2",
+        "2,1",
+        "2,2",
+        "3,1",
+        "3,2",
+        "4,1",
+        "4,2",
+        "5,1",
+        "5,2"
+      ]
+    },
+    {
+      "id": "table-long-6x5",
+      "category": "work",
+      "placement": "free",
+      "credit": "office",
+      "use": "Meeting table with 3 chairs a side",
+      "layers": {
+        "furniture1": {
+          "ts": "TA",
+          "rows": [
+            ".,.,.,.,.,.",
+            ".,.,.,.,.,.",
+            "10,13,13,13,13,11",
+            "20,23,23,23,23,21",
+            ".,.,.,.,.,."
+          ]
+        },
+        "furniture2": {
+          "ts": "SE",
+          "rows": [
+            "121,122,121,122,121,122",
+            "134,135,134,135,134,135",
+            ".,.,.,.,.,.",
+            "123,124,123,124,123,124",
+            "136,137,136,137,136,137"
+          ]
+        },
+        "foreground1": {
+          "ts": "TA",
+          "rows": [
+            ".,.,.,.,.,.",
+            "0,3,3,3,3,1",
+            ".,.,.,.,.,.",
+            ".,.,.,.,.,.",
+            ".,.,.,.,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "0,2",
+        "0,3",
+        "1,2",
+        "1,3",
+        "2,2",
+        "2,3",
+        "3,2",
+        "3,3",
+        "4,2",
+        "4,3",
+        "5,2",
+        "5,3"
+      ]
+    },
+    {
+      "id": "table-long-4x3",
+      "category": "work",
+      "placement": "free",
+      "credit": "office",
+      "use": "Workshop or hack table",
+      "layers": {
+        "furniture1": {
+          "ts": "TA",
+          "rows": [
+            ".,.,.,.",
+            "10,13,13,11",
+            "20,23,23,21"
+          ]
+        },
+        "foreground1": {
+          "ts": "TA",
+          "rows": [
+            "0,3,3,1",
+            ".,.,.,.",
+            ".,.,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "0,1",
+        "0,2",
+        "1,1",
+        "1,2",
+        "2,1",
+        "2,2",
+        "3,1",
+        "3,2"
+      ]
+    },
+    {
+      "id": "table-long-4x5",
+      "category": "work",
+      "placement": "free",
+      "credit": "office",
+      "use": "Meeting table with 2 chairs a side",
+      "layers": {
+        "furniture1": {
+          "ts": "TA",
+          "rows": [
+            ".,.,.,.",
+            ".,.,.,.",
+            "10,13,13,11",
+            "20,23,23,21",
+            ".,.,.,."
+          ]
+        },
+        "furniture2": {
+          "ts": "SE",
+          "rows": [
+            "121,122,121,122",
+            "134,135,134,135",
+            ".,.,.,.",
+            "123,124,123,124",
+            "136,137,136,137"
+          ]
+        },
+        "foreground1": {
+          "ts": "TA",
+          "rows": [
+            ".,.,.,.",
+            "0,3,3,1",
+            ".,.,.,.",
+            ".,.,.,.",
+            ".,.,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "0,2",
+        "0,3",
+        "1,2",
+        "1,3",
+        "2,2",
+        "2,3",
+        "3,2",
+        "3,3"
+      ]
+    },
+    {
+      "id": "coworking-pod-4x5",
+      "category": "work",
+      "placement": "free",
+      "credit": "office",
+      "use": "Four-seat face-to-face work pod",
+      "layers": {
+        "furniture1": {
+          "ts": "TA",
+          "rows": [
+            ".,.,.,.",
+            ".,12,12,.",
+            ".,12,12,.",
+            ".,12,12,.",
+            ".,22,22,."
+          ]
+        },
+        "furniture2": {
+          "ts": "SE",
+          "rows": [
+            ".,.,.,.",
+            "119,.,.,120",
+            ".,.,.,.",
+            "119,.,.,120",
+            ".,.,.,."
+          ]
+        },
+        "furniture3": {
+          "ts": "MI",
+          "rows": [
+            ".,.,.,.",
+            ".,25,24,.",
+            ".,59h,.,.",
+            ".,25,24,.",
+            ".,.,.,."
+          ]
+        },
+        "foreground1": {
+          "ts": "TA",
+          "rows": [
+            ".,2,2,.",
+            ".,.,.,.",
+            ".,.,.,.",
+            ".,.,.,.",
+            ".,.,.,."
+          ]
+        },
+        "foreground2": {
+          "ts": "MI",
+          "rows": [
+            ".,.,74,.",
+            ".,.,.,.",
+            ".,.,.,.",
+            ".,.,.,.",
+            ".,.,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "1,1",
+        "1,2",
+        "1,3",
+        "1,4",
+        "2,1",
+        "2,2",
+        "2,3",
+        "2,4"
+      ]
+    },
+    {
+      "id": "glass-table-4x6",
+      "category": "work",
+      "placement": "free",
+      "credit": "office",
+      "use": "8-seat glass meeting table",
+      "layers": {
+        "furniture1": {
+          "ts": "TA",
+          "rows": [
+            ".,.,.,.",
+            ".,15,17,.",
+            ".,17h,17,.",
+            ".,17h,17,.",
+            ".,17h,17,.",
+            ".,25,27,."
+          ]
+        },
+        "furniture2": {
+          "ts": "SE",
+          "rows": [
+            ".,.,.,.",
+            "119,.,.,120",
+            "119,.,.,120",
+            "119,.,.,120",
+            "119,.,.,120",
+            ".,.,.,."
+          ]
+        },
+        "foreground1": {
+          "ts": "TA",
+          "rows": [
+            ".,5,6,.",
+            ".,.,.,.",
+            ".,.,.,.",
+            ".,.,.,.",
+            ".,.,.,.",
+            ".,.,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "1,1",
+        "1,2",
+        "1,3",
+        "1,4",
+        "2,1",
+        "2,2",
+        "2,3",
+        "2,4"
+      ]
+    },
+    {
+      "id": "cafe-table-3x2",
+      "category": "work",
+      "placement": "free",
+      "use": "Round cafe or chat table with 3 seats",
+      "layers": {
+        "furniture1": {
+          "ts": "SE",
+          "rows": [
+            ".,169,.",
+            "170,TA:143,171"
+          ]
+        }
+      },
+      "collisions": [
+        "1,1"
+      ]
+    },
+    {
+      "id": "lounge-sofa-set-4x4",
+      "category": "social",
+      "placement": "free",
+      "credit": "office",
+      "use": "Lounge or chill-out corner: sofa and coffee table",
+      "layers": {
+        "furniture1": {
+          "ts": "SE",
+          "rows": [
+            ".,.,.,.",
+            "13,14,14,15",
+            ".,.,.,.",
+            ".,TA:55,TA:56,."
+          ]
+        },
+        "foreground1": {
+          "ts": "SE",
+          "rows": [
+            "0,1,1,2",
+            ".,.,.,.",
+            ".,TA:45,TA:46,.",
+            ".,.,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "1,3",
+        "2,3"
+      ]
+    },
+    {
+      "id": "conversation-pit-3x4",
+      "category": "social",
+      "placement": "free",
+      "use": "Two sofas facing each other over a table",
+      "layers": {
+        "furniture1": {
+          "ts": "SE",
+          "rows": [
+            ".,.,.",
+            "16,17,18",
+            ".,TA:145,.",
+            "23,24,25"
+          ]
+        },
+        "foreground1": {
+          "ts": "SE",
+          "rows": [
+            "3,4,5",
+            ".,.,.",
+            ".,.,.",
+            ".,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "1,2"
+      ]
+    },
+    {
+      "id": "armchair-pair-3x2",
+      "category": "social",
+      "placement": "free",
+      "credit": "conference",
+      "use": "Two armchairs and a side table for a 1:1 chat",
+      "layers": {
+        "furniture1": {
+          "ts": "SE",
+          "rows": [
+            "82,.,83",
+            "95,TA:140,96"
+          ]
+        }
+      },
+      "collisions": [
+        "1,1"
+      ]
+    },
+    {
+      "id": "kitchen-counter-2x5",
+      "category": "social",
+      "placement": "free",
+      "credit": "office",
+      "use": "Coffee or kitchen counter along a west wall",
+      "layers": {
+        "furniture1": {
+          "ts": "TA",
+          "rows": [
+            "70,71",
+            "80,81",
+            "90,91",
+            "100,.",
+            "110,111"
+          ]
+        },
+        "furniture2": {
+          "ts": "MI",
+          "rows": [
+            "46,58",
+            "56,.",
+            "104,.",
+            ".,.",
+            ".,."
+          ]
+        },
+        "foreground1": {
+          "ts": "TA",
+          "rows": [
+            ".,.",
+            ".,.",
+            ".,.",
+            ".,101",
+            ".,."
+          ]
+        }
+      },
+      "collisions": [
+        "0,0",
+        "0,1",
+        "0,2",
+        "0,3",
+        "0,4",
+        "1,0",
+        "1,4"
+      ]
+    },
+    {
+      "id": "snack-bar-5x3",
+      "category": "social",
+      "placement": "north-wall",
+      "faceRow": "lower",
+      "credit": "conference",
+      "use": "Buffet or snack bar; place with its top row on the lower face row of a north wall",
+      "layers": {
+        "furniture1": {
+          "ts": "TA",
+          "rows": [
+            "0,3,3,3,1",
+            "10,13,13,13,11",
+            "20,23,23,23,21"
+          ]
+        },
+        "furniture2": {
+          "ts": "MI",
+          "rows": [
+            ".,.,.,.,57",
+            "96,102,90,100,58",
+            ".,.,.,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "0,0",
+        "0,1",
+        "0,2",
+        "1,0",
+        "1,1",
+        "1,2",
+        "2,0",
+        "2,1",
+        "2,2",
+        "3,0",
+        "3,1",
+        "3,2",
+        "4,0",
+        "4,1",
+        "4,2"
+      ]
+    },
+    {
+      "id": "low-shelf-2x2",
+      "category": "social",
+      "placement": "free",
+      "credit": "office",
+      "use": "Low shelf or swag table",
+      "layers": {
+        "furniture1": {
+          "ts": "OF",
+          "rows": [
+            ".,.",
+            "31,32"
+          ]
+        },
+        "foreground1": {
+          "ts": "OF",
+          "rows": [
+            "19,20",
+            ".,."
+          ]
+        }
+      },
+      "collisions": [
+        "0,1",
+        "1,1"
+      ]
+    },
+    {
+      "id": "plant-palm-3x3",
+      "category": "social",
+      "placement": "free",
+      "credit": "office",
+      "use": "Large potted palm",
+      "layers": {
+        "furniture1": {
+          "ts": "DE",
+          "rows": [
+            ".,.,.",
+            ".,.,.",
+            ".,85,."
+          ]
+        },
+        "foreground1": {
+          "ts": "DE",
+          "rows": [
+            "60,61,62",
+            "72,73,74",
+            "84,.,86"
+          ]
+        }
+      },
+      "collisions": [
+        "1,2"
+      ]
+    },
+    {
+      "id": "plant-tree-1x2",
+      "category": "social",
+      "placement": "free",
+      "credit": "office",
+      "use": "Potted tree, for example flanking a door",
+      "layers": {
+        "furniture1": {
+          "ts": "DE",
+          "rows": [
+            ".",
+            "90"
+          ]
+        },
+        "foreground1": {
+          "ts": "DE",
+          "rows": [
+            "78",
+            "."
+          ]
+        }
+      },
+      "collisions": [
+        "0,1"
+      ]
+    },
+    {
+      "id": "plant-small-1x1",
+      "category": "social",
+      "placement": "free",
+      "use": "Table-side flowers",
+      "layers": {
+        "furniture1": {
+          "ts": "DE",
+          "rows": [
+            "93"
+          ]
+        }
+      },
+      "collisions": [
+        "0,0"
+      ]
+    },
+    {
+      "id": "registration-desk-4x3",
+      "category": "logistics",
+      "placement": "free",
+      "credit": "conference",
+      "use": "Registration or info desk with an \"i\" sign",
+      "layers": {
+        "furniture1": {
+          "ts": "TA",
+          "rows": [
+            ".,.,.,.",
+            "95,96,97,.",
+            "105,106,107,UI:50"
+          ]
+        },
+        "furniture2": {
+          "ts": "MI",
+          "rows": [
+            ".,.,.,.",
+            ".,0,.,.",
+            ".,.,.,."
+          ]
+        },
+        "foreground1": {
+          "ts": "UI",
+          "rows": [
+            ".,.,.,24",
+            ".,.,.,37",
+            ".,.,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "0,1",
+        "0,2",
+        "1,1",
+        "1,2",
+        "2,1",
+        "2,2",
+        "3,2"
+      ]
+    },
+    {
+      "id": "sponsor-booth-4x4",
+      "category": "logistics",
+      "placement": "north-wall",
+      "faceRow": "upper",
+      "credit": "conference",
+      "use": "Sponsor table with an empty banner frame (no sponsor-logo art exists); rows 0-1 sit on the face rows of a north wall",
+      "layers": {
+        "furniture1": {
+          "ts": "TA",
+          "rows": [
+            "DE:49,DE:50,DE:50,DE:51",
+            "0,3,3,1",
+            "10,13,13,11",
+            "20,23,23,21"
+          ]
+        },
+        "furniture2": {
+          "ts": "MI",
+          "rows": [
+            ".,.,.,.",
+            ".,.,.,.",
+            ".,96,102,.",
+            ".,.,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "0,1",
+        "0,2",
+        "0,3",
+        "1,1",
+        "1,2",
+        "1,3",
+        "2,1",
+        "2,2",
+        "2,3",
+        "3,1",
+        "3,2",
+        "3,3"
+      ]
+    },
+    {
+      "id": "notice-board-3x1",
+      "category": "logistics",
+      "placement": "north-wall",
+      "faceRow": "either",
+      "credit": "conference",
+      "use": "Wall notice board; place on a face row of a north wall",
+      "layers": {
+        "furniture1": {
+          "ts": "DE",
+          "rows": [
+            "49,50,51"
+          ]
+        },
+        "furniture2": {
+          "ts": "DE",
+          "rows": [
+            ".,27,."
+          ]
+        }
+      },
+      "collisions": []
+    },
+    {
+      "id": "info-sign-1x3",
+      "category": "logistics",
+      "placement": "free",
+      "use": "Way-finding or info sign on a stand",
+      "layers": {
+        "furniture1": {
+          "ts": "UI",
+          "rows": [
+            ".",
+            ".",
+            "50"
+          ]
+        },
+        "foreground1": {
+          "ts": "UI",
+          "rows": [
+            "24",
+            "37",
+            "."
+          ]
+        }
+      },
+      "collisions": [
+        "0,2"
+      ]
+    },
+    {
+      "id": "game-circle-3x3",
+      "category": "fun",
+      "placement": "free",
+      "use": "Board-game or werewolf circle: rug, 4 poufs, round table, balloons",
+      "layers": {
+        "furniture1": {
+          "ts": "RB",
+          "rows": [
+            "387,387,387",
+            "387,387,387",
+            "387,387,387"
+          ]
+        },
+        "furniture2": {
+          "ts": "SE",
+          "rows": [
+            ".,163,.",
+            "164,TA:143,165",
+            ".,166,."
+          ]
+        },
+        "foreground1": {
+          "ts": "DE",
+          "rows": [
+            "94,.,.",
+            ".,.,.",
+            ".,.,."
+          ]
+        }
+      },
+      "collisions": [
+        "1,1"
+      ]
+    },
+    {
+      "id": "pouf-row-4x1",
+      "category": "fun",
+      "placement": "free",
+      "use": "Bean-bag style seating for games",
+      "layers": {
+        "furniture1": {
+          "ts": "SE",
+          "rows": [
+            "163,164,165,166"
+          ]
+        }
+      },
+      "collisions": []
+    },
+    {
+      "id": "party-balloons-1x1",
+      "category": "fun",
+      "placement": "free",
+      "use": "Party decoration",
+      "layers": {
+        "foreground1": {
+          "ts": "DE",
+          "rows": [
+            "94"
+          ]
+        }
+      },
+      "collisions": []
+    },
+    {
+      "id": "phone-pod-2x2",
+      "category": "phone",
+      "placement": "free",
+      "credit": "conference",
+      "use": "Phone or 1:1 call nook: high-back armchair and side table",
+      "layers": {
+        "furniture1": {
+          "ts": "SE",
+          "rows": [
+            "82,.",
+            "95,TA:140"
+          ]
+        }
+      },
+      "collisions": [
+        "1,1"
+      ]
+    }
+  ],
+  "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+}

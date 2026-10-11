@@ -1,0 +1,35 @@
+{
+  "description": "Windows of WA's own maps that DSL rooms must reproduce tile for tile. Roles map to the WA layers walls -> walls/walls1, foreground1 -> above/above1, collisions -> collisions.",
+  "windows": [
+    {
+      "name": "office south wall: 63/64/65 door, 104 run, 110 junction, corner 54, brick faces",
+      "map": "office.tmj",
+      "mapWidth": 31,
+      "mapHeight": 21,
+      "rooms": [
+        { "id": "west", "bounds": { "x": 6, "y": 0, "width": 17, "height": 15 }, "doors": [{ "wall": "south", "offset": 2, "width": 2 }] },
+        { "id": "east", "bounds": { "x": 22, "y": 0, "width": 9, "height": 15 } }
+      ],
+      "window": { "x0": 7, "y0": 14, "x1": 30, "y1": 16 },
+      "roles": ["walls", "foreground1", "collisions"],
+      "exclude": []
+    },
+    {
+      "name": "conference north wall: yellow faces next to a 3-wide lintel",
+      "map": "conference.tmj",
+      "mapWidth": 24,
+      "mapHeight": 14,
+      "rooms": [
+        { "id": "conference", "bounds": { "x": 0, "y": 0, "width": 24, "height": 14 }, "wallStyle": "yellow", "doors": [{ "wall": "north", "offset": 19, "width": 3, "exit": true }] }
+      ],
+      "window": { "x0": 0, "y0": 0, "x1": 23, "y1": 2 },
+      "roles": ["walls", "foreground1", "collisions"],
+      "exclude": [
+        { "role": "walls", "x": 18, "y": 1, "reason": "WA uses RB 201, pixel-identical to the set's yellow face 200 (art audit, Wall-face rule)" },
+        { "role": "walls", "x": 22, "y": 1, "reason": "WA uses a mirrored RB 201 here, a variant the set does not model; the set draws the open-west yellow face as 200" },
+        { "role": "walls", "x": 22, "y": 2, "reason": "WA uses RB 226 flipped (a left highlight), which the set expresses as 225 (art audit: 225 = left, 226 = right highlight)" },
+        { "role": "collisions", "x": 17, "y": 1, "reason": "WA leaves this face cell without collision; it is unreachable because (17,2) collides (art audit, Collisions)" }
+      ]
+    }
+  ]
+}

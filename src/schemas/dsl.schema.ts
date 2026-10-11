@@ -1,0 +1,347 @@
+import * as z from 'zod';
+import { WaEngineError } from '../core/errors.js';
+import { AssetSetIdSchema } from './asset-set.schema.js';
+import { NPC_WRITABLE_BY, WaVariableSchema } from './wa.schema.js';
+
+// The room DSL in two layers. `DslShape` checks structure only and is the MCP inputSchema,
+// so the SDK's pre-handler validation never swallows a coded geometry error. `parseDsl`
+// adds the geometry rules and maps each failure to a coded WaEngineError.
+
+export const MAX_MAP_TILES = 500;
+// 2 face rows under the north wall plus at least 1 walkable row.
+export const MIN_INTERIOR_ROWS = 3;
+export const MIN_INTERIOR_COLS = 1;
+export const FACE_ROWS = 2;
+// Input caps: keep a single tool call bounded in time and memory.
+export const MAX_ROOMS = 200;
+export const MAX_DOORS_PER_ROOM = 16;
+export const MAX_FURNITURE_PER_ROOM = 100;
+export const MAX_VARIABLES = 100;
+// The cell between two doors on one wall line must hold a straight wall piece (63 or 65)
+// for each door, so distinct doors need at least 2 wall cells between them.
+export const MIN_DOOR_GAP = 2;
+
+const int = z.number().int();
+
+export const RectSchema = z.strictObject({
+  x: int.describe('Left tile column'),
+  y: int.describe('Top tile row'),
+  width: int.min(1).describe('Width in tiles'),
+  height: int.min(1).describe('Height in tiles'),
+});
+export type Rect = z.infer<typeof RectSchema>;
+
+export const DoorSchema = z.strictObject({
+  wall: z.enum(['north', 'south', 'east', 'west']).describe('The wall the door is in'),
+  offset: int.describe('Cells from the wall start: the west corner for north/south walls, the north corner for east/west walls'),
+  width: int.min(1).default(1).describe('Door width in cells'),
+  exit: z
+    .boolean()
+    .exactOptional()
+    .describe('An exit door may open off the map edge; pair it with an exitUrl zone. Other doors must lead somewhere walkable'),
+});
+export type Door = z.infer<typeof DoorSchema>;
+
+export const FurnitureSchema = z.strictObject({
+  prefabId: z.string().min(1).describe('Prefab id; the id ends in its size, width x height (place_prefab lists them)'),
+  x: int.min(0).describe('Map tile column of the prefab top-left cell'),
+  y: int.min(0).describe('Map tile row of the prefab top-left cell'),
+});
+
+export const DslRoomSchema = z.strictObject({
+  id: z
+    .string()
+    .regex(/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/, 'room ids are 1-64 letters, digits, "_" or "-"')
+    .describe('Unique room id; also the name of the room area'),
+  name: z.string().exactOptional().describe('Display name, for people reading the DSL'),
+  bounds: RectSchema.describe('Room rectangle in tiles, including its walls; at least 3 wide and 5 tall'),
+  wallStyle: z.string().exactOptional().describe('Wall style of the asset set, for example "white" or "yellow"'),
+  floorStyle: z.string().exactOptional().describe('Floor style of the asset set, for example "wood-dark"'),
+  doors: z.array(DoorSchema).max(MAX_DOORS_PER_ROOM).default([]).describe('Doors in the room walls'),
+  furniture: z.array(FurnitureSchema).max(MAX_FURNITURE_PER_ROOM).default([]).describe('Prefabs inside the room'),
+  waProperties: z
+    .record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
+    .exactOptional()
+    .describe('WorkAdventure properties for the room area, the same keys as configure_wa_zone, for example {"jitsiRoom": "Talks"}'),
+});
+export type DslRoom = z.infer<typeof DslRoomSchema>;
+
+// Room variables default to the NPC-only sentinel (user decision): players cannot write them.
+export const DslVariableSchema = WaVariableSchema.extend({
+  name: WaVariableSchema.shape.name.describe('Variable name: letters, digits and "_"'),
+  default: WaVariableSchema.shape.default.describe('Starting value; arrays and objects are stored as JSON text'),
+  persist: WaVariableSchema.shape.persist.describe('Keep the value after everyone leaves'),
+  writableBy: z.string().min(1).default(NPC_WRITABLE_BY).describe('Player tag allowed to write it; by default only the NPC service can'),
+});
+
+export const DslShape = z.strictObject({
+  mapWidth: int.min(1).describe('Must equal the map width from scaffold_map'),
+  mapHeight: int.min(1).describe('Must equal the map height from scaffold_map'),
+  tileSize: z.literal(32).default(32).describe('Always 32'),
+  assetSet: AssetSetIdSchema.describe('The map asset set, for example "wa-starter-office"'),
+  rooms: z.array(DslRoomSchema).max(MAX_ROOMS).describe('Every room of the map; rooms left out are removed'),
+  modalOrigins: z.array(z.string()).max(20).exactOptional().describe('Bare https origins the NPC map script may open in a pop-up; leave it out unless the map runs the NPC'),
+  variables: z.array(DslVariableSchema).max(MAX_VARIABLES).default([]).describe('Shared map variables'),
+});
+export type Dsl = z.infer<typeof DslShape>;
+
+export function interiorOf(r: Rect): Rect {
+  return { x: r.x + 1, y: r.y + 1, width: r.width - 2, height: r.height - 2 };
+}
+
+export function rectsIntersect(a: Rect, b: Rect): boolean {
+  return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+}
+
+export function wallLength(r: Rect, wall: Door['wall']): number {
+  return wall === 'north' || wall === 'south' ? r.width : r.height;
+}
+
+export function isVertical(wall: Door['wall']): boolean {
+  return wall === 'east' || wall === 'west';
+}
+
+// Map cells of a door span.
+export function doorCells(r: Rect, door: Door): { x: number; y: number }[] {
+  const cells: { x: number; y: number }[] = [];
+  for (let i = door.offset; i < door.offset + door.width; i++) {
+    switch (door.wall) {
+      case 'north': cells.push({ x: r.x + i, y: r.y }); break;
+      case 'south': cells.push({ x: r.x + i, y: r.y + r.height - 1 }); break;
+      case 'west': cells.push({ x: r.x, y: r.y + i }); break;
+      case 'east': cells.push({ x: r.x + r.width - 1, y: r.y + i }); break;
+    }
+  }
+  return cells;
+}
+
+function perimeter(r: Rect): { x: number; y: number }[] {
+  const cells: { x: number; y: number }[] = [];
+  for (let x = r.x; x < r.x + r.width; x++) {
+    cells.push({ x, y: r.y }, { x, y: r.y + r.height - 1 });
+  }
+  for (let y = r.y + 1; y < r.y + r.height - 1; y++) {
+    cells.push({ x: r.x, y }, { x: r.x + r.width - 1, y });
+  }
+  return cells;
+}
+
+function fail(code: ConstructorParameters<typeof WaEngineError>[0], message: string, details?: unknown): never {
+  throw new WaEngineError(code, message, details);
+}
+
+function checkDoor(room: DslRoom, door: Door, index: number): void {
+  const at = { room: room.id, door: index };
+  const length = wallLength(room.bounds, door.wall);
+  if (door.offset < 0 || door.offset + door.width > length) {
+    fail('DOOR_OUT_OF_WALL', `door ${index} of room "${room.id}" runs past its ${door.wall} wall (length ${length})`, at);
+  }
+  // Door end pieces (63/65, 11/61) are straight wall pieces: corners and junctions have none.
+  if (door.offset < 2 || door.offset + door.width > length - 2) {
+    fail(
+      'DOOR_AT_CORNER',
+      `door ${index} of room "${room.id}" needs a straight wall cell between it and each corner (offset 2..${length - 2 - door.width})`,
+      at,
+    );
+  }
+  if (isVertical(door.wall) && door.offset < 1 + FACE_ROWS) {
+    fail(
+      'DOOR_BLOCKED_BY_FACE',
+      `door ${index} of room "${room.id}" opens onto the wall-face rows under the north wall; use offset ${1 + FACE_ROWS} or more`,
+      at,
+    );
+  }
+}
+
+// A vertical door must also stay clear of the face rows of the room on the other side.
+function checkNeighbourFaces(rooms: DslRoom[]): void {
+  for (const room of rooms) {
+    room.doors.forEach((door, index) => {
+      if (!isVertical(door.wall)) return;
+      const cells = doorCells(room.bounds, door);
+      const column = cells[0]?.x;
+      for (const other of rooms) {
+        if (other === room) continue;
+        const b = other.bounds;
+        if (b.x !== column && b.x + b.width - 1 !== column) continue;
+        const faceTop = b.y + 1;
+        const faceBottom = b.y + FACE_ROWS;
+        const blocked = cells.filter((c) => c.y >= faceTop && c.y <= faceBottom && c.y < b.y + b.height - 1);
+        if (blocked.length > 0) {
+          fail(
+            'DOOR_BLOCKED_BY_FACE',
+            `door ${index} of room "${room.id}" opens onto the wall-face rows of room "${other.id}"`,
+            { room: room.id, door: index, neighbour: other.id, cells: blocked },
+          );
+        }
+      }
+    });
+  }
+}
+
+interface DoorSpan {
+  start: number;
+  end: number;
+  room: string;
+  door: number;
+}
+
+// Doors on one wall line, across all rooms: identical spans (a shared door declared from
+// both sides) merge; overlapping, touching, or too-close spans are rejected.
+function checkDoorSpacing(rooms: DslRoom[]): void {
+  const lines = new Map<string, DoorSpan[]>();
+  for (const room of rooms) {
+    room.doors.forEach((door, index) => {
+      const cells = doorCells(room.bounds, door);
+      const first = cells[0]!;
+      const vertical = isVertical(door.wall);
+      const key = vertical ? `x=${first.x}` : `y=${first.y}`;
+      const along = cells.map((c) => (vertical ? c.y : c.x));
+      const spans = lines.get(key) ?? [];
+      spans.push({ start: Math.min(...along), end: Math.max(...along), room: room.id, door: index });
+      lines.set(key, spans);
+    });
+  }
+  for (const [line, spans] of lines) {
+    spans.sort((a, b) => a.start - b.start || a.end - b.end);
+    for (let i = 1; i < spans.length; i++) {
+      const a = spans[i - 1]!;
+      const b = spans[i]!;
+      if (a.start === b.start && a.end === b.end) continue;
+      if (b.start - a.end - 1 < MIN_DOOR_GAP) {
+        fail(
+          'DOOR_TOO_CLOSE',
+          `door ${a.door} of room "${a.room}" and door ${b.door} of room "${b.room}" on wall line ${line} need at least ${MIN_DOOR_GAP} wall cells between them`,
+          { line, doors: [{ room: a.room, door: a.door }, { room: b.room, door: b.door }] },
+        );
+      }
+    }
+  }
+}
+
+function checkThickWalls(rooms: DslRoom[]): void {
+  const walls = new Set<string>();
+  for (const room of rooms) for (const c of perimeter(room.bounds)) walls.add(`${c.x},${c.y}`);
+  const has = (x: number, y: number): boolean => walls.has(`${x},${y}`);
+  for (const key of walls) {
+    const [x, y] = key.split(',').map(Number) as [number, number];
+    if (has(x + 1, y) && has(x, y + 1) && has(x + 1, y + 1)) {
+      fail(
+        'THICK_WALL',
+        `walls are 2 cells thick at (${x},${y}); rooms that touch must share one wall line`,
+        { x, y },
+      );
+    }
+  }
+}
+
+function checkModalOrigins(origins: readonly string[]): void {
+  for (const origin of origins) {
+    let url: URL | undefined;
+    try {
+      url = new URL(origin);
+    } catch {
+      url = undefined;
+    }
+    if (url?.protocol !== 'https:' || url.origin !== origin) {
+      fail('BAD_URL', `modalOrigins entries must be bare https origins such as https://example.org: ${origin}`, {
+        origin,
+      });
+    }
+  }
+}
+
+function safeParseShape(input: unknown): ReturnType<typeof DslShape.safeParse> {
+  try {
+    return DslShape.safeParse(input);
+  } catch (err) {
+    // A deeply nested variable default overflows zod's recursive JSON check.
+    if (err instanceof RangeError) fail('INVALID_INPUT', 'DSL input is nested too deeply');
+    throw err;
+  }
+}
+
+export function parseDsl(input: unknown): Dsl {
+  const parsed = safeParseShape(input);
+  if (!parsed.success) {
+    fail('INVALID_INPUT', `invalid DSL:\n${z.prettifyError(parsed.error)}`, { issues: parsed.error.issues });
+  }
+  const dsl = parsed.data;
+
+  if (dsl.mapWidth > MAX_MAP_TILES || dsl.mapHeight > MAX_MAP_TILES) {
+    fail('MAP_TOO_LARGE', `maps are limited to ${MAX_MAP_TILES}x${MAX_MAP_TILES} tiles`, {
+      mapWidth: dsl.mapWidth,
+      mapHeight: dsl.mapHeight,
+    });
+  }
+
+  const seen = new Set<string>();
+  for (const room of dsl.rooms) {
+    if (seen.has(room.id)) fail('DUPLICATE_ROOM_ID', `room id "${room.id}" is used more than once`, { room: room.id });
+    seen.add(room.id);
+    const b = room.bounds;
+    if (b.x < 0 || b.y < 0 || b.x + b.width > dsl.mapWidth || b.y + b.height > dsl.mapHeight) {
+      fail('ROOM_OUT_OF_BOUNDS', `room "${room.id}" lies outside the ${dsl.mapWidth}x${dsl.mapHeight} map`, {
+        room: room.id,
+      });
+    }
+    const interior = interiorOf(b);
+    if (interior.width < MIN_INTERIOR_COLS || interior.height < MIN_INTERIOR_ROWS) {
+      fail(
+        'ROOM_TOO_SMALL',
+        `room "${room.id}" needs an interior of at least ${MIN_INTERIOR_COLS}x${MIN_INTERIOR_ROWS} tiles (2 wall-face rows plus 1 walkable row), so bounds of at least ${MIN_INTERIOR_COLS + 2}x${MIN_INTERIOR_ROWS + 2}`,
+        { room: room.id },
+      );
+    }
+    room.doors.forEach((door, index) => {
+      checkDoor(room, door, index);
+      if (door.exit === true) {
+        const onEdge =
+          (door.wall === 'north' && b.y === 0) ||
+          (door.wall === 'south' && b.y + b.height === dsl.mapHeight) ||
+          (door.wall === 'west' && b.x === 0) ||
+          (door.wall === 'east' && b.x + b.width === dsl.mapWidth);
+        if (!onEdge) {
+          fail('EXIT_NOT_AT_MAP_EDGE', `door ${index} of room "${room.id}" is marked exit, but its ${door.wall} wall is not on the map edge`, {
+            room: room.id,
+            door: index,
+          });
+        }
+      }
+    });
+    room.furniture.forEach((item, index) => {
+      if (item.x >= dsl.mapWidth || item.y >= dsl.mapHeight) {
+        fail('FURNITURE_OUT_OF_BOUNDS', `furniture ${index} of room "${room.id}" starts outside the map`, {
+          room: room.id,
+          furniture: index,
+        });
+      }
+    });
+  }
+
+  const variables = new Set<string>();
+  for (const variable of dsl.variables) {
+    if (variables.has(variable.name)) {
+      fail('DUPLICATE_VARIABLE', `variable "${variable.name}" is declared more than once`, { name: variable.name });
+    }
+    variables.add(variable.name);
+  }
+
+  for (let i = 0; i < dsl.rooms.length; i++) {
+    for (let j = i + 1; j < dsl.rooms.length; j++) {
+      const a = dsl.rooms[i]!;
+      const b = dsl.rooms[j]!;
+      if (rectsIntersect(interiorOf(a.bounds), b.bounds) || rectsIntersect(interiorOf(b.bounds), a.bounds)) {
+        fail('ROOM_OVERLAP', `rooms "${a.id}" and "${b.id}" overlap; touching rooms share exactly one wall line`, {
+          rooms: [a.id, b.id],
+        });
+      }
+    }
+  }
+
+  checkThickWalls(dsl.rooms);
+  checkNeighbourFaces(dsl.rooms);
+  checkDoorSpacing(dsl.rooms);
+  if (dsl.modalOrigins !== undefined) checkModalOrigins(dsl.modalOrigins);
+  return dsl;
+}

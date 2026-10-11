@@ -1,0 +1,122 @@
+{
+ "compressionlevel": -1,
+ "height": 5,
+ "infinite": false,
+ "layers": [
+  {
+   "data": [0, 0, 0, 0,
+  0, 0, 0, 0,
+  3, 3, 3, 3,
+  3, 3, 3, 3,
+  0, 0, 0, 0],
+   "height": 5,
+   "id": 1,
+   "name": "collisions",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 4,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [0, 0, 0, 0,
+  0, 0, 0, 0,
+  205, 208, 208, 206,
+  215, 218, 218, 216,
+  0, 0, 0, 0],
+   "height": 5,
+   "id": 2,
+   "name": "furniture1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 4,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [134, 135, 134, 135,
+  147, 148, 147, 148,
+  0, 0, 0, 0,
+  136, 137, 136, 137,
+  149, 150, 149, 150],
+   "height": 5,
+   "id": 3,
+   "name": "furniture2",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 4,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [0, 0, 0, 0,
+  195, 198, 198, 196,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0],
+   "height": 5,
+   "id": 4,
+   "name": "foreground1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 4,
+   "x": 0,
+   "y": 0
+  }
+ ],
+ "nextlayerid": 5,
+ "nextobjectid": 1,
+ "orientation": "orthogonal",
+ "properties": [
+  {
+   "name": "category",
+   "type": "string",
+   "value": "work"
+  },
+  {
+   "name": "credit",
+   "type": "string",
+   "value": "Arrangement adapted from the WorkAdventure map-starter-kit office.tmj (https://github.com/workadventure/map-starter-kit), licensed CC-BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+  },
+  {
+   "name": "license",
+   "type": "string",
+   "value": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+  },
+  {
+   "name": "placement",
+   "type": "string",
+   "value": "free"
+  },
+  {
+   "name": "use",
+   "type": "string",
+   "value": "Meeting table with 2 chairs a side"
+  }
+ ],
+ "renderorder": "right-down",
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilesets": [
+  {
+   "firstgid": 1,
+   "source": "../tilesets/WA_Special_Zones.tsj"
+  },
+  {
+   "firstgid": 13,
+   "source": "../tilesets/WA_Seats.tsj"
+  },
+  {
+   "firstgid": 195,
+   "source": "../tilesets/WA_Tables.tsj"
+  }
+ ],
+ "tilewidth": 32,
+ "type": "map",
+ "version": "1.11",
+ "width": 4
+}

@@ -1,0 +1,93 @@
+{
+ "compressionlevel": -1,
+ "height": 4,
+ "infinite": false,
+ "layers": [
+  {
+   "data": [0, 0, 0,
+  0, 0, 0,
+  0, 3, 0,
+  0, 0, 0],
+   "height": 4,
+   "id": 1,
+   "name": "collisions",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [0, 0, 0,
+  29, 30, 31,
+  0, 340, 0,
+  36, 37, 38],
+   "height": 4,
+   "id": 2,
+   "name": "furniture1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [16, 17, 18,
+  0, 0, 0,
+  0, 0, 0,
+  0, 0, 0],
+   "height": 4,
+   "id": 3,
+   "name": "foreground1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  }
+ ],
+ "nextlayerid": 4,
+ "nextobjectid": 1,
+ "orientation": "orthogonal",
+ "properties": [
+  {
+   "name": "category",
+   "type": "string",
+   "value": "social"
+  },
+  {
+   "name": "placement",
+   "type": "string",
+   "value": "free"
+  },
+  {
+   "name": "use",
+   "type": "string",
+   "value": "Two sofas facing each other over a table"
+  }
+ ],
+ "renderorder": "right-down",
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilesets": [
+  {
+   "firstgid": 1,
+   "source": "../tilesets/WA_Special_Zones.tsj"
+  },
+  {
+   "firstgid": 13,
+   "source": "../tilesets/WA_Seats.tsj"
+  },
+  {
+   "firstgid": 195,
+   "source": "../tilesets/WA_Tables.tsj"
+  }
+ ],
+ "tilewidth": 32,
+ "type": "map",
+ "version": "1.11",
+ "width": 3
+}

@@ -1,0 +1,15 @@
+{
+ "columns": 10,
+ "image": "../../../tilesets/WA_Miscellaneous.png",
+ "imageheight": 352,
+ "imagewidth": 320,
+ "margin": 0,
+ "name": "WA_Miscellaneous",
+ "spacing": 0,
+ "tilecount": 110,
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilewidth": 32,
+ "type": "tileset",
+ "version": "1.11"
+}

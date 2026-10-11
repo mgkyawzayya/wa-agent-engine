@@ -1,0 +1,103 @@
+{
+ "compressionlevel": -1,
+ "height": 4,
+ "infinite": false,
+ "layers": [
+  {
+   "data": [0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 3, 3, 0],
+   "height": 4,
+   "id": 1,
+   "name": "collisions",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 4,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [0, 0, 0, 0,
+  26, 27, 27, 28,
+  0, 0, 0, 0,
+  0, 250, 251, 0],
+   "height": 4,
+   "id": 2,
+   "name": "furniture1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 4,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [13, 14, 14, 15,
+  0, 0, 0, 0,
+  0, 240, 241, 0,
+  0, 0, 0, 0],
+   "height": 4,
+   "id": 3,
+   "name": "foreground1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 4,
+   "x": 0,
+   "y": 0
+  }
+ ],
+ "nextlayerid": 4,
+ "nextobjectid": 1,
+ "orientation": "orthogonal",
+ "properties": [
+  {
+   "name": "category",
+   "type": "string",
+   "value": "social"
+  },
+  {
+   "name": "credit",
+   "type": "string",
+   "value": "Arrangement adapted from the WorkAdventure map-starter-kit office.tmj (https://github.com/workadventure/map-starter-kit), licensed CC-BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+  },
+  {
+   "name": "license",
+   "type": "string",
+   "value": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+  },
+  {
+   "name": "placement",
+   "type": "string",
+   "value": "free"
+  },
+  {
+   "name": "use",
+   "type": "string",
+   "value": "Lounge or chill-out corner: sofa and coffee table"
+  }
+ ],
+ "renderorder": "right-down",
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilesets": [
+  {
+   "firstgid": 1,
+   "source": "../tilesets/WA_Special_Zones.tsj"
+  },
+  {
+   "firstgid": 13,
+   "source": "../tilesets/WA_Seats.tsj"
+  },
+  {
+   "firstgid": 195,
+   "source": "../tilesets/WA_Tables.tsj"
+  }
+ ],
+ "tilewidth": 32,
+ "type": "map",
+ "version": "1.11",
+ "width": 4
+}

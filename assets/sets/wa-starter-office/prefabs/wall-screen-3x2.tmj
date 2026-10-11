@@ -1,0 +1,58 @@
+{
+ "compressionlevel": -1,
+ "height": 2,
+ "infinite": false,
+ "layers": [
+  {
+   "data": [41, 42, 43,
+  51, 52, 53],
+   "height": 2,
+   "id": 1,
+   "name": "furniture1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  }
+ ],
+ "nextlayerid": 2,
+ "nextobjectid": 1,
+ "orientation": "orthogonal",
+ "properties": [
+  {
+   "name": "category",
+   "type": "string",
+   "value": "talks"
+  },
+  {
+   "name": "faceRow",
+   "type": "string",
+   "value": "upper"
+  },
+  {
+   "name": "placement",
+   "type": "string",
+   "value": "north-wall"
+  },
+  {
+   "name": "use",
+   "type": "string",
+   "value": "Projector screen or display; place on the 2 face rows of a north wall"
+  }
+ ],
+ "renderorder": "right-down",
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilesets": [
+  {
+   "firstgid": 1,
+   "source": "../tilesets/WA_Miscellaneous.tsj"
+  }
+ ],
+ "tilewidth": 32,
+ "type": "map",
+ "version": "1.11",
+ "width": 3
+}

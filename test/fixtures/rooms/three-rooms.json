@@ -1,0 +1,16 @@
+{
+  "description": "Three rooms: two side by side over one wide room, with horizontal doors into the wide room and a vertical door between the top two.",
+  "mapWidth": 12,
+  "mapHeight": 13,
+  "rooms": [
+    { "id": "a", "bounds": { "x": 0, "y": 0, "width": 6, "height": 6 }, "doors": [{ "wall": "south", "offset": 2 }, { "wall": "east", "offset": 3 }] },
+    { "id": "b", "bounds": { "x": 5, "y": 0, "width": 6, "height": 6 }, "floorStyle": "slate-blue", "doors": [{ "wall": "south", "offset": 3 }] },
+    { "id": "c", "bounds": { "x": 0, "y": 5, "width": 11, "height": 6 }, "floorStyle": "carpet-red" }
+  ],
+  "expectCells": {
+    "walls": { "0,0": 28, "5,0": 160, "10,0": 29, "0,5": 108, "5,5": 110, "10,5": 158, "0,10": 53, "10,10": 54, "5,2": 11, "5,4": 61, "1,5": 63, "3,5": 65, "7,5": 63, "9,5": 65 },
+    "foreground1": { "2,5": 64, "8,5": 64, "5,3": 36 },
+    "floor": { "2,5": 387, "8,5": 387, "5,3": 360, "4,3": 350 }
+  },
+  "expectEmpty": { "walls": ["2,6", "2,7", "8,6", "8,7"] }
+}

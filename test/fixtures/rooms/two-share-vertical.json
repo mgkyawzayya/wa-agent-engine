@@ -1,0 +1,21 @@
+{
+  "description": "Two rooms sharing one vertical wall column: T-junctions 160 (top) and 110 (bottom); the east room uses yellow faces.",
+  "mapWidth": 11,
+  "mapHeight": 8,
+  "rooms": [
+    { "id": "a", "bounds": { "x": 0, "y": 0, "width": 5, "height": 6 } },
+    { "id": "b", "bounds": { "x": 4, "y": 0, "width": 5, "height": 6 }, "wallStyle": "yellow" }
+  ],
+  "expect": {
+    "walls": [
+      "28 104 104 104 160 104 104 104 29 . .",
+      "102 203 203 203 102 200 200 200 102 . .",
+      "102 228 228 228 102 225 225 225 102 . .",
+      "102 . . . 102 . . . 102 . .",
+      "102 . . . 102 . . . 102 . .",
+      "53 104 104 104 110 104 104 104 54 . .",
+      "310 310 310 310 310 310 310 310 310 . .",
+      "310 310 310 310 310 310 310 310 310 . ."
+    ]
+  }
+}

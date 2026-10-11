@@ -1,0 +1,15 @@
+{
+ "columns": 25,
+ "image": "../../../tilesets/WA_Exterior.png",
+ "imageheight": 1088,
+ "imagewidth": 800,
+ "margin": 0,
+ "name": "WA_Exterior",
+ "spacing": 0,
+ "tilecount": 850,
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilewidth": 32,
+ "type": "tileset",
+ "version": "1.11"
+}

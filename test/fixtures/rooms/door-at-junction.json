@@ -1,0 +1,10 @@
+{
+  "description": "A door placed where another room's wall meets this wall: DOOR_AT_JUNCTION.",
+  "mapWidth": 10,
+  "mapHeight": 12,
+  "rooms": [
+    { "id": "a", "bounds": { "x": 0, "y": 0, "width": 9, "height": 6 }, "doors": [{ "wall": "south", "offset": 3 }] },
+    { "id": "b", "bounds": { "x": 3, "y": 5, "width": 6, "height": 6 } }
+  ],
+  "expectError": "DOOR_AT_JUNCTION"
+}

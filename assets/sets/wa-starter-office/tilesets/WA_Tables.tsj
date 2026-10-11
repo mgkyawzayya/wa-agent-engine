@@ -1,0 +1,15 @@
+{
+ "columns": 10,
+ "image": "../../../tilesets/WA_Tables.png",
+ "imageheight": 864,
+ "imagewidth": 320,
+ "margin": 0,
+ "name": "WA_Tables",
+ "spacing": 0,
+ "tilecount": 270,
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilewidth": 32,
+ "type": "tileset",
+ "version": "1.11"
+}

@@ -1,0 +1,18 @@
+{
+  "sha": "1143646a9c02c3928eac4acbb123642c62a48a85",
+  "files": {
+    "office.tmj": "c986c89206d150a38182402312f781acfd7e9f72384b2c0e9e377c6663a074a0",
+    "conference.tmj": "7fe86348626e7e170bf2ae0e7424f49f5c2dbde6412cba52496acb1b258bc208",
+    "conference.png": "2ade20799a7ce5aaed66fc1f1f7723c83472228f241a563885f048523f5a4fc7",
+    "tilesets/WA_Decoration.png": "4db175d47f79fb6a0f3ecf71decc3f39fc996478c25bd1006b72d720b04d5363",
+    "tilesets/WA_Exterior.png": "68ed8f71b29edc0f4b5b6c06c9e1a815d394df28dbd7511afbc97d561868796f",
+    "tilesets/WA_Logo_Long.png": "cf146081b4d6f5ed699689e516f9a8db7d92ed720356fbc59cfcea0d6cbcb3de",
+    "tilesets/WA_Miscellaneous.png": "1c324d292095758563cd1d4e022c8f8e47a453579f026d504e3e9439772d9ba7",
+    "tilesets/WA_Other_Furniture.png": "c5e5addd7bcf6937aa5d285c2149b05ed92ef981174d1c53c842ee221a8bb528",
+    "tilesets/WA_Room_Builder.png": "b2f0881def83c4a27a0a5f51738eb5e448c3ad139afc3196748581b5b5b66a02",
+    "tilesets/WA_Seats.png": "f45b53f2e5326060008ba10ec1a854d1375cad85e805687b6330172e42df0c12",
+    "tilesets/WA_Special_Zones.png": "6dd771fb0b72f3505b2250264b803141c710d85e1e4c36e790c1595802edb2a9",
+    "tilesets/WA_Tables.png": "9f952c50e2a385dc84083c60c4904e9d33d855e0db9d3431fc038476a66f86d8",
+    "tilesets/WA_User_Interface.png": "19d33055abaa8560345228891c55ca5e4c19446b45f5bab76aef12400b50f205"
+  }
+}

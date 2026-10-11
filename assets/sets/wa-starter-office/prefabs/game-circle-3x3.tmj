@@ -1,0 +1,112 @@
+{
+ "compressionlevel": -1,
+ "height": 3,
+ "infinite": false,
+ "layers": [
+  {
+   "data": [0, 0, 0,
+  0, 3, 0,
+  0, 0, 0],
+   "height": 3,
+   "id": 1,
+   "name": "collisions",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [496, 496, 496,
+  496, 496, 496,
+  496, 496, 496],
+   "height": 3,
+   "id": 2,
+   "name": "furniture1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [0, 1272, 0,
+  1273, 1434, 1274,
+  0, 1275, 0],
+   "height": 3,
+   "id": 3,
+   "name": "furniture2",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [107, 0, 0,
+  0, 0, 0,
+  0, 0, 0],
+   "height": 3,
+   "id": 4,
+   "name": "foreground1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  }
+ ],
+ "nextlayerid": 5,
+ "nextobjectid": 1,
+ "orientation": "orthogonal",
+ "properties": [
+  {
+   "name": "category",
+   "type": "string",
+   "value": "fun"
+  },
+  {
+   "name": "placement",
+   "type": "string",
+   "value": "free"
+  },
+  {
+   "name": "use",
+   "type": "string",
+   "value": "Board-game or werewolf circle: rug, 4 poufs, round table, balloons"
+  }
+ ],
+ "renderorder": "right-down",
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilesets": [
+  {
+   "firstgid": 1,
+   "source": "../tilesets/WA_Special_Zones.tsj"
+  },
+  {
+   "firstgid": 13,
+   "source": "../tilesets/WA_Decoration.tsj"
+  },
+  {
+   "firstgid": 109,
+   "source": "../tilesets/WA_Room_Builder.tsj"
+  },
+  {
+   "firstgid": 1109,
+   "source": "../tilesets/WA_Seats.tsj"
+  },
+  {
+   "firstgid": 1291,
+   "source": "../tilesets/WA_Tables.tsj"
+  }
+ ],
+ "tilewidth": 32,
+ "type": "map",
+ "version": "1.11",
+ "width": 3
+}

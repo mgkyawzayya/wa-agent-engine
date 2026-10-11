@@ -1,0 +1,64 @@
+{
+ "compressionlevel": -1,
+ "height": 3,
+ "infinite": false,
+ "layers": [
+  {
+   "data": [85, 86, 87, 88,
+  97, 98, 99, 100,
+  109, 110, 111, 112],
+   "height": 3,
+   "id": 1,
+   "name": "furniture1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 4,
+   "x": 0,
+   "y": 0
+  }
+ ],
+ "nextlayerid": 2,
+ "nextobjectid": 1,
+ "orientation": "orthogonal",
+ "properties": [
+  {
+   "name": "category",
+   "type": "string",
+   "value": "talks"
+  },
+  {
+   "name": "credit",
+   "type": "string",
+   "value": "Arrangement adapted from the WorkAdventure map-starter-kit conference.tmj (https://github.com/workadventure/map-starter-kit), licensed CC-BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+  },
+  {
+   "name": "license",
+   "type": "string",
+   "value": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+  },
+  {
+   "name": "placement",
+   "type": "string",
+   "value": "free"
+  },
+  {
+   "name": "use",
+   "type": "string",
+   "value": "Darker speaker stage variant; walkable"
+  }
+ ],
+ "renderorder": "right-down",
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilesets": [
+  {
+   "firstgid": 1,
+   "source": "../tilesets/WA_Other_Furniture.tsj"
+  }
+ ],
+ "tilewidth": 32,
+ "type": "map",
+ "version": "1.11",
+ "width": 4
+}

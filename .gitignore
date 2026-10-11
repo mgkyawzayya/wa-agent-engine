@@ -1,0 +1,20 @@
+node_modules/
+dist/
+.cache/
+.vitest/
+.wa-preview/
+*.local.*
+*.tmp
+.env
+.env.*
+!.env.example
+# Starter-kit PNGs are licensed for WA maps only: never inside the built-in sets, and
+# assets/tilesets/ is where the sets' .tsj image paths point from inside this repo.
+assets/tilesets/
+assets/sets/**/*.png
+
+# Local working notes and private art, kept out of the public repository.
+plans/
+deploy/
+CLAUDE.md
+assets/generated/

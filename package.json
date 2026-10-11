@@ -1,0 +1,73 @@
+{
+  "name": "wa-agent-engine",
+  "version": "0.1.0",
+  "description": "Lets coding agents draw WorkAdventure maps: an MCP server, a CLI and agent skills that turn a room layout into a validated Tiled map with a preview.",
+  "keywords": [
+    "workadventure",
+    "tiled",
+    "map",
+    "mcp",
+    "model-context-protocol",
+    "agent-skills",
+    "claude-code",
+    "codex",
+    "cursor"
+  ],
+  "homepage": "https://github.com/mgkyawzayya/wa-agent-engine#readme",
+  "bugs": {
+    "url": "https://github.com/mgkyawzayya/wa-agent-engine/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mgkyawzayya/wa-agent-engine.git"
+  },
+  "author": "Kyaw Zayya",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
+  "bin": {
+    "wa-agent-engine": "dist/cli/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "assets/sets/**/*.tsj",
+    "assets/sets/**/*.tmj",
+    "assets/sets/**/set.json",
+    "skills/**/*.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "clean": "node -e \"process.getBuiltinModule('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "fetch-assets": "tsx scripts/fetch-starter-kit.ts",
+    "dev:mcp": "tsx src/cli/index.ts mcp",
+    "smoke": "node dist/cli/index.js --version && node dist/cli/index.js --help",
+    "prepack": "npm run build",
+    "gen:prefabs": "tsx scripts/gen-prefab-reference.ts",
+    "check-skills": "tsx scripts/check-skills.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.3.1",
+    "fast-png": "8.0.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.3.1",
+    "@types/node": "26.6.5",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.3"
+  }
+}

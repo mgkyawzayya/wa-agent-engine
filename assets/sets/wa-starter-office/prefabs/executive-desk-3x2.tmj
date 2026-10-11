@@ -1,0 +1,97 @@
+{
+ "compressionlevel": -1,
+ "height": 2,
+ "infinite": false,
+ "layers": [
+  {
+   "data": [3, 3, 3,
+  3, 3, 3],
+   "height": 2,
+   "id": 1,
+   "name": "collisions",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [218, 219, 220,
+  228, 229, 230],
+   "height": 2,
+   "id": 2,
+   "name": "furniture1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [0, 13, 0,
+  0, 0, 0],
+   "height": 2,
+   "id": 3,
+   "name": "furniture2",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  }
+ ],
+ "nextlayerid": 4,
+ "nextobjectid": 1,
+ "orientation": "orthogonal",
+ "properties": [
+  {
+   "name": "category",
+   "type": "string",
+   "value": "work"
+  },
+  {
+   "name": "credit",
+   "type": "string",
+   "value": "Arrangement adapted from the WorkAdventure map-starter-kit conference.tmj (https://github.com/workadventure/map-starter-kit), licensed CC-BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+  },
+  {
+   "name": "license",
+   "type": "string",
+   "value": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+  },
+  {
+   "name": "placement",
+   "type": "string",
+   "value": "free"
+  },
+  {
+   "name": "use",
+   "type": "string",
+   "value": "Organiser or host desk with a monitor"
+  }
+ ],
+ "renderorder": "right-down",
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilesets": [
+  {
+   "firstgid": 1,
+   "source": "../tilesets/WA_Special_Zones.tsj"
+  },
+  {
+   "firstgid": 13,
+   "source": "../tilesets/WA_Miscellaneous.tsj"
+  },
+  {
+   "firstgid": 123,
+   "source": "../tilesets/WA_Tables.tsj"
+  }
+ ],
+ "tilewidth": 32,
+ "type": "map",
+ "version": "1.11",
+ "width": 3
+}

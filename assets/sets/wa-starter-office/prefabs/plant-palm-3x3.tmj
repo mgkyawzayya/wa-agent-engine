@@ -1,0 +1,96 @@
+{
+ "compressionlevel": -1,
+ "height": 3,
+ "infinite": false,
+ "layers": [
+  {
+   "data": [0, 0, 0,
+  0, 0, 0,
+  0, 3, 0],
+   "height": 3,
+   "id": 1,
+   "name": "collisions",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [0, 0, 0,
+  0, 0, 0,
+  0, 98, 0],
+   "height": 3,
+   "id": 2,
+   "name": "furniture1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "data": [73, 74, 75,
+  85, 86, 87,
+  97, 0, 99],
+   "height": 3,
+   "id": 3,
+   "name": "foreground1",
+   "opacity": 1,
+   "type": "tilelayer",
+   "visible": true,
+   "width": 3,
+   "x": 0,
+   "y": 0
+  }
+ ],
+ "nextlayerid": 4,
+ "nextobjectid": 1,
+ "orientation": "orthogonal",
+ "properties": [
+  {
+   "name": "category",
+   "type": "string",
+   "value": "social"
+  },
+  {
+   "name": "credit",
+   "type": "string",
+   "value": "Arrangement adapted from the WorkAdventure map-starter-kit office.tmj (https://github.com/workadventure/map-starter-kit), licensed CC-BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+  },
+  {
+   "name": "license",
+   "type": "string",
+   "value": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+  },
+  {
+   "name": "placement",
+   "type": "string",
+   "value": "free"
+  },
+  {
+   "name": "use",
+   "type": "string",
+   "value": "Large potted palm"
+  }
+ ],
+ "renderorder": "right-down",
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilesets": [
+  {
+   "firstgid": 1,
+   "source": "../tilesets/WA_Special_Zones.tsj"
+  },
+  {
+   "firstgid": 13,
+   "source": "../tilesets/WA_Decoration.tsj"
+  }
+ ],
+ "tilewidth": 32,
+ "type": "map",
+ "version": "1.11",
+ "width": 3
+}

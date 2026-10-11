@@ -1,0 +1,20 @@
+{
+  "description": "A new room built on a wall already in the map: the meeting cells become T-junctions 160, and only the 1-cell halo of the old wall is recomputed.",
+  "mapWidth": 12,
+  "mapHeight": 8,
+  "rooms": [{ "id": "a", "bounds": { "x": 2, "y": 0, "width": 5, "height": 6 } }],
+  "existingWalls": ["0-10,0"],
+  "expect": {
+    "walls": [
+      ". 104 160 104 104 104 160 104 . . . .",
+      ". . 102 203 203 203 102 . . . . .",
+      ". . 102 228 228 228 102 . . . . .",
+      ". . 102 . . . 102 . . . . .",
+      ". . 102 . . . 102 . . . . .",
+      ". . 53 104 104 104 54 . . . . .",
+      ". . 310 310 310 310 310 . . . . .",
+      ". . 310 310 310 310 310 . . . . ."
+    ]
+  },
+  "expectHalo": ["1,0", "7,0"]
+}

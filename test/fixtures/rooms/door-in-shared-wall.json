@@ -1,0 +1,26 @@
+{
+  "description": "A vertical door in a shared wall, declared from both rooms: 11/36/61, and the door takes the east room's floor.",
+  "mapWidth": 12,
+  "mapHeight": 8,
+  "rooms": [
+    { "id": "a", "bounds": { "x": 0, "y": 0, "width": 6, "height": 6 }, "doors": [{ "wall": "east", "offset": 3 }] },
+    { "id": "b", "bounds": { "x": 5, "y": 0, "width": 6, "height": 6 }, "floorStyle": "carpet-red", "doors": [{ "wall": "west", "offset": 3 }] }
+  ],
+  "expect": {
+    "walls": [
+      "28 104 104 104 104 160 104 104 104 104 29 .",
+      "102 203 203 203 203 102 203 203 203 203 102 .",
+      "102 228 228 228 228 11 228 228 228 228 102 .",
+      "102 . . . . . . . . . 102 .",
+      "102 . . . . 61 . . . . 102 .",
+      "53 104 104 104 104 110 104 104 104 104 54 .",
+      "310 310 310 310 310 310 310 310 310 310 310 .",
+      "310 310 310 310 310 310 310 310 310 310 310 ."
+    ]
+  },
+  "expectCells": {
+    "foreground1": { "5,3": 36 },
+    "floor": { "4,3": 350, "5,3": 387, "6,3": 387 }
+  },
+  "expectEmpty": { "collisions": ["5,3"], "walls": ["5,3"] }
+}

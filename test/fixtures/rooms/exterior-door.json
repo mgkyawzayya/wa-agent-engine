@@ -1,0 +1,12 @@
+{
+  "description": "A door in an outside wall takes the floor of the room it belongs to; no faces or collisions under its lintel.",
+  "mapWidth": 8,
+  "mapHeight": 9,
+  "rooms": [{ "id": "a", "bounds": { "x": 0, "y": 0, "width": 7, "height": 6 }, "floorStyle": "carpet-navy", "doors": [{ "wall": "south", "offset": 2 }] }],
+  "expectCells": {
+    "walls": { "1,5": 63, "3,5": 65 },
+    "foreground1": { "2,5": 64 },
+    "floor": { "2,4": 362, "2,5": 362 }
+  },
+  "expectEmpty": { "walls": ["2,5", "2,6", "2,7"], "collisions": ["2,5", "2,6", "2,7"], "floor": ["2,6"] }
+}

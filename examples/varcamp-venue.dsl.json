@@ -1,0 +1,301 @@
+{
+  "mapWidth": 43,
+  "mapHeight": 24,
+  "assetSet": "wa-starter-office",
+  "rooms": [
+    {
+      "id": "daisy-talks",
+      "name": "Daisy track: talks",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 16,
+        "height": 12
+      },
+      "floorStyle": "carpet-navy",
+      "doors": [
+        {
+          "wall": "south",
+          "offset": 7,
+          "width": 2
+        },
+        {
+          "wall": "east",
+          "offset": 7
+        }
+      ],
+      "furniture": [
+        {
+          "prefabId": "wall-screen-3x2",
+          "x": 6,
+          "y": 1
+        },
+        {
+          "prefabId": "stage-light-4x3",
+          "x": 6,
+          "y": 3
+        },
+        {
+          "prefabId": "lectern-1x1",
+          "x": 7,
+          "y": 6
+        },
+        {
+          "prefabId": "audience-row-6x1",
+          "x": 1,
+          "y": 8
+        },
+        {
+          "prefabId": "audience-row-6x1",
+          "x": 9,
+          "y": 8
+        },
+        {
+          "prefabId": "plant-palm-3x3",
+          "x": 12,
+          "y": 3
+        }
+      ],
+      "waProperties": {
+        "jitsiRoom": "varcamp-daisy-track",
+        "jitsiTrigger": "onaction",
+        "jitsiTriggerMessage": "Press SPACE to join the Daisy track talk"
+      }
+    },
+    {
+      "id": "padauk-workshop",
+      "name": "Padauk track: workshop",
+      "bounds": {
+        "x": 15,
+        "y": 0,
+        "width": 14,
+        "height": 12
+      },
+      "wallStyle": "yellow",
+      "doors": [
+        {
+          "wall": "south",
+          "offset": 4
+        },
+        {
+          "wall": "east",
+          "offset": 6
+        }
+      ],
+      "furniture": [
+        {
+          "prefabId": "notice-board-3x1",
+          "x": 17,
+          "y": 2
+        },
+        {
+          "prefabId": "whiteboard-easel-3x3",
+          "x": 24,
+          "y": 3
+        },
+        {
+          "prefabId": "table-long-4x3",
+          "x": 17,
+          "y": 5
+        },
+        {
+          "prefabId": "table-long-4x3",
+          "x": 22,
+          "y": 7
+        }
+      ],
+      "waProperties": {
+        "focusable": true,
+        "zoomMargin": 0.5
+      }
+    },
+    {
+      "id": "sabal-lounge",
+      "name": "Sabal lounge",
+      "bounds": {
+        "x": 28,
+        "y": 0,
+        "width": 15,
+        "height": 12
+      },
+      "floorStyle": "wood-dark",
+      "doors": [
+        {
+          "wall": "south",
+          "offset": 3
+        }
+      ],
+      "furniture": [
+        {
+          "prefabId": "snack-bar-5x3",
+          "x": 34,
+          "y": 2
+        },
+        {
+          "prefabId": "lounge-sofa-set-4x4",
+          "x": 30,
+          "y": 5
+        },
+        {
+          "prefabId": "armchair-pair-3x2",
+          "x": 35,
+          "y": 7
+        },
+        {
+          "prefabId": "kitchen-counter-2x5",
+          "x": 39,
+          "y": 3
+        },
+        {
+          "prefabId": "plant-tree-1x2",
+          "x": 29,
+          "y": 3
+        }
+      ],
+      "waProperties": {
+        "playAudio": "https://example.com/varcamp/lounge-ambience.mp3",
+        "audioLoop": true,
+        "audioVolume": 0.25
+      }
+    },
+    {
+      "id": "registration",
+      "name": "Registration hall",
+      "bounds": {
+        "x": 0,
+        "y": 11,
+        "width": 24,
+        "height": 13
+      },
+      "doors": [
+        {
+          "wall": "east",
+          "offset": 6
+        },
+        {
+          "wall": "south",
+          "offset": 10,
+          "width": 2,
+          "exit": true
+        }
+      ],
+      "furniture": [
+        {
+          "prefabId": "registration-desk-4x3",
+          "x": 9,
+          "y": 15
+        },
+        {
+          "prefabId": "info-sign-1x3",
+          "x": 6,
+          "y": 15
+        },
+        {
+          "prefabId": "low-shelf-2x2",
+          "x": 1,
+          "y": 14
+        }
+      ]
+    },
+    {
+      "id": "thazin-games",
+      "name": "Thazin game corner",
+      "bounds": {
+        "x": 23,
+        "y": 11,
+        "width": 13,
+        "height": 13
+      },
+      "floorStyle": "wood-honey",
+      "furniture": [
+        {
+          "prefabId": "game-circle-3x3",
+          "x": 26,
+          "y": 15
+        },
+        {
+          "prefabId": "pouf-row-4x1",
+          "x": 26,
+          "y": 20
+        },
+        {
+          "prefabId": "party-balloons-1x1",
+          "x": 24,
+          "y": 14
+        }
+      ]
+    },
+    {
+      "id": "phone-booth-a",
+      "name": "Phone booth A",
+      "bounds": {
+        "x": 35,
+        "y": 11,
+        "width": 4,
+        "height": 6
+      },
+      "floorStyle": "carpet-red",
+      "doors": [
+        {
+          "wall": "west",
+          "offset": 3
+        }
+      ],
+      "waProperties": {
+        "jitsiRoom": "varcamp-phone-booth-a",
+        "jitsiTrigger": "onaction"
+      }
+    },
+    {
+      "id": "phone-booth-b",
+      "name": "Phone booth B",
+      "bounds": {
+        "x": 38,
+        "y": 11,
+        "width": 5,
+        "height": 6
+      },
+      "floorStyle": "carpet-red",
+      "doors": [
+        {
+          "wall": "south",
+          "offset": 2
+        }
+      ],
+      "waProperties": {
+        "jitsiRoom": "varcamp-phone-booth-b",
+        "jitsiTrigger": "onaction"
+      }
+    },
+    {
+      "id": "sponsors",
+      "name": "Sponsor booths",
+      "bounds": {
+        "x": 35,
+        "y": 16,
+        "width": 8,
+        "height": 8
+      },
+      "doors": [
+        {
+          "wall": "west",
+          "offset": 5
+        }
+      ],
+      "furniture": [
+        {
+          "prefabId": "sponsor-booth-4x4",
+          "x": 36,
+          "y": 17
+        }
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "name": "currentTalk",
+      "default": "Opening keynote",
+      "persist": true
+    }
+  ]
+}

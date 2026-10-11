@@ -1,0 +1,8 @@
+{
+  "description": "A vertical door whose east side lands on the face rows of a wall already in the map: DOOR_BLOCKED_BY_FACE (the DSL check cannot see existing walls).",
+  "mapWidth": 12,
+  "mapHeight": 10,
+  "rooms": [{ "id": "a", "bounds": { "x": 0, "y": 0, "width": 5, "height": 8 }, "doors": [{ "wall": "east", "offset": 3 }] }],
+  "existingWalls": ["5-9,1"],
+  "expectError": "DOOR_BLOCKED_BY_FACE"
+}

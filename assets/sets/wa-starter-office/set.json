@@ -1,0 +1,545 @@
+{
+  "id": "wa-starter-office",
+  "title": "WorkAdventure map-starter-kit office tiles",
+  "starterKitSha": "1143646a9c02c3928eac4acbb123642c62a48a85",
+  "mapCopyright": "Built with wa-agent-engine from the WorkAdventure map-starter-kit tilesets (https://github.com/workadventure/map-starter-kit). Some furniture arrangements are adapted from its office.tmj and conference.tmj (CC-BY-SA 3.0). Tileset licenses: see each tileset's tilesetCopyright.",
+  "tilesets": [
+    {
+      "name": "WA_Special_Zones",
+      "tsj": "tilesets/WA_Special_Zones.tsj",
+      "image": "tilesets/WA_Special_Zones.png",
+      "tilesetCopyright": "WorkAdventure (https://workadventu.re) - WorkAdventure specific resources license: https://github.com/workadventure/map-starter-kit/blob/1143646a9c02c3928eac4acbb123642c62a48a85/LICENSE.assets"
+    },
+    {
+      "name": "WA_Room_Builder",
+      "tsj": "tilesets/WA_Room_Builder.tsj",
+      "image": "tilesets/WA_Room_Builder.png",
+      "tilesetCopyright": "WorkAdventure (https://workadventu.re) - WorkAdventure specific resources license: https://github.com/workadventure/map-starter-kit/blob/1143646a9c02c3928eac4acbb123642c62a48a85/LICENSE.assets"
+    },
+    {
+      "name": "WA_Tables",
+      "tsj": "tilesets/WA_Tables.tsj",
+      "image": "tilesets/WA_Tables.png",
+      "tilesetCopyright": "WorkAdventure (https://workadventu.re) - WorkAdventure specific resources license: https://github.com/workadventure/map-starter-kit/blob/1143646a9c02c3928eac4acbb123642c62a48a85/LICENSE.assets"
+    },
+    {
+      "name": "WA_Seats",
+      "tsj": "tilesets/WA_Seats.tsj",
+      "image": "tilesets/WA_Seats.png",
+      "tilesetCopyright": "WorkAdventure (https://workadventu.re) - WorkAdventure specific resources license: https://github.com/workadventure/map-starter-kit/blob/1143646a9c02c3928eac4acbb123642c62a48a85/LICENSE.assets"
+    },
+    {
+      "name": "WA_Miscellaneous",
+      "tsj": "tilesets/WA_Miscellaneous.tsj",
+      "image": "tilesets/WA_Miscellaneous.png",
+      "tilesetCopyright": "WorkAdventure (https://workadventu.re) - WorkAdventure specific resources license: https://github.com/workadventure/map-starter-kit/blob/1143646a9c02c3928eac4acbb123642c62a48a85/LICENSE.assets"
+    },
+    {
+      "name": "WA_Other_Furniture",
+      "tsj": "tilesets/WA_Other_Furniture.tsj",
+      "image": "tilesets/WA_Other_Furniture.png",
+      "tilesetCopyright": "WorkAdventure (https://workadventu.re) - WorkAdventure specific resources license: https://github.com/workadventure/map-starter-kit/blob/1143646a9c02c3928eac4acbb123642c62a48a85/LICENSE.assets"
+    },
+    {
+      "name": "WA_Decoration",
+      "tsj": "tilesets/WA_Decoration.tsj",
+      "image": "tilesets/WA_Decoration.png",
+      "tilesetCopyright": "WorkAdventure (https://workadventu.re) - WorkAdventure specific resources license: https://github.com/workadventure/map-starter-kit/blob/1143646a9c02c3928eac4acbb123642c62a48a85/LICENSE.assets"
+    },
+    {
+      "name": "WA_User_Interface",
+      "tsj": "tilesets/WA_User_Interface.tsj",
+      "image": "tilesets/WA_User_Interface.png",
+      "tilesetCopyright": "WorkAdventure (https://workadventu.re) - WorkAdventure specific resources license: https://github.com/workadventure/map-starter-kit/blob/1143646a9c02c3928eac4acbb123642c62a48a85/LICENSE.assets"
+    },
+    {
+      "name": "WA_Exterior",
+      "tsj": "tilesets/WA_Exterior.tsj",
+      "image": "tilesets/WA_Exterior.png",
+      "tilesetCopyright": "WorkAdventure (https://workadventu.re) - WorkAdventure specific resources license: https://github.com/workadventure/map-starter-kit/blob/1143646a9c02c3928eac4acbb123642c62a48a85/LICENSE.assets"
+    }
+  ],
+  "wallTerrain": {
+    "tileset": "WA_Room_Builder",
+    "wangset": "walls",
+    "wallColor": 1,
+    "doorColor": 2,
+    "isolatedWallTile": 106
+  },
+  "doorLintelTiles": [
+    64,
+    36
+  ],
+  "faceRules": {
+    "tileset": "WA_Room_Builder",
+    "height": 2,
+    "exteriorStyle": "brick",
+    "styles": {
+      "white": {
+        "row1": {
+          "mid": 203,
+          "openW": 205,
+          "openE": 206,
+          "openWE": 280
+        },
+        "row2": {
+          "mid": 228,
+          "openW": 230,
+          "openE": 231,
+          "openWE": 305
+        }
+      },
+      "yellow": {
+        "row1": {
+          "mid": 200,
+          "openW": 200,
+          "openE": 200,
+          "openWE": 280
+        },
+        "row2": {
+          "mid": 225,
+          "openW": 225,
+          "openE": 226,
+          "openWE": 305
+        }
+      },
+      "brick": {
+        "row1": {
+          "mid": 310,
+          "openW": 310,
+          "openE": 310,
+          "openWE": 310
+        },
+        "row2": {
+          "mid": 310,
+          "openW": 310,
+          "openE": 310,
+          "openWE": 310
+        }
+      }
+    }
+  },
+  "wallStyles": {
+    "default": "white",
+    "names": [
+      "white",
+      "yellow"
+    ]
+  },
+  "floorStyles": {
+    "default": "wood-light",
+    "styles": {
+      "wood-light": {
+        "tileset": "WA_Room_Builder",
+        "tile": 350
+      },
+      "wood-dark": {
+        "tileset": "WA_Room_Builder",
+        "tile": 375
+      },
+      "wood-rough": {
+        "tileset": "WA_Room_Builder",
+        "tile": 352
+      },
+      "wood-honey": {
+        "tileset": "WA_Room_Builder",
+        "tile": 353
+      },
+      "wood-walnut": {
+        "tileset": "WA_Room_Builder",
+        "tile": 377
+      },
+      "wood-maple": {
+        "tileset": "WA_Room_Builder",
+        "tile": 378
+      },
+      "boards": {
+        "tileset": "WA_Room_Builder",
+        "tile": 355
+      },
+      "stripe-light": {
+        "tileset": "WA_Room_Builder",
+        "tile": 358
+      },
+      "stripe-grey": {
+        "tileset": "WA_Room_Builder",
+        "tile": 383
+      },
+      "slate-blue": {
+        "tileset": "WA_Room_Builder",
+        "tile": 360
+      },
+      "slate-purple": {
+        "tileset": "WA_Room_Builder",
+        "tile": 385
+      },
+      "carpet-navy": {
+        "tileset": "WA_Room_Builder",
+        "tile": 362
+      },
+      "carpet-red": {
+        "tileset": "WA_Room_Builder",
+        "tile": 387
+      },
+      "grass": {
+        "tileset": "WA_Exterior",
+        "tile": 628
+      }
+    }
+  },
+  "collisionTile": {
+    "tileset": "WA_Special_Zones",
+    "tile": 2
+  },
+  "startTile": {
+    "tileset": "WA_Special_Zones",
+    "tile": 1
+  },
+  "prefabs": [
+    {
+      "id": "stage-light-4x3",
+      "path": "prefabs/stage-light-4x3.tmj",
+      "width": 4,
+      "height": 3,
+      "category": "talks",
+      "placement": "free",
+      "use": "Speaker stage with steps at the front centre; walkable",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "stage-dark-4x3",
+      "path": "prefabs/stage-dark-4x3.tmj",
+      "width": 4,
+      "height": 3,
+      "category": "talks",
+      "placement": "free",
+      "use": "Darker speaker stage variant; walkable",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "lectern-1x1",
+      "path": "prefabs/lectern-1x1.tmj",
+      "width": 1,
+      "height": 1,
+      "category": "talks",
+      "placement": "free",
+      "use": "Speaker lectern with microphone, on or beside a stage"
+    },
+    {
+      "id": "audience-row-2x1",
+      "path": "prefabs/audience-row-2x1.tmj",
+      "width": 2,
+      "height": 1,
+      "category": "talks",
+      "placement": "free",
+      "use": "Audience seats facing north; stack rows with one empty row between",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "audience-row-4x1",
+      "path": "prefabs/audience-row-4x1.tmj",
+      "width": 4,
+      "height": 1,
+      "category": "talks",
+      "placement": "free",
+      "use": "Audience seats facing north; stack rows with one empty row between",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "audience-row-6x1",
+      "path": "prefabs/audience-row-6x1.tmj",
+      "width": 6,
+      "height": 1,
+      "category": "talks",
+      "placement": "free",
+      "use": "Audience seats facing north; stack rows with one empty row between",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "whiteboard-easel-3x3",
+      "path": "prefabs/whiteboard-easel-3x3.tmj",
+      "width": 3,
+      "height": 3,
+      "category": "talks",
+      "placement": "free",
+      "use": "Flip-chart or session board",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "wall-screen-3x2",
+      "path": "prefabs/wall-screen-3x2.tmj",
+      "width": 3,
+      "height": 2,
+      "category": "talks",
+      "placement": "north-wall",
+      "faceRow": "upper",
+      "use": "Projector screen or display; place on the 2 face rows of a north wall"
+    },
+    {
+      "id": "info-screen-stand-1x3",
+      "path": "prefabs/info-screen-stand-1x3.tmj",
+      "width": 1,
+      "height": 3,
+      "category": "talks",
+      "placement": "free",
+      "use": "Schedule or info display stand",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "executive-desk-3x2",
+      "path": "prefabs/executive-desk-3x2.tmj",
+      "width": 3,
+      "height": 2,
+      "category": "work",
+      "placement": "free",
+      "use": "Organiser or host desk with a monitor",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "executive-desk-chair-3x3",
+      "path": "prefabs/executive-desk-chair-3x3.tmj",
+      "width": 3,
+      "height": 3,
+      "category": "work",
+      "placement": "free",
+      "use": "Desk with a seat behind it",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "table-long-6x3",
+      "path": "prefabs/table-long-6x3.tmj",
+      "width": 6,
+      "height": 3,
+      "category": "work",
+      "placement": "free",
+      "use": "Workshop or hack table",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "table-long-6x5",
+      "path": "prefabs/table-long-6x5.tmj",
+      "width": 6,
+      "height": 5,
+      "category": "work",
+      "placement": "free",
+      "use": "Meeting table with 3 chairs a side",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "table-long-4x3",
+      "path": "prefabs/table-long-4x3.tmj",
+      "width": 4,
+      "height": 3,
+      "category": "work",
+      "placement": "free",
+      "use": "Workshop or hack table",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "table-long-4x5",
+      "path": "prefabs/table-long-4x5.tmj",
+      "width": 4,
+      "height": 5,
+      "category": "work",
+      "placement": "free",
+      "use": "Meeting table with 2 chairs a side",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "coworking-pod-4x5",
+      "path": "prefabs/coworking-pod-4x5.tmj",
+      "width": 4,
+      "height": 5,
+      "category": "work",
+      "placement": "free",
+      "use": "Four-seat face-to-face work pod",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "glass-table-4x6",
+      "path": "prefabs/glass-table-4x6.tmj",
+      "width": 4,
+      "height": 6,
+      "category": "work",
+      "placement": "free",
+      "use": "8-seat glass meeting table",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "cafe-table-3x2",
+      "path": "prefabs/cafe-table-3x2.tmj",
+      "width": 3,
+      "height": 2,
+      "category": "work",
+      "placement": "free",
+      "use": "Round cafe or chat table with 3 seats"
+    },
+    {
+      "id": "lounge-sofa-set-4x4",
+      "path": "prefabs/lounge-sofa-set-4x4.tmj",
+      "width": 4,
+      "height": 4,
+      "category": "social",
+      "placement": "free",
+      "use": "Lounge or chill-out corner: sofa and coffee table",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "conversation-pit-3x4",
+      "path": "prefabs/conversation-pit-3x4.tmj",
+      "width": 3,
+      "height": 4,
+      "category": "social",
+      "placement": "free",
+      "use": "Two sofas facing each other over a table"
+    },
+    {
+      "id": "armchair-pair-3x2",
+      "path": "prefabs/armchair-pair-3x2.tmj",
+      "width": 3,
+      "height": 2,
+      "category": "social",
+      "placement": "free",
+      "use": "Two armchairs and a side table for a 1:1 chat",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "kitchen-counter-2x5",
+      "path": "prefabs/kitchen-counter-2x5.tmj",
+      "width": 2,
+      "height": 5,
+      "category": "social",
+      "placement": "free",
+      "use": "Coffee or kitchen counter along a west wall",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "snack-bar-5x3",
+      "path": "prefabs/snack-bar-5x3.tmj",
+      "width": 5,
+      "height": 3,
+      "category": "social",
+      "placement": "north-wall",
+      "faceRow": "lower",
+      "use": "Buffet or snack bar; place with its top row on the lower face row of a north wall",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "low-shelf-2x2",
+      "path": "prefabs/low-shelf-2x2.tmj",
+      "width": 2,
+      "height": 2,
+      "category": "social",
+      "placement": "free",
+      "use": "Low shelf or swag table",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "plant-palm-3x3",
+      "path": "prefabs/plant-palm-3x3.tmj",
+      "width": 3,
+      "height": 3,
+      "category": "social",
+      "placement": "free",
+      "use": "Large potted palm",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "plant-tree-1x2",
+      "path": "prefabs/plant-tree-1x2.tmj",
+      "width": 1,
+      "height": 2,
+      "category": "social",
+      "placement": "free",
+      "use": "Potted tree, for example flanking a door",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "plant-small-1x1",
+      "path": "prefabs/plant-small-1x1.tmj",
+      "width": 1,
+      "height": 1,
+      "category": "social",
+      "placement": "free",
+      "use": "Table-side flowers"
+    },
+    {
+      "id": "registration-desk-4x3",
+      "path": "prefabs/registration-desk-4x3.tmj",
+      "width": 4,
+      "height": 3,
+      "category": "logistics",
+      "placement": "free",
+      "use": "Registration or info desk with an \"i\" sign",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "sponsor-booth-4x4",
+      "path": "prefabs/sponsor-booth-4x4.tmj",
+      "width": 4,
+      "height": 4,
+      "category": "logistics",
+      "placement": "north-wall",
+      "faceRow": "upper",
+      "use": "Sponsor table with an empty banner frame (no sponsor-logo art exists); rows 0-1 sit on the face rows of a north wall",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "notice-board-3x1",
+      "path": "prefabs/notice-board-3x1.tmj",
+      "width": 3,
+      "height": 1,
+      "category": "logistics",
+      "placement": "north-wall",
+      "faceRow": "either",
+      "use": "Wall notice board; place on a face row of a north wall",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    },
+    {
+      "id": "info-sign-1x3",
+      "path": "prefabs/info-sign-1x3.tmj",
+      "width": 1,
+      "height": 3,
+      "category": "logistics",
+      "placement": "free",
+      "use": "Way-finding or info sign on a stand"
+    },
+    {
+      "id": "game-circle-3x3",
+      "path": "prefabs/game-circle-3x3.tmj",
+      "width": 3,
+      "height": 3,
+      "category": "fun",
+      "placement": "free",
+      "use": "Board-game or werewolf circle: rug, 4 poufs, round table, balloons"
+    },
+    {
+      "id": "pouf-row-4x1",
+      "path": "prefabs/pouf-row-4x1.tmj",
+      "width": 4,
+      "height": 1,
+      "category": "fun",
+      "placement": "free",
+      "use": "Bean-bag style seating for games"
+    },
+    {
+      "id": "party-balloons-1x1",
+      "path": "prefabs/party-balloons-1x1.tmj",
+      "width": 1,
+      "height": 1,
+      "category": "fun",
+      "placement": "free",
+      "use": "Party decoration"
+    },
+    {
+      "id": "phone-pod-2x2",
+      "path": "prefabs/phone-pod-2x2.tmj",
+      "width": 2,
+      "height": 2,
+      "category": "phone",
+      "placement": "free",
+      "use": "Phone or 1:1 call nook: high-back armchair and side table",
+      "license": "CC-BY-SA-3.0 (https://creativecommons.org/licenses/by-sa/3.0/)"
+    }
+  ]
+}
