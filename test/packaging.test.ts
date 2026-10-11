@@ -14,6 +14,7 @@ const ALLOWED = [
   /^dist\/.+\.(js|d\.ts)$/,
   /^assets\/sets\/.+\.(tsj|tmj)$/,
   /^assets\/sets\/.+\/set\.json$/,
+  /^assets\/markers\/[^/]+\.tsj$/,
   /^skills\/.+\.md$/,
 ];
 
@@ -38,6 +39,8 @@ test('npm pack ships the asset set, only allowlisted files, and no PNG', async (
   expect(set).toContain('assets/sets/wa-starter-office/set.json');
   expect(set.filter((p) => p.endsWith('.tsj'))).toHaveLength(9);
   expect(set.filter((p) => p.endsWith('.tmj'))).toHaveLength(69);
+  // The marker tileset of automapping asset sets ships as a .tsj; its image is generated.
+  expect(paths.filter((p) => p.startsWith('assets/markers/'))).toEqual(['assets/markers/wa-markers.tsj']);
 });
 
 test('the package is MIT-licensed, and says so in package.json and LICENSE', async () => {

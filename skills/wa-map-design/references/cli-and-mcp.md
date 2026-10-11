@@ -125,7 +125,7 @@ Output: `ok` (false when there is any error), `errors` and `warnings`. Each issu
 | `START_LAYER_NESTED` | warning | The start layer is inside a group. |
 | `START_LAYER_EMPTY` | warning | The start layer has no tiles. |
 | `START_TILE_BLOCKED` | warning | A start tile lies under a wall, wall face, furniture or water, so players would spawn stuck. |
-| `OVERLAY_ABOVE_FLOOR` | error | The start or collisions layer draws above the floor, so its marker tiles show. |
+| `OVERLAY_ABOVE_FLOOR` | error | The start, collisions or sketch layer (`wa_sketch`, `wa_style`) draws above the floor, so its marker tiles show. |
 | `LAYER_DATA_UNSUPPORTED` | error | A tile layer cannot be decoded. |
 | `LAYER_SIZE_MISMATCH` | error | A tile layer is not the size of the map. |
 | `NON_EMBEDDED_TILESET` | error | An external or image-collection tileset; WorkAdventure needs embedded tilesets with one image. |
@@ -134,8 +134,8 @@ Output: `ok` (false when there is any error), `errors` and `warnings`. Each issu
 | `MISSING_COPYRIGHT` | warning | A tileset without `tilesetCopyright`, or a map without `mapCopyright`. Common on maps drawn by hand. |
 | `INVALID_GID` | error | A tile id that belongs to no tileset. |
 | `ASSET_SET_NOT_FOUND` | warning | The asset set could not be loaded, so the wall checks were skipped. |
-| `ASSET_SET_INCOMPLETE` | warning | The asset set has no tile for some wall or door patterns, so rooms that need them fail to build. |
-| `WALL_WITHOUT_COLLISION` | error | A wall or wall-face tile without a collision, so players walk through it. |
+| `ASSET_SET_INCOMPLETE` | warning | The asset set has no tile for some wall or door patterns, so rooms that need them fail to build. For a set drawn with automapping rules: its rules draw no tile for the listed pieces (wall patterns, lintels, face variants, floors), or they cannot be loaded. |
+| `WALL_WITHOUT_COLLISION` | error | A wall or wall-face tile without a collision, so players walk through it. For a set drawn with automapping rules: a wall or wall-face cell of the sketch (`wa_sketch`) without one. |
 | `ISOLATED_WALL` | warning | A wall cell with no wall neighbours. |
 | `DOOR_UNREACHABLE` | error | An engine-built door is blocked or leads nowhere. |
 | `EXIT_WITHOUT_EXIT_ZONE` | error | An exit door has no area with `exitUrl` over it. |
@@ -151,7 +151,7 @@ Output: `ok` (false when there is any error), `errors` and `warnings`. Each issu
 | `SCRIPT_EXTERNAL` | warning | The map script is loaded from outside the project. |
 | `SCRIPT_NOT_FOUND` | warning | The map script file is not in the project. |
 | `SCRIPT_WHITESPACE` | warning | The map script value has leading or trailing spaces. |
-| `ENGINE_STATE_INVALID` | error | The engine's build record does not fit the map, for example after a resize in Tiled. |
+| `ENGINE_STATE_INVALID` | error | The engine's build record does not fit the map, for example after a resize in Tiled. As a warning: the asset set's automapping rules changed since the rooms were built; build them again. |
 
 ### `render_map_preview` (CLI command `render`)
 

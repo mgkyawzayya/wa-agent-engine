@@ -17,6 +17,9 @@ import { MAX_MAP_DIMENSION } from './limits.js';
 export const TILE_ROLES = [
   'start',
   'collisions',
+  // The sketch layers of maps drawn with automapping rules: markers the rules read.
+  'sketch',
+  'sketchStyle',
   'floor',
   'walls',
   'furniture1',
@@ -44,6 +47,8 @@ interface RoleSpec {
 const ROLE_SPECS: Record<LayerRole, RoleSpec> = {
   start: { candidates: ['start'], kind: 'tilelayer', topLevelOnly: true, index: 1 },
   collisions: { candidates: ['collisions'], kind: 'tilelayer', index: 1 },
+  sketch: { candidates: ['wa_sketch'], kind: 'tilelayer', index: 1 },
+  sketchStyle: { candidates: ['wa_style'], kind: 'tilelayer', index: 1 },
   floor: { candidates: ['floor', 'floor/floor1'], kind: 'tilelayer', index: 1 },
   walls: { candidates: ['walls', 'walls/walls1'], kind: 'tilelayer', index: 1 },
   // A flat `furniture` or `above` tile layer (older hand-made WA maps) serves as sub-layer 1.
@@ -243,11 +248,14 @@ function newGroup(map: TiledMap, name: string, children: TiledLayer[]): TiledGro
   return { id: allocLayerId(map), layers: children, name, opacity: 1, type: 'group', visible: true, x: 0, y: 0 };
 }
 
-// Contract order of the standard roles, bottom to top. start and collisions sit under the
-// floor so their overlay tiles stay hidden; layers above floorLayer draw over avatars.
+// Contract order of the standard roles, bottom to top. start, collisions and the sketch layers
+// sit under the floor so their overlay tiles stay hidden; layers above floorLayer draw over
+// avatars.
 const STANDARD_ORDER: readonly (LayerRole | 'furniture' | 'foreground')[] = [
   'start',
   'collisions',
+  'sketch',
+  'sketchStyle',
   'floor',
   'walls',
   'furniture',
@@ -321,13 +329,17 @@ function addChild(map: TiledMap, group: TiledGroupLayer, role: LayerRole): void 
   group.layers.splice(after === -1 ? group.layers.length : after + 1, 0, child);
 }
 
+export const SKETCH_ROLES: readonly TileRole[] = ['sketch', 'sketchStyle'];
+
 // Creates only the missing standard roles. Never reorders, renames, or deletes a layer,
 // never creates a second top-level layer with an existing name, and reuses WA's `above`
-// group (or a flat `furniture`/`above` layer) for its slot. Safe to call repeatedly.
-export function ensureStandardLayers(map: TiledMap): LayerRole[] {
+// group (or a flat `furniture`/`above` layer) for its slot. Safe to call repeatedly. The
+// sketch layers are created only when asked for (maps drawn with automapping rules), hidden.
+export function ensureStandardLayers(map: TiledMap, options: { sketch?: boolean } = {}): LayerRole[] {
   const created: LayerRole[] = [];
   const topLevel = (name: string): TiledLayer | undefined => map.layers.find((l) => l.name === name);
   for (const slot of STANDARD_ORDER) {
+    if (SKETCH_ROLES.includes(slot as TileRole) && options.sketch !== true) continue;
     if (slot === 'furniture' || slot === 'foreground') {
       const { names, roles } = GROUP_ROLES[slot];
       const missing = roles.filter((role) => tryResolveRole(map, role) === undefined);
@@ -377,7 +389,9 @@ export function ensureStandardLayers(map: TiledMap): LayerRole[] {
           { role: slot },
         );
       }
-      insertTopLevel(map, slot, spec.kind === 'objectgroup' ? newObjectGroup(map, name) : newTileLayer(map, name));
+      const layer = spec.kind === 'objectgroup' ? newObjectGroup(map, name) : newTileLayer(map, name);
+      if (SKETCH_ROLES.includes(slot as TileRole)) layer.visible = false;
+      insertTopLevel(map, slot, layer);
     }
     created.push(slot);
   }

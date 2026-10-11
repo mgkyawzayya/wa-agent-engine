@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { loadAssetSet, type LoadedAssetSet } from '../../src/core/asset-set-registry.js';
+import { loadAssetSet, wangSet, type LoadedWangSet } from '../../src/core/asset-set-registry.js';
 import { autotile, collectDoorSpans, doorSideProblems, faceCellsFor, faceStyleOf, wallPieceFor, type AutotileResult } from '../../src/core/autotiler.js';
 import { decodeGid, tilesetForGid } from '../../src/core/gid.js';
 import { CellSet } from '../../src/core/grid.js';
@@ -28,10 +28,10 @@ const ROOMS_DIR = fileURLToPath(new URL('../fixtures/rooms/', import.meta.url));
 const WINDOWS = fileURLToPath(new URL('../fixtures/crosscheck/windows.json', import.meta.url));
 
 let project: TempProject;
-let set: LoadedAssetSet;
+let set: LoadedWangSet;
 beforeAll(async () => {
   project = await makeProject();
-  set = await loadAssetSet('wa-starter-office', project.dir);
+  set = wangSet(await loadAssetSet('wa-starter-office', project.dir));
 });
 afterAll(() => project.cleanup());
 
@@ -189,7 +189,7 @@ describe('DSL rooms reproduce windows of WA maps tile for tile', () => {
     for (const role of w.roles) {
       // Only tiles of the autotiler's own tilesets count; decorations (trees, logos) on the
       // same WA layers are not drawn by it.
-      const own = role === 'collisions' ? set.set.collisionTile.tileset : set.set.wallTerrain.tileset;
+      const own = role === 'collisions' ? set.set.collisionTile.tileset : set.wang.wallTerrain.tileset;
       const theirs = localTiles(map, role).map((t) => (t?.tileset === own ? t : undefined));
       const ours = roleCells(result, role);
       for (let y = w.window.y0; y <= w.window.y1; y++) {

@@ -82,6 +82,20 @@ const replaceAtoB: LayerSpec[] = [
 ];
 
 describe('rules files', () => {
+  test('the hash of a rule set changes with its rules, not with line endings or spacing', async () => {
+    await writeRuleMap('walls.tmj', replaceAtoB);
+    const hash = async (): Promise<string> => (await loadRules(project.dir, join(rulesDir, 'rules.txt'))).hash;
+    const first = await hash();
+    await writeFile(join(rulesDir, 'rules.txt'), 'walls.tmj\r\n');
+    await writeFile(join(rulesDir, 'walls.tmj'), JSON.stringify(JSON.parse(ruleMapJson(replaceAtoB)), null, 2));
+    expect(await hash()).toBe(first);
+    await writeFile(join(rulesDir, 'walls.tmj'), ruleMapJson([{ name: 'input_ground', data: [1] }, { name: 'output_ground', data: [3] }]));
+    expect(await hash()).not.toBe(first);
+    await writeFile(join(rulesDir, 'walls.tmj'), ruleMapJson(replaceAtoB));
+    await writeFile(join(rulesDir, 'rules.txt'), 'walls.tmj\nwalls.tmj\n');
+    expect(await hash()).not.toBe(first);
+  });
+
   test('a missing rules file is AUTOMAP_RULES_NOT_FOUND', async () => {
     expect((await loadError(join(rulesDir, 'none.txt'))).code).toBe('AUTOMAP_RULES_NOT_FOUND');
   });

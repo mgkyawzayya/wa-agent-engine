@@ -142,6 +142,9 @@ const EngineStateSchema = z.object({
   // Room details by room id. Kept out of `rooms`, whose strict schema 0.1.0 also reads.
   roomDetails: z.record(z.string(), z.string()).default({}),
   nextPrefab: z.number().int(),
+  // For rooms drawn with an asset set's automapping rules: the hash of the rules and the seed
+  // of that build, so a check can tell that the rules changed since.
+  automap: z.object({ rulesHash: z.string(), seed: z.number().int().min(0) }).exactOptional(),
 });
 export type EngineState = z.infer<typeof EngineStateSchema>;
 export type PrefabRecord = EngineState['prefabs'][number];

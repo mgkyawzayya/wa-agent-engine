@@ -71,7 +71,7 @@ your brief ──▶ agent + wa-map-design skill ──▶ MCP tools ──▶ c
 
 The agent writes the venue as a small JSON layout: rooms with bounds, doors, furniture and zone properties. Rooms share walls; doors sit on a wall at an offset. The engine turns the layout into tiles using an **asset set**, a description of which tile in the tilesets is a wall piece, a face, a floor or a lintel, plus the furniture prefabs.
 
-The package ships one asset set, `wa-starter-office`, for the starter kit's tilesets. It holds tile ids only, no pixels: the art always comes from your map project. The `wa-asset-set-onboarding` skill shows an agent how to describe another tileset.
+The package ships one asset set, `wa-starter-office`, for the starter kit's tilesets. It holds tile ids only, no pixels: the art always comes from your map project. The `wa-asset-set-onboarding` skill shows an agent how to describe another tileset, either with a Wang wall terrain like the starter set's or with Tiled automapping rules, which can draw walls the starter kit's model cannot.
 
 For a campus, a park or a village, the layout also takes a `ground` style, `paths` and plazas, `water` for rivers and ponds (bridges appear where a path crosses), and `scatter` areas of trees, bushes and flowers; the skill's [world recipe](skills/wa-map-design/references/world-recipe.md) shows how to plan one.
 

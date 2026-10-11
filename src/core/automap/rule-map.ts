@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { stat, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import type {
@@ -493,7 +494,8 @@ export async function loadRuleMap(projectDir: string, abs: string, relPath: stri
   for (const set of inputSets) set.layers.sort((a, b) => (a.layerName < b.layerName ? -1 : a.layerName > b.layerName ? 1 : 0));
 
   const rules = buildRules(map.width, inputSets, outputSets, optionAreas, ruleDefaults);
-  return { path: abs, relPath, width: map.width, height: map.height, options, inputSets, outputSets, inputLayerNames, outputTileLayerNames, rules, tilesets, warnings };
+  const hash = createHash('sha256').update(JSON.stringify(map)).digest('hex');
+  return { path: abs, relPath, hash, width: map.width, height: map.height, options, inputSets, outputSets, inputLayerNames, outputTileLayerNames, rules, tilesets, warnings };
 }
 
 function boxOf(cells: readonly (readonly [number, number])[]): RuleBox {

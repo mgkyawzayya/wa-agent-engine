@@ -2,9 +2,10 @@ import { access, readFile, stat } from 'node:fs/promises';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as z from 'zod';
-import { AssetSetIdSchema, AssetSetSchema, ExtendingAssetSetSchema, type AssetSet } from '../schemas/asset-set.schema.js';
+import { AssetSetIdSchema, AssetSetSchema, ExtendingAssetSetSchema, type AssetSet, type Drawing } from '../schemas/asset-set.schema.js';
 import { TiledTilesetFileSchema, type TiledTilesetFile } from '../schemas/tiled.schema.js';
 import { WaEngineError } from './errors.js';
+import { MARKER_COPYRIGHT, MARKER_IMAGE, MARKER_TILESET, MARKER_TSJ } from './markers.js';
 import { assertProjectDir, resolveInProject } from './project-paths.js';
 
 // Asset sets ship definitions only (tilesets, terrain, prefabs); their images come from the
@@ -39,17 +40,40 @@ export interface LoadedTileset {
   tilesetCopyright: string;
 }
 
-export interface LoadedAssetSet {
+interface LoadedSetBase {
   id: string;
   source: 'project' | 'builtin';
   // The base set's id when this set extends one; `set` then holds both sets merged.
   extends?: string;
   set: AssetSet;
+  // The set's tilesets, plus the built-in marker tileset when its drawing uses it.
   tilesets: ReadonlyMap<string, LoadedTileset>;
-  walls: WallLookup;
   // Resolves a path relative to set.json (a prefab or .tsj), through the project guard
   // for project-local sets.
   resolveFile(rel: string, ext: string | readonly string[]): Promise<string>;
+}
+
+export type WangParts = Required<Pick<AssetSet, 'wallTerrain' | 'doorLintelTiles' | 'faceRules'>>;
+
+// A set that draws walls with its wall terrain (a Wang set) and its face rules.
+export interface LoadedWangSet extends LoadedSetBase {
+  kind: 'wang';
+  wang: WangParts;
+  walls: WallLookup;
+}
+
+// A set that draws walls, faces, lintels and floors with Tiled automapping rules.
+export interface LoadedAutomapSet extends LoadedSetBase {
+  kind: 'automap';
+  drawing: Drawing;
+}
+
+export type LoadedAssetSet = LoadedWangSet | LoadedAutomapSet;
+
+// The Wang set of a loaded set, for code that only runs for one.
+export function wangSet(loaded: LoadedAssetSet): LoadedWangSet {
+  if (loaded.kind !== 'wang') throw new WaEngineError('INTERNAL', `asset set "${loaded.id}" is drawn with automapping rules`);
+  return loaded;
 }
 
 const errnoOf = (err: unknown): string | undefined => (err as NodeJS.ErrnoException).code;
@@ -77,7 +101,7 @@ async function readJson(abs: string, id: string, what: string): Promise<unknown>
 
 const neighbourKey = (n: number, e: number, s: number, w: number): string => `${n},${e},${s},${w}`;
 
-function buildWallLookup(id: string, set: AssetSet, tilesets: ReadonlyMap<string, LoadedTileset>): WallLookup {
+function buildWallLookup(id: string, set: WangParts, tilesets: ReadonlyMap<string, LoadedTileset>): WallLookup {
   const terrain = set.wallTerrain;
   const wangset = tilesets.get(terrain.tileset)?.tsj.wangsets?.find((w) => w.name === terrain.wangset);
   if (wangset === undefined) throw invalid(id, `tileset ${terrain.tileset} has no wangset "${terrain.wangset}"`);
@@ -111,15 +135,23 @@ function checkReferences(id: string, set: AssetSet, tilesets: ReadonlyMap<string
     const count = tilesets.get(tileset)?.tsj.tilecount ?? 0;
     if (tile >= count) problems.push(`${what}: tile ${tile} is past the end of ${tileset} (${count} tiles)`);
   };
-  const terrain = set.wallTerrain;
-  for (const [name, ref] of Object.entries(set.floorStyles.styles)) check(ref.tileset, ref.tile, `floor style ${name}`);
-  for (const [name, style] of Object.entries(set.faceRules.styles)) {
-    for (const row of [style.row1, style.row2]) {
-      for (const tile of Object.values(row)) check(set.faceRules.tileset, tile, `face style ${name}`);
+  for (const [name, ref] of Object.entries(set.floorStyles.styles)) {
+    if (ref.tileset !== undefined && ref.tile !== undefined) check(ref.tileset, ref.tile, `floor style ${name}`);
+  }
+  if (set.faceRules !== undefined) {
+    for (const [name, style] of Object.entries(set.faceRules.styles)) {
+      for (const row of [style.row1, style.row2]) {
+        for (const tile of Object.values(row)) check(set.faceRules.tileset, tile, `face style ${name}`);
+      }
     }
   }
-  for (const tile of set.doorLintelTiles) check(terrain.tileset, tile, 'door lintel');
-  check(terrain.tileset, terrain.isolatedWallTile, 'isolated wall tile');
+  if (set.drawing !== undefined) {
+    const { markerTileset, markers } = set.drawing;
+    check(markerTileset, markers.wall, 'wall marker');
+    check(markerTileset, markers.door, 'door marker');
+    for (const [name, tile] of Object.entries(markers.floor)) check(markerTileset, tile, `floor marker ${name}`);
+    for (const [name, tile] of Object.entries(markers.wallStyle)) check(markerTileset, tile, `wall style marker ${name}`);
+  }
   check(set.collisionTile.tileset, set.collisionTile.tile, 'collision tile');
   check(set.startTile.tileset, set.startTile.tile, 'start tile');
   if (set.water !== undefined) {
@@ -127,11 +159,16 @@ function checkReferences(id: string, set: AssetSet, tilesets: ReadonlyMap<string
     check(set.water.bridge.horizontal.tileset, set.water.bridge.horizontal.tile, 'horizontal bridge tile');
     check(set.water.bridge.vertical.tileset, set.water.bridge.vertical.tile, 'vertical bridge tile');
   }
-  const wangset = tilesets.get(terrain.tileset)?.tsj.wangsets?.find((w) => w.name === terrain.wangset);
-  for (const { tileid } of wangset?.wangtiles ?? []) check(terrain.tileset, tileid, 'wall terrain');
-  const colors = wangset?.colors?.length ?? 0;
-  if (terrain.wallColor === terrain.doorColor || terrain.wallColor > colors || terrain.doorColor > colors) {
-    problems.push(`wallColor and doorColor must be two different colours of wangset "${terrain.wangset}" (it has ${colors})`);
+  const terrain = set.wallTerrain;
+  if (terrain !== undefined) {
+    for (const tile of set.doorLintelTiles ?? []) check(terrain.tileset, tile, 'door lintel');
+    check(terrain.tileset, terrain.isolatedWallTile, 'isolated wall tile');
+    const wangset = tilesets.get(terrain.tileset)?.tsj.wangsets?.find((w) => w.name === terrain.wangset);
+    for (const { tileid } of wangset?.wangtiles ?? []) check(terrain.tileset, tileid, 'wall terrain');
+    const colors = wangset?.colors?.length ?? 0;
+    if (terrain.wallColor === terrain.doorColor || terrain.wallColor > colors || terrain.doorColor > colors) {
+      problems.push(`wallColor and doorColor must be two different colours of wangset "${terrain.wangset}" (it has ${colors})`);
+    }
   }
   const collides = tilesets
     .get(set.collisionTile.tileset)
@@ -184,9 +221,26 @@ export async function loadAssetSet(id: string, projectDirInput: string, asBaseOf
   if (set.id !== id) throw invalid(id, `set.json declares id "${set.id}"`);
 
   const tilesets = await loadTilesets(id, set.tilesets, resolveFile);
+  const { drawing } = set;
+  if (drawing !== undefined) {
+    if (source === 'builtin') throw invalid(id, 'a built-in set cannot be drawn with automapping rules');
+    if (drawing.markerTileset === MARKER_TILESET && !tilesets.has(MARKER_TILESET)) tilesets.set(MARKER_TILESET, await builtinMarkers(id));
+  }
   checkReferences(id, set, tilesets);
+  if (drawing !== undefined) {
+    const rules = await resolveFile(drawing.rules, ['.txt', '.tmj', '.json']);
+    if (!(await exists(rules))) throw invalid(id, `its automapping rules ${drawing.rules} are missing`, { rules: drawing.rules });
+    return { kind: 'automap', id, source, set, tilesets, drawing, resolveFile };
+  }
+  const wang: WangParts = { wallTerrain: set.wallTerrain!, doorLintelTiles: set.doorLintelTiles!, faceRules: set.faceRules! };
+  return { kind: 'wang', id, source, set, tilesets, wang, walls: buildWallLookup(id, wang, tilesets), resolveFile };
+}
 
-  return { id, source, set, tilesets, walls: buildWallLookup(id, set, tilesets), resolveFile };
+// The engine's marker tileset; its image is written into the project when a map is drawn.
+async function builtinMarkers(id: string): Promise<LoadedTileset> {
+  const tsj = TiledTilesetFileSchema.safeParse(await readJson(MARKER_TSJ, id, 'the built-in marker tileset'));
+  if (!tsj.success) throw new WaEngineError('INTERNAL', 'the built-in marker tileset is not a Tiled tileset');
+  return { name: MARKER_TILESET, tsj: tsj.data, tsjPath: MARKER_TSJ, image: MARKER_IMAGE, tilesetCopyright: MARKER_COPYRIGHT };
 }
 
 type ResolveFile = LoadedAssetSet['resolveFile'];
@@ -249,13 +303,14 @@ async function loadExtendingSet(
     prefabs: [...base.set.prefabs, ...own.prefabs],
   };
   if (own.mapCopyright !== undefined) set.mapCopyright = own.mapCopyright;
+  // Everything else, the walls or the automapping rules included, comes from the base.
   return {
+    ...base,
     id,
     source,
     extends: base.id,
     set,
     tilesets: new Map([...base.tilesets, ...ownTilesets]),
-    walls: base.walls,
     resolveFile: (rel, ext) => (ownPaths.has(rel) ? resolveOwn(rel, ext) : base.resolveFile(rel, ext)),
   };
 }
@@ -303,7 +358,7 @@ const DOOR_PIECES: readonly { name: string; key: [WallNeighbour, WallNeighbour, 
 ];
 
 // Checks that the wall terrain covers all 16 wall neighbour patterns and every door piece.
-export function checkCoverage(loaded: LoadedAssetSet): CoverageReport {
+export function checkCoverage(loaded: LoadedWangSet): CoverageReport {
   const missing: string[] = [];
   const bit = (mask: number, b: number): WallNeighbour => ((mask >> b) & 1) as WallNeighbour;
   for (let mask = 0; mask < 16; mask++) {

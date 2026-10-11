@@ -1,9 +1,11 @@
 import { access } from 'node:fs/promises';
-import { interiorOf, MAX_MAP_TILES, parseDsl, type Dsl, type DslRoom, type Rect } from '../schemas/dsl.schema.js';
+import { FACE_ROWS, interiorOf, MAX_MAP_TILES, parseDsl, type Dsl, type DslRoom, type Rect } from '../schemas/dsl.schema.js';
 import { isExternalTileset, setProperty, type TiledMap, type TiledObject } from '../schemas/tiled.schema.js';
 import { NPC_WRITABLE_BY, type WaVariable } from '../schemas/wa.schema.js';
 import { loadAssetSet, type LoadedAssetSet } from './asset-set-registry.js';
 import { autotile, collectDoorSpans, DOOR_SIDE_REACH, doorSideProblems, faceStyleOf, type DoorSpan } from './autotiler.js';
+import { drawWithRules, loadDrawingRules } from './automap/drawing.js';
+import { resolveExternalTilesets } from './automap/tiles.js';
 import {
   decodeCells,
   eachWrite,
@@ -19,13 +21,15 @@ import {
 import { assertWhole, WaEngineError, isWaEngineError, type ErrorCode } from './errors.js';
 import { decodeGid, tilesetForGid } from './gid.js';
 import { CellSet, inBounds, rectCells, type Cell } from './grid.js';
-import { allocObjectId, ensureStandardLayers, forEachObjectGroup, removeOwnedObjects, resolveRole, type TileRole } from './layers.js';
+import { allocObjectId, ensureStandardLayers, forEachObjectGroup, removeOwnedObjects, resolveRole, tryResolveRole, type TileRole } from './layers.js';
 import { writeLabels } from './labels.js';
 import { doorFronts, drawWorld, seededRandom } from './world.js';
 import { createEmptyMap, readMap, withMapLock, writeMap } from './map-io.js';
 import { editMap, resolveMap } from './map-session.js';
+import { ensureMarkerImage, MARKER_TILESET, MARKER_TSJ } from './markers.js';
 import { loadPrefab, type LoadedPrefab } from './prefab-registry.js';
 import { resolveMapRelative } from './project-paths.js';
+import { sketchCells, sketchReader } from './sketch.js';
 import { embedSetTilesets, TileWriter } from './tile-writer.js';
 import { collidingGids, doorProblems, newDoorProblems, solidCells } from './walkability.js';
 import { checkZoneProperties, DEFAULT_ASSET_SET, upsertArea } from './zones.js';
@@ -35,6 +39,25 @@ const TILE = 32;
 function firstError(errors: readonly WaEngineError[]): never {
   const [first] = errors;
   throw new WaEngineError(first!.code, first!.message, errors.length === 1 ? first!.details : { errors: errors.map((e) => e.toJSON()) });
+}
+
+// The map's layers and tilesets for a set: a set drawn with automapping rules gets its sketch
+// layers, and the image of the built-in markers when it uses them.
+async function prepareMap(projectDir: string, map: TiledMap, mapAbs: string, set: LoadedAssetSet, names?: Iterable<string>): Promise<void> {
+  ensureStandardLayers(map, { sketch: set.kind === 'automap' });
+  if (set.tilesets.get(MARKER_TILESET)?.tsjPath === MARKER_TSJ) await ensureMarkerImage(projectDir);
+  await embedSetTilesets(projectDir, map, mapAbs, set, names);
+}
+
+// Cells players cannot walk through: colliding tiles and, in rooms drawn with automapping
+// rules, the walls and faces of the sketch, whatever the rules drew there.
+function solidOf(map: TiledMap, set: LoadedAssetSet): CellSet {
+  const solid = solidCells(map);
+  if (set.kind === 'automap') {
+    const sketch = sketchCells(map, new TileWriter(map), set.drawing);
+    for (const c of [...sketch.walls, ...sketch.faces]) solid.add(c.x, c.y);
+  }
+  return solid;
 }
 
 // ---- scaffold ----
@@ -102,8 +125,7 @@ export async function scaffoldMap(options: ScaffoldOptions): Promise<ScaffoldRes
     const warnings = options.script === undefined ? [] : await checkScript(projectDir, mapAbs, options.script);
 
     const map = createEmptyMap(width, height);
-    ensureStandardLayers(map);
-    await embedSetTilesets(projectDir, map, mapAbs, set);
+    await prepareMap(projectDir, map, mapAbs, set);
     if (set.set.mapCopyright !== undefined) setProperty(map, 'mapCopyright', 'string', set.set.mapCopyright);
     if (options.mapDescription !== undefined) setProperty(map, 'mapDescription', 'string', options.mapDescription);
     if (options.mapName !== undefined) setProperty(map, 'mapName', 'string', options.mapName);
@@ -133,15 +155,20 @@ interface Existing {
 }
 
 function readExisting(map: TiledMap, writer: TileWriter, set: LoadedAssetSet): Existing {
+  const occupied = new CellSet();
+  for (let y = 0; y < map.height; y++) for (let x = 0; x < map.width; x++) if (writer.get('walls', x, y) !== 0) occupied.add(x, y);
+  // With automapping rules, walls and doors are the markers on the sketch.
+  if (set.kind === 'automap') {
+    const sketch = sketchCells(map, writer, set.drawing);
+    return { walls: sketch.walls, doors: sketch.doors, occupied, faceStyle: () => undefined };
+  }
   const walls = new CellSet();
   const doors = new CellSet();
-  const occupied = new CellSet();
-  const faceTileset = set.set.faceRules.tileset;
-  const wallTileset = set.set.wallTerrain.tileset;
+  const faceTileset = set.wang.faceRules.tileset;
+  const wallTileset = set.wang.wallTerrain.tileset;
   for (let y = 0; y < map.height; y++) {
     for (let x = 0; x < map.width; x++) {
       const wall = writer.local('walls', x, y);
-      if (writer.get('walls', x, y) !== 0) occupied.add(x, y);
       if (wall?.tileset === wallTileset && set.walls.wallTops.has(wall.tile)) walls.add(x, y);
       const top = writer.local('foreground1', x, y);
       if (top?.tileset === wallTileset && set.walls.lintels.has(top.tile)) doors.add(x, y);
@@ -172,17 +199,22 @@ interface Probe {
 }
 
 function probe(map: TiledMap, writer: TileWriter, set: LoadedAssetSet): Probe {
+  if (set.kind === 'automap') {
+    const sketch = sketchReader(map, writer, set.drawing);
+    return { isFace: sketch.isFace, isWallTop: sketch.isWall };
+  }
+  const { wang, walls } = set;
   const inside = (x: number, y: number): boolean => x >= 0 && y >= 0 && x < map.width && y < map.height;
   return {
     isFace: (x, y) => {
       if (!inside(x, y)) return false;
       const t = writer.local('walls', x, y);
-      return t?.tileset === set.set.faceRules.tileset && faceStyleOf(set.set, t.tile) !== undefined;
+      return t?.tileset === wang.faceRules.tileset && faceStyleOf(set.set, t.tile) !== undefined;
     },
     isWallTop: (x, y) => {
       if (!inside(x, y)) return false;
       const t = writer.local('walls', x, y);
-      return t?.tileset === set.set.wallTerrain.tileset && set.walls.wallTops.has(t.tile);
+      return t?.tileset === wang.wallTerrain.tileset && walls.wallTops.has(t.tile);
     },
   };
 }
@@ -266,7 +298,7 @@ function newlySolid(writer: TileWriter, writes: Writes, colliding: Set<number>, 
   return fresh;
 }
 
-function checkDoors(map: TiledMap, rooms: EngineState['rooms'], solid: CellSet = solidCells(map)): void {
+function checkDoors(map: TiledMap, rooms: EngineState['rooms'], solid: CellSet): void {
   const problems = doorProblems(map, rooms, solid);
   if (problems.length > 0) firstError(problems);
 }
@@ -338,10 +370,9 @@ export async function placePrefab(options: PlacePrefabOptions): Promise<PlacePre
     const set = await loadSetFor(session.state?.assetSet, options.assetSet ?? state.assetSet, session.projectDir);
     state.assetSet = set.id;
     const prefab = await loadPrefab(set, options.prefabId);
-    ensureStandardLayers(map);
-    await embedSetTilesets(session.projectDir, map, session.mapAbs, set, prefabTilesets(prefab, set));
+    await prepareMap(session.projectDir, map, session.mapAbs, set, prefabTilesets(prefab, set));
     const writer = new TileWriter(map);
-    const solid = solidCells(map);
+    const solid = solidOf(map, set);
     const before = doorProblems(map, state.rooms, solid);
     const recorder = new WriteRecorder();
     stampPrefab(map, writer, set, prefab, options.x, options.y, recorder);
@@ -355,7 +386,7 @@ export async function placePrefab(options: PlacePrefabOptions): Promise<PlacePre
     state.nextPrefab += 1;
     state.prefabs.push({ instance, prefabId: prefab.id, x: options.x, y: options.y, origin: 'tool', writes: recorder.toWrites() });
     // A prefab on a wall face may sit where a room's label was.
-    writeLabels(map, state, set.set.faceRules.height, TILE);
+    writeLabels(map, state, FACE_ROWS, TILE);
     const cells = Object.values(prefab.layers).reduce((n, list) => n + (list?.length ?? 0), 0);
     return { result: { instance, cells, collisions: prefab.collisions.length }, write: { state } };
   });
@@ -551,8 +582,7 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
     const set = await loadSetFor(session.state?.assetSet, dsl.assetSet, projectDir);
     const previous = session.state ?? emptyState(dsl.assetSet, map);
     const size = previous.size;
-    ensureStandardLayers(map);
-    await embedSetTilesets(projectDir, map, mapAbs, set);
+    await prepareMap(projectDir, map, mapAbs, set);
     const writer = new TileWriter(map);
     const warnings: WaEngineError[] = [];
     // Prefab definitions, read once per id however many records use them.
@@ -631,6 +661,25 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
     const recorder = new WriteRecorder();
     for (const c of tiles.clears) writer.set(c.role, c.x, c.y, 0, recorder);
     for (const p of tiles.placements) writer.set(p.role, p.x, p.y, writer.gid(p.tileset, p.tile), recorder);
+    // With automapping rules the placements are sketch markers: the tiles come from the rules.
+    let placedCells = set.kind === 'automap' ? 0 : tiles.placements.length;
+    // With automapping rules the sketch is in place now; the rules draw the rooms from it,
+    // around the new rooms and the ones they replace, and every tile they change is recorded.
+    let automapped: EngineState['automap'];
+    if (set.kind === 'automap') {
+      const rules = await loadDrawingRules(set, projectDir);
+      const margin = 2;
+      const region = [...dsl.rooms, ...previous.rooms].map(({ bounds: b }) => ({ x: b.x - margin, y: b.y - margin, width: b.width + 2 * margin, height: b.height + 2 * margin }));
+      const run = drawWithRules(set, map, (role) => (tryResolveRole(map, role) === undefined ? undefined : writer.copy(role)), rules, {
+        mapAbs,
+        region,
+        externalTilesets: await resolveExternalTilesets(projectDir, map, mapAbs),
+      });
+      for (const c of run.changes) writer.set(c.role, c.x, c.y, c.raw, recorder);
+      warnings.push(...run.warnings.map((w) => new WaEngineError(w.code, w.message, w.details)));
+      placedCells += run.changes.filter((c) => c.raw !== 0).length;
+      automapped = { rulesHash: rules.hash, seed: 0 };
+    }
     // The world around the rooms: ground, water and paths, owned by the build like the rooms.
     const buildings = new CellSet([...dsl.rooms.flatMap((r) => rectCells(r.bounds)), ...tiles.faces]);
     const world = drawWorld(dsl, set, writer, recorder, collision, buildings);
@@ -656,9 +705,11 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
       writes: recorder.toWrites(),
       prefabs: [],
     };
+    if (automapped !== undefined) state.automap = automapped;
+    else delete state.automap;
 
     // Zones: one area per room with WA properties, over its walkable interior.
-    const faceRows = set.set.faceRules.height;
+    const faceRows = FACE_ROWS;
     const zoneNames: string[] = [];
     const zoneErrors: WaEngineError[] = [];
     for (const room of dsl.rooms) {
@@ -697,7 +748,7 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
     // only goes where it keeps the doors so.
     writer.flush();
     const colliding = collidingGids(map);
-    const solid = solidCells(map);
+    const solid = solidOf(map, set);
     checkDoors(map, dsl.rooms, solid);
 
     // Scattered prefabs (trees, flowers): seeded random spots on the ground, clear of rooms,
@@ -794,10 +845,10 @@ export async function buildRooms(options: BuildRoomsOptions): Promise<BuildRooms
     // Labels last, so they see every piece of furniture now on the walls.
     writeLabels(map, state, faceRows, TILE);
     // The whole map, furniture included, must leave every door walkable.
-    checkDoors(map, dsl.rooms);
+    checkDoors(map, dsl.rooms, solidOf(map, set));
     return {
       result: {
-        placedCells: tiles.placements.length,
+        placedCells,
         zones: zoneNames,
         variables,
         prefabs: furniture.map((b) => b.instance),

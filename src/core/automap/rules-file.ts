@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path';
 import type { RuleMap, RuleMapReference, RuleSet } from '../../schemas/automap.schema.js';
 import { WaEngineError, type ErrorBody } from '../errors.js';
@@ -57,6 +58,12 @@ export async function loadRules(projectDir: string, rulesAbs: string): Promise<R
   const loaded = new Map<string, Promise<RuleMap>>();
   const references: RuleMapReference[] = [];
   const warnings: ErrorBody[] = [];
+  const hash = createHash('sha256');
+  const addReference = async (filter: RegExp | undefined, abs: string): Promise<void> => {
+    const ruleMap = await ruleMapAt(abs);
+    hash.update(`map\0${ruleMap.relPath}\0${ruleMap.hash}\0`);
+    references.push({ filter, ruleMap });
+  };
 
   const ruleMapAt = (abs: string): Promise<RuleMap> => {
     let pending = loaded.get(abs);
@@ -77,7 +84,10 @@ export async function loadRules(projectDir: string, rulesAbs: string): Promise<R
       notFile: () => new WaEngineError('AUTOMAP_RULES_NOT_FOUND', `rules file is not a file: ${rel}`, { rules: rel }),
       tooLarge: () => new WaEngineError('AUTOMAP_RULES_INVALID', `rules file is larger than ${MAX_RULES_FILE_BYTES / 1024} KB: ${rel}`, { rules: rel }),
     });
-    return bytes.toString('utf8');
+    // Line endings do not count, so a checkout with CRLF has the same rules.
+    const text = bytes.toString('utf8');
+    hash.update(`rules\0${rel}\0${text.replaceAll('\r\n', '\n')}\0`);
+    return text;
   };
 
   const parse = async (given: string, real: string, stack: readonly string[], inherited: RegExp | undefined): Promise<void> => {
@@ -116,11 +126,11 @@ export async function loadRules(projectDir: string, rulesAbs: string): Promise<R
       if (references.length >= MAX_REFERENCES) {
         throw new WaEngineError('AUTOMAP_RULES_INVALID', `rules files list more than ${MAX_REFERENCES} rule maps`, { rules: shown(topReal) });
       }
-      references.push({ filter, ruleMap: await ruleMapAt(abs) });
+      await addReference(filter, abs);
     }
   };
 
   if (extname(topReal).toLowerCase() === '.txt') await parse(topGiven, topReal, [topReal], undefined);
-  else references.push({ filter: undefined, ruleMap: await ruleMapAt(topReal) });
-  return { projectDir: project, rulesPath: shown(topReal), rulesAbs: topReal, references, warnings };
+  else await addReference(undefined, topReal);
+  return { projectDir: project, rulesPath: shown(topReal), rulesAbs: topReal, references, warnings, hash: hash.digest('hex') };
 }

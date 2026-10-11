@@ -1,0 +1,311 @@
+{
+ "columns": 25,
+ "image": "../../../tilesets/WA_Room_Builder.png",
+ "imageheight": 1280,
+ "imagewidth": 800,
+ "margin": 0,
+ "name": "WA_Room_Builder",
+ "spacing": 0,
+ "tilecount": 1000,
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tilewidth": 32,
+ "type": "tileset",
+ "version": "1.11",
+ "wangsets": [
+  {
+   "colors": [
+    {
+     "color": "#2b2f30",
+     "name": "wall",
+     "probability": 1,
+     "tile": 104
+    },
+    {
+     "color": "#edc489",
+     "name": "door",
+     "probability": 1,
+     "tile": 64
+    }
+   ],
+   "name": "walls",
+   "tile": 104,
+   "type": "edge",
+   "wangtiles": [
+    {
+     "tileid": 56,
+     "wangid": [
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "tileid": 58,
+     "wangid": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "tileid": 31,
+     "wangid": [
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "tileid": 59,
+     "wangid": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0
+     ]
+    },
+    {
+     "tileid": 102,
+     "wangid": [
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "tileid": 104,
+     "wangid": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0
+     ]
+    },
+    {
+     "tileid": 53,
+     "wangid": [
+      1,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "tileid": 28,
+     "wangid": [
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "tileid": 29,
+     "wangid": [
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0
+     ]
+    },
+    {
+     "tileid": 54,
+     "wangid": [
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0
+     ]
+    },
+    {
+     "tileid": 108,
+     "wangid": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "tileid": 160,
+     "wangid": [
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+     ]
+    },
+    {
+     "tileid": 158,
+     "wangid": [
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0
+     ]
+    },
+    {
+     "tileid": 110,
+     "wangid": [
+      1,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0
+     ]
+    },
+    {
+     "tileid": 137,
+     "wangid": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+     ]
+    },
+    {
+     "tileid": 63,
+     "wangid": [
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      1,
+      0
+     ]
+    },
+    {
+     "tileid": 64,
+     "wangid": [
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      2,
+      0
+     ]
+    },
+    {
+     "tileid": 65,
+     "wangid": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      2,
+      0
+     ]
+    },
+    {
+     "tileid": 11,
+     "wangid": [
+      1,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "tileid": 36,
+     "wangid": [
+      2,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "tileid": 61,
+     "wangid": [
+      2,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,63 @@
+{
+ "id": "office-automap",
+ "title": "Office walls drawn with automapping rules (wa-agent-engine proving set)",
+ "mapCopyright": "Built with wa-agent-engine from the WorkAdventure map-starter-kit tilesets (https://github.com/workadventure/map-starter-kit). Some furniture arrangements are adapted from its office.tmj and conference.tmj (CC-BY-SA 3.0). Tileset licenses: see each tileset's tilesetCopyright.",
+ "tilesets": [
+  {
+   "name": "WA_Special_Zones",
+   "tsj": "tilesets/WA_Special_Zones.tsj",
+   "image": "tilesets/WA_Special_Zones.png",
+   "tilesetCopyright": "WorkAdventure (https://workadventu.re) - WorkAdventure specific resources license: https://github.com/workadventure/map-starter-kit/blob/1143646a9c02c3928eac4acbb123642c62a48a85/LICENSE.assets"
+  },
+  {
+   "name": "WA_Room_Builder",
+   "tsj": "tilesets/WA_Room_Builder.tsj",
+   "image": "tilesets/WA_Room_Builder.png",
+   "tilesetCopyright": "WorkAdventure (https://workadventu.re) - WorkAdventure specific resources license: https://github.com/workadventure/map-starter-kit/blob/1143646a9c02c3928eac4acbb123642c62a48a85/LICENSE.assets"
+  }
+ ],
+ "drawing": {
+  "mode": "automap",
+  "rules": "automap/rules.txt",
+  "markerTileset": "wa-markers",
+  "markers": {
+   "wall": 0,
+   "door": 1,
+   "floor": {
+    "wood-light": 2,
+    "carpet-red": 3,
+    "carpet-navy": 4,
+    "slate-blue": 5
+   },
+   "wallStyle": {
+    "white": 6,
+    "yellow": 7
+   }
+  }
+ },
+ "wallStyles": {
+  "default": "white",
+  "names": [
+   "white",
+   "yellow"
+  ]
+ },
+ "floorStyles": {
+  "default": "wood-light",
+  "styles": {
+   "wood-light": {},
+   "carpet-red": {},
+   "carpet-navy": {},
+   "slate-blue": {}
+  }
+ },
+ "collisionTile": {
+  "tileset": "WA_Special_Zones",
+  "tile": 2
+ },
+ "startTile": {
+  "tileset": "WA_Special_Zones",
+  "tile": 1
+ },
+ "prefabs": []
+}

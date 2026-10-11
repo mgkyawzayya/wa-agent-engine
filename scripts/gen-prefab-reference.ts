@@ -80,6 +80,8 @@ export function renderCatalog(set: AssetSet): string {
     }
     lines.push('');
   }
+  // The built-in set draws walls with its wall terrain and face rules.
+  if (set.faceRules === undefined) throw new Error(`${set.id} has no face rules`);
   const exterior = set.faceRules.exteriorStyle;
   const wallStyles = set.wallStyles.names.map((n) => (n === set.wallStyles.default ? `\`${n}\` (default)` : `\`${n}\``));
   const floorStyles = Object.entries(set.floorStyles.styles).map(([name, ref]) =>

@@ -1,12 +1,16 @@
-import type { AssetSet, FaceRow, FaceStyle } from '../schemas/asset-set.schema.js';
+import type { AssetSet, Drawing, FaceRow, FaceStyle } from '../schemas/asset-set.schema.js';
 import { doorCells, FACE_ROWS, interiorOf, isVertical, type DslRoom } from '../schemas/dsl.schema.js';
-import type { LoadedAssetSet, WallLookup, WallNeighbour } from './asset-set-registry.js';
+import type { LoadedAssetSet, WallLookup, WallNeighbour, WangParts } from './asset-set-registry.js';
 import { WaEngineError } from './errors.js';
 import { CellSet, DIRECTIONS4, inBounds, perimeterCells, rectCells, rectContains, type Cell } from './grid.js';
 import { TILE_ROLES, type TileRole } from './layers.js';
 
 // Turns DSL rooms into tile placements per layer role: wall tops (edge Wang lookup on the
 // N/E/S/W neighbours), 2-row wall faces, floors, lintel doors, and collisions. Pure: no I/O.
+//
+// For a set drawn with automapping rules the geometry and its checks are the same, but the
+// placements are markers on the sketch layers (the wall, door and floor markers on `sketch`,
+// each room's wall-style marker over its inside on `sketchStyle`); the rules draw the tiles.
 //
 // Contract with the compiler:
 // - Write every placement and empty every clear. Nothing else in the map is touched, so
@@ -120,9 +124,11 @@ export function faceCellsFor(
 
 // The face style a tile belongs to: the room wall styles first, then any other style.
 export function faceStyleOf(set: AssetSet, tile: number): string | undefined {
-  const names = [...set.wallStyles.names, ...Object.keys(set.faceRules.styles).filter((n) => !set.wallStyles.names.includes(n))];
+  const rules = set.faceRules;
+  if (rules === undefined) return undefined;
+  const names = [...set.wallStyles.names, ...Object.keys(rules.styles).filter((n) => !set.wallStyles.names.includes(n))];
   return names.find((name) => {
-    const style = set.faceRules.styles[name];
+    const style = rules.styles[name];
     return style !== undefined && [style.row1, style.row2].some((row) => Object.values(row).includes(tile));
   });
 }
@@ -155,19 +161,25 @@ export function collectDoorSpans(rooms: readonly DslRoom[]): DoorSpan[] {
   return [...spans.values()];
 }
 
+// How the build draws: tiles from the wall terrain and face rules, or markers for the rules.
+type Painter =
+  | { kind: 'wang'; wang: WangParts; lookup: WallLookup }
+  | { kind: 'sketch'; drawing: Drawing };
+
 interface Build {
   input: AutotileInput;
   width: number;
   height: number;
   set: AssetSet;
-  lookup: WallLookup;
+  painter: Painter;
   perimeter: CellSet;
   footprint: CellSet;
   walls: CellSet;
   doors: CellSet;
   spans: DoorSpan[];
-  wallStyleOf: Map<DslRoom, FaceStyle>;
-  floorOf: Map<DslRoom, { tileset: string; tile: number }>;
+  // Each room's wall and floor style names, once they are known to exist.
+  wallStyleOf: Map<DslRoom, string>;
+  floorOf: Map<DslRoom, string>;
   wallTops: Cell[];
   halo: CellSet;
   faces: FaceCell[];
@@ -199,20 +211,18 @@ function resolveStyles(b: Build): void {
   for (const room of b.input.rooms) {
     const wallStyle = room.wallStyle ?? b.set.wallStyles.default;
     const floorStyle = room.floorStyle ?? b.set.floorStyles.default;
-    const face = b.set.wallStyles.names.includes(wallStyle) ? b.set.faceRules.styles[wallStyle] : undefined;
-    const floor = Object.hasOwn(b.set.floorStyles.styles, floorStyle) ? b.set.floorStyles.styles[floorStyle] : undefined;
-    if (face === undefined) {
+    if (!b.set.wallStyles.names.includes(wallStyle)) {
       b.errors.push(new WaEngineError('UNKNOWN_STYLE', `room "${room.id}": unknown wallStyle "${wallStyle}"`, {
         room: room.id,
         available: b.set.wallStyles.names,
       }));
-    } else b.wallStyleOf.set(room, face);
-    if (floor === undefined) {
+    } else b.wallStyleOf.set(room, wallStyle);
+    if (!Object.hasOwn(b.set.floorStyles.styles, floorStyle)) {
       b.errors.push(new WaEngineError('UNKNOWN_STYLE', `room "${room.id}": unknown floorStyle "${floorStyle}"`, {
         room: room.id,
         available: Object.keys(b.set.floorStyles.styles),
       }));
-    } else b.floorOf.set(room, floor);
+    } else b.floorOf.set(room, floorStyle);
   }
 }
 
@@ -285,7 +295,7 @@ function cutDoors(b: Build): void {
     else doors.add(c.x, c.y);
   }
 
-  const allFaces = new CellSet(faceCellsFor(walls, walls, doors, b.width, b.height, b.set.faceRules.height));
+  const allFaces = new CellSet(faceCellsFor(walls, walls, doors, b.width, b.height, FACE_ROWS));
   const occupied = b.input.occupied;
   b.existingFaces = occupied === undefined ? allFaces : new CellSet([...allFaces].filter((c) => occupied.has(c.x, c.y)));
   for (const span of b.spans.filter((s) => s.vertical)) {
@@ -311,16 +321,24 @@ function placeWallTops(b: Build): void {
     if (near) b.halo.add(c.x, c.y);
   }
   b.wallTops = [...b.perimeter].filter((c) => b.walls.has(c.x, c.y));
+  const isolated = (warn: boolean, c: Cell): void => {
+    if (warn) b.warnings.push(new WaEngineError('ISOLATED_WALL', `wall cell at (${c.x},${c.y}) has no wall neighbours`, c));
+  };
+  const { painter } = b;
+  if (painter.kind === 'sketch') {
+    // Halo walls are already on the sketch; the rules re-tile them.
+    for (const c of [...b.wallTops, ...b.halo]) isolated(DIRECTIONS4.every((d) => valueAt(b.walls, b.doors, c.x + d.dx, c.y + d.dy) === 0), c);
+    for (const c of b.wallTops) place(b, 'sketch', c.x, c.y, painter.drawing.markerTileset, painter.drawing.markers.wall);
+    return;
+  }
   for (const c of [...b.wallTops, ...b.halo]) {
-    const tile = wallPieceFor(b.lookup, b.walls, b.doors, c.x, c.y);
+    const tile = wallPieceFor(painter.lookup, b.walls, b.doors, c.x, c.y);
     if (tile === undefined) {
       b.errors.push(new WaEngineError('WALL_PIECE_MISSING', `asset set "${b.input.set.id}" has no wall piece for the cell at (${c.x},${c.y})`, c));
       continue;
     }
-    if (tile === b.lookup.isolated) {
-      b.warnings.push(new WaEngineError('ISOLATED_WALL', `wall cell at (${c.x},${c.y}) has no wall neighbours`, c));
-    }
-    place(b, 'walls', c.x, c.y, b.set.wallTerrain.tileset, tile);
+    isolated(tile === painter.lookup.isolated, c);
+    place(b, 'walls', c.x, c.y, painter.wang.wallTerrain.tileset, tile);
   }
 }
 
@@ -328,18 +346,23 @@ function placeWallTops(b: Build): void {
 // the room's inside a DSL room, else the style already there, else the outside style.
 function placeFaces(b: Build): void {
   const { rooms, occupied, existingFaceStyle } = b.input;
-  const height = b.set.faceRules.height;
+  const height = FACE_ROWS;
+  const { painter } = b;
   // A door cell's old wall tile goes. Old faces and collisions under a horizontal door go too,
-  // wherever the map has them (also inside a new room that took over a hand-drawn wall).
+  // wherever the map has them (also inside a new room that took over a hand-drawn wall). With
+  // automapping rules, the rules clear them.
+  const clear = (x: number, y: number): void => {
+    if (painter.kind === 'wang') b.clears.push({ role: 'walls', x, y }, { role: 'collisions', x, y });
+  };
   for (const span of b.spans) {
     for (const c of span.cells) {
-      b.clears.push({ role: 'walls', x: c.x, y: c.y }, { role: 'collisions', x: c.x, y: c.y });
+      clear(c.x, c.y);
       if (span.vertical || occupied === undefined) continue;
       for (let row = 1; row <= height && inBounds(c.x, c.y + row, b.width, b.height); row++) {
         const y = c.y + row;
         if (b.walls.has(c.x, y) || b.doors.has(c.x, y)) break;
         if (!occupied.has(c.x, y)) continue;
-        b.clears.push({ role: 'walls', x: c.x, y }, { role: 'collisions', x: c.x, y });
+        clear(c.x, y);
         b.underDoor.add(c.x, y);
         b.footprint.add(c.x, y);
       }
@@ -353,29 +376,45 @@ function placeFaces(b: Build): void {
           (f) => !b.footprint.has(f.x, f.y) && !occupied.has(f.x, f.y),
         );
   b.faces = [...own, ...fromHalo];
+  for (const f of b.faces) b.footprint.add(f.x, f.y);
+  if (painter.kind === 'sketch') return;
+  const faceRules = painter.wang.faceRules;
   const faceSet = new CellSet(b.faces);
-  const exterior = b.set.faceRules.styles[b.set.faceRules.exteriorStyle]!;
+  const exterior = faceRules.styles[faceRules.exteriorStyle]!;
+  const styleNamed = (name: string | undefined): FaceStyle => (name === undefined ? undefined : faceRules.styles[name]) ?? exterior;
   const solid = (x: number, y: number): boolean =>
     faceSet.has(x, y) || b.walls.has(x, y) || ((occupied?.has(x, y) ?? false) && !b.underDoor.has(x, y));
   for (const f of b.faces) {
     const room = interiorRoomAt(rooms, f.x, f.y);
-    const kept = room === undefined ? existingFaceStyle?.(f.x, f.y) : undefined;
-    const style =
-      room !== undefined
-        ? (b.wallStyleOf.get(room) ?? exterior)
-        : kept !== undefined
-          ? (b.set.faceRules.styles[kept] ?? exterior)
-          : exterior;
-    place(b, 'walls', f.x, f.y, b.set.faceRules.tileset, faceVariant(style, f.row, !solid(f.x - 1, f.y), !solid(f.x + 1, f.y)));
-    b.footprint.add(f.x, f.y);
+    const style = styleNamed(room !== undefined ? b.wallStyleOf.get(room) : existingFaceStyle?.(f.x, f.y));
+    place(b, 'walls', f.x, f.y, faceRules.tileset, faceVariant(style, f.row, !solid(f.x - 1, f.y), !solid(f.x + 1, f.y)));
   }
 }
 
 // 5. Floors: every interior, face cells included; a door takes the floor of its inner room
 // (the south room of a shared horizontal door, the east room of a shared vertical door).
 function placeFloors(b: Build): void {
+  const { painter } = b;
+  if (painter.kind === 'sketch') {
+    // Floor markers on the insides, the wall-style marker over them; the rules give doors the
+    // floor of their inner room.
+    const { markerTileset, markers } = painter.drawing;
+    for (const room of b.input.rooms) {
+      const floor = b.floorOf.get(room);
+      const wallStyle = b.wallStyleOf.get(room);
+      for (const c of rectCells(interiorOf(room.bounds))) {
+        if (floor !== undefined) place(b, 'sketch', c.x, c.y, markerTileset, markers.floor[floor]!);
+        if (wallStyle !== undefined) place(b, 'sketchStyle', c.x, c.y, markerTileset, markers.wallStyle[wallStyle]!);
+      }
+    }
+    return;
+  }
+  const tileOf = (style: string | undefined): { tileset: string; tile: number } | undefined => {
+    const ref = style === undefined ? undefined : b.set.floorStyles.styles[style];
+    return ref?.tileset === undefined || ref.tile === undefined ? undefined : { tileset: ref.tileset, tile: ref.tile };
+  };
   for (const room of b.input.rooms) {
-    const floor = b.floorOf.get(room);
+    const floor = tileOf(b.floorOf.get(room));
     if (floor === undefined) continue;
     for (const c of rectCells(interiorOf(room.bounds))) place(b, 'floor', c.x, c.y, floor.tileset, floor.tile);
   }
@@ -387,7 +426,7 @@ function placeFloors(b: Build): void {
           best === undefined ? r : span.vertical ? (r.bounds.x > best.bounds.x ? r : best) : r.bounds.y > best.bounds.y ? r : best,
         undefined,
       );
-      const floor = inner === undefined ? undefined : b.floorOf.get(inner);
+      const floor = inner === undefined ? undefined : tileOf(b.floorOf.get(inner));
       if (floor !== undefined) place(b, 'floor', c.x, c.y, floor.tileset, floor.tile);
     }
   }
@@ -396,19 +435,26 @@ function placeFloors(b: Build): void {
 // 6. Collisions on every wall top and face; door cells and the cells under lintels stay free.
 function placeCollisions(b: Build): void {
   b.collisions = new CellSet([...b.wallTops, ...b.halo, ...b.faces]);
+  // With automapping rules the rules draw collisions; these still count for the door checks.
+  if (b.painter.kind === 'sketch') return;
   const { tileset, tile } = b.set.collisionTile;
   for (const c of b.collisions.sorted()) place(b, 'collisions', c.x, c.y, tileset, tile);
 }
 
-// 7. Lintels over every door cell.
+// 7. Lintels over every door cell (with automapping rules: the door marker).
 function placeLintels(b: Build): void {
+  const { painter } = b;
   for (const span of b.spans) {
-    const lintel = span.vertical ? b.lookup.tileFor(2, 0, 2, 0) : b.lookup.tileFor(0, 2, 0, 2);
+    if (painter.kind === 'sketch') {
+      for (const c of span.cells) place(b, 'sketch', c.x, c.y, painter.drawing.markerTileset, painter.drawing.markers.door);
+      continue;
+    }
+    const lintel = span.vertical ? painter.lookup.tileFor(2, 0, 2, 0) : painter.lookup.tileFor(0, 2, 0, 2);
     if (lintel === undefined) {
       b.errors.push(new WaEngineError('WALL_PIECE_MISSING', `asset set "${b.input.set.id}" has no ${span.vertical ? 'vertical' : 'horizontal'} lintel`));
       continue;
     }
-    for (const c of span.cells) place(b, 'foreground1', c.x, c.y, b.set.wallTerrain.tileset, lintel);
+    for (const c of span.cells) place(b, 'foreground1', c.x, c.y, painter.wang.wallTerrain.tileset, lintel);
   }
 }
 
@@ -513,7 +559,7 @@ export function autotile(input: AutotileInput): AutotileResult {
     width: input.mapWidth,
     height: input.mapHeight,
     set: input.set.set,
-    lookup: input.set.walls,
+    painter: input.set.kind === 'wang' ? { kind: 'wang', wang: input.set.wang, lookup: input.set.walls } : { kind: 'sketch', drawing: input.set.drawing },
     perimeter,
     footprint: new CellSet(input.rooms.flatMap((r) => rectCells(r.bounds))),
     walls: new CellSet([...perimeter, ...input.existingWalls]),

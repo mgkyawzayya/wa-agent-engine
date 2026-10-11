@@ -44,20 +44,20 @@ export function automap(map: TiledMap, rules: RuleSet, options: AutomapOptions):
     warnings,
   };
 
-  // The automapped region, clamped to the map before any region is built.
-  let left = 0;
-  let top = 0;
-  let right = map.width - 1;
-  let bottom = map.height - 1;
-  if (options.region !== undefined) {
-    const r = options.region;
+  // The automapped region (one rectangle or several, like a selection in Tiled), clamped to
+  // the map before anything else is built.
+  const mapRect = { left: 0, top: 0, right: map.width - 1, bottom: map.height - 1 };
+  let region = new Region();
+  const rects = options.region === undefined ? [{ x: 0, y: 0, width: map.width, height: map.height }] : [options.region].flat();
+  for (const r of rects) {
     assertWhole({ 'region.x': r.x, 'region.y': r.y, 'region.width': r.width, 'region.height': r.height });
-    left = Math.max(left, r.x);
-    top = Math.max(top, r.y);
-    right = Math.min(right, r.x + r.width - 1);
-    bottom = Math.min(bottom, r.y + r.height - 1);
+    const left = Math.max(0, r.x);
+    const top = Math.max(0, r.y);
+    const right = Math.min(map.width - 1, r.x + r.width - 1);
+    const bottom = Math.min(map.height - 1, r.y + r.height - 1);
+    if (left <= right && top <= bottom) region.addRect({ left, top, right, bottom });
   }
-  if (references.length === 0 || left > right || top > bottom) return report;
+  if (references.length === 0 || region.rects().length === 0) return report;
   for (const ts of map.tilesets) {
     if (isExternalTileset(ts) && options.externalTilesets?.[ts.source] === undefined) {
       report.warnings.push({
@@ -74,8 +74,6 @@ export function automap(map: TiledMap, rules: RuleSet, options: AutomapOptions):
   for (const r of references) run.prepareOutputs(r.ruleMap.outputTileLayerNames);
 
   // In a partial run, each rule map's output widens the region for the following ones.
-  const mapRect = { left: 0, top: 0, right: map.width - 1, bottom: map.height - 1 };
-  let region = Region.fromRect(left, top, right - left + 1, bottom - top + 1);
   let growing = true;
   for (const r of references) {
     if (growing && region.coversRect(mapRect)) growing = false;

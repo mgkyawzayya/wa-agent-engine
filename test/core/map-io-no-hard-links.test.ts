@@ -31,3 +31,12 @@ test('new maps are still created exclusively without hard links', async () => {
   });
   expect((await readdir(join(project.dir, 'maps'))).filter((f) => f.endsWith('.tmp'))).toEqual([]);
 });
+
+test('the marker image of automapping asset sets is still written without hard links', async () => {
+  const { ensureMarkerImage, MARKER_IMAGE, markerPng } = await import('../../src/core/markers.js');
+  const { readFile } = await import('node:fs/promises');
+  await ensureMarkerImage(project.dir);
+  await ensureMarkerImage(project.dir);
+  expect(Buffer.from(await readFile(join(project.dir, MARKER_IMAGE))).equals(Buffer.from(markerPng()))).toBe(true);
+  expect((await readdir(join(project.dir, 'tilesets'))).filter((f) => f.endsWith('.tmp'))).toEqual([]);
+});

@@ -1,0 +1,177 @@
+{
+ "columns": 4,
+ "image": "wa-markers.png",
+ "imageheight": 128,
+ "imagewidth": 128,
+ "margin": 0,
+ "name": "wa-markers",
+ "spacing": 0,
+ "tilecount": 16,
+ "tiledversion": "1.12.2",
+ "tileheight": 32,
+ "tiles": [
+  {
+   "id": 0,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "red"
+    }
+   ]
+  },
+  {
+   "id": 1,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "green"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "yellow"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "blue"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "orange"
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "purple"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "cyan"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "magenta"
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "lime"
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "pink"
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "teal"
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "lavender"
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "brown"
+    }
+   ]
+  },
+  {
+   "id": 13,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "beige"
+    }
+   ]
+  },
+  {
+   "id": 14,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "maroon"
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "properties": [
+    {
+     "name": "colour",
+     "type": "string",
+     "value": "navy"
+    }
+   ]
+  }
+ ],
+ "tilewidth": 32,
+ "type": "tileset",
+ "version": "1.11"
+}

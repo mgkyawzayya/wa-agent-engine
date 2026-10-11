@@ -43,6 +43,7 @@
     "assets/sets/**/*.tsj",
     "assets/sets/**/*.tmj",
     "assets/sets/**/set.json",
+    "assets/markers/*.tsj",
     "skills/**/*.md"
   ],
   "scripts": {
@@ -56,6 +57,7 @@
     "smoke": "node dist/cli/index.js --version && node dist/cli/index.js --help",
     "prepack": "npm run build",
     "gen:prefabs": "tsx scripts/gen-prefab-reference.ts",
+    "gen:markers": "tsx scripts/gen-markers.ts",
     "check-skills": "tsx scripts/check-skills.ts"
   },
   "dependencies": {

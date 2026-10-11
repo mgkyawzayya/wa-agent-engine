@@ -112,6 +112,9 @@ export interface RuleTileset {
 export interface RuleMap {
   path: string;
   relPath: string;
+  // SHA-256 of the rule map's content (as parsed, so line endings and spacing do not count),
+  // for noticing that rules changed.
+  hash: string;
   width: number;
   height: number;
   options: RuleMapOptions;
@@ -137,6 +140,8 @@ export interface RuleSet {
   rulesAbs: string;
   references: RuleMapReference[];
   warnings: ErrorBody[];
+  // SHA-256 over every rules file and rule map read, in order: it changes when the rules do.
+  hash: string;
 }
 
 // A working-map tileset stored in an external file, resolved by the caller (the core is sync);
@@ -149,7 +154,8 @@ export interface ExternalTilesetInfo {
 
 export interface AutomapOptions {
   seed?: number;
-  region?: Rect;
+  // Where to automap, like a selection in Tiled: one rectangle or several. Default: the map.
+  region?: Rect | readonly Rect[];
   // The working map's file name, for `[filter]` lines.
   mapFileName: string;
   // The working map's real absolute path (from the project guard), inside the rule set's

@@ -1,12 +1,12 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, relative, sep } from 'node:path';
-import { getProperty, isExternalTileset, type TiledEmbeddedTileset, type TiledMap, type TiledObject } from '../schemas/tiled.schema.js';
+import { getProperty, isExternalTileset, type TiledEmbeddedTileset, type TiledMap, type TiledObject, type TiledTileLayer } from '../schemas/tiled.schema.js';
 import { WaEngineError } from './errors.js';
 import { GLYPH_ADVANCE, GLYPH_HEIGHT, GLYPH_WIDTH, glyph, wrapText } from './bitmap-font.js';
 import { TEXT_EM_WIDTH, TEXT_LINE_HEIGHT } from './labels.js';
 import { decodeGid, tilesetForGid } from './gid.js';
-import { forEachObjectGroup, forEachTileLayer, readTileData } from './layers.js';
+import { forEachObjectGroup, forEachTileLayer, readTileData, SKETCH_ROLES, tryResolveRole } from './layers.js';
 import { readFileBounded, readMap, sha256Hex } from './map-io.js';
 import { resolveMap } from './map-session.js';
 import { decodePng, encodePng, readPngInfo, type Rgba8 } from './png.js';
@@ -265,6 +265,24 @@ export function previewSize(map: TiledMap, scale: number): { width: number; heig
   return { width: map.width * cellWidth, height: map.height * cellHeight };
 }
 
+// The sketch layers of maps drawn with automapping rules hold markers for the rules, never art:
+// previews leave them out even when they are visible.
+function sketchLayers(map: TiledMap): Set<TiledTileLayer> {
+  const layers = new Set<TiledTileLayer>();
+  for (const role of SKETCH_ROLES) {
+    let layer;
+    try {
+      layer = tryResolveRole(map, role)?.layer;
+    } catch (err) {
+      // A layer that cannot hold the role is drawn like any other.
+      if (!(err instanceof WaEngineError)) throw err;
+      continue;
+    }
+    if (layer?.type === 'tilelayer') layers.add(layer);
+  }
+  return layers;
+}
+
 // Composes a map from already-decoded tileset images, then its text objects. Pure and
 // deterministic. Like WA, only each tile layer's own visibility and opacity count; group
 // attributes are ignored.
@@ -276,8 +294,9 @@ export function composeMap(map: TiledMap, sheets: Sheets, options: { scale?: num
   const canvas: Rgba8 = { width: size.width, height: size.height, data: new Uint8ClampedArray(size.width * size.height * 4) };
   const grids = new Map<TiledEmbeddedTileset, TileGrid>();
   for (const [tileset, image] of sheets) grids.set(tileset, tileGrid(tileset, image));
+  const sketch = sketchLayers(map);
   forEachTileLayer(map.layers, (layer) => {
-    if (layer.visible === false) return;
+    if (layer.visible === false || sketch.has(layer)) return;
     const opacity = Math.round(Math.max(0, Math.min(1, layer.opacity ?? 1)) * 255);
     if (opacity === 0) return;
     readTileData(layer).forEach((raw, i) => {
@@ -344,8 +363,9 @@ function checkTileset(ts: TiledEmbeddedTileset, map: TiledMap): void {
 // Every image's header is checked, and the decode budget summed, before any is decoded.
 export async function loadSheets(projectDir: string, mapAbs: string, map: TiledMap): Promise<Map<TiledEmbeddedTileset, Rgba8>> {
   const used = new Set<TiledEmbeddedTileset>();
+  const sketch = sketchLayers(map);
   forEachTileLayer(map.layers, (layer) => {
-    if (layer.visible === false) return;
+    if (layer.visible === false || sketch.has(layer)) return;
     for (const raw of readTileData(layer)) {
       if (raw === 0) continue;
       const hit = tilesetForGid(map.tilesets, decodeGid(raw).gid);
@@ -411,8 +431,9 @@ export function previewName(projectDir: string, mapAbs: string, scale: RenderSca
 function checkDrawWork(map: TiledMap, scale: number, size: { width: number; height: number }): void {
   let work = 0;
   const checked = new Set<TiledEmbeddedTileset>();
+  const sketch = sketchLayers(map);
   forEachTileLayer(map.layers, (layer) => {
-    if (layer.visible === false || (layer.opacity ?? 1) <= 0) return;
+    if (layer.visible === false || (layer.opacity ?? 1) <= 0 || sketch.has(layer)) return;
     for (const raw of readTileData(layer)) {
       if (raw === 0) continue;
       const hit = tilesetForGid(map.tilesets, decodeGid(raw).gid);

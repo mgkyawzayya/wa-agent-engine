@@ -7,6 +7,7 @@ import {
   checkCoverage,
   loadAssetSet,
   resolveImages,
+  wangSet,
   type WallNeighbour,
 } from '../../src/core/asset-set-registry.js';
 import { readMap } from '../../src/core/map-io.js';
@@ -57,7 +58,7 @@ describe('built-in wa-starter-office', () => {
   });
 
   test('wall terrain covers all 16 neighbour patterns and every door piece', async () => {
-    const set = await loadAssetSet('wa-starter-office', project.dir);
+    const set = wangSet(await loadAssetSet('wa-starter-office', project.dir));
     expect(checkCoverage(set)).toEqual({ ok: true, missing: [] });
     const t = (n: WallNeighbour, e: WallNeighbour, s: WallNeighbour, w: WallNeighbour) => set.walls.tileFor(n, e, s, w);
     expect([t(0, 2, 0, 1), t(0, 2, 0, 2), t(0, 1, 0, 2)]).toEqual([63, 64, 65]);
@@ -80,7 +81,7 @@ describe('built-in wa-starter-office', () => {
     const tsj = JSON.parse(await readFile(tsjPath, 'utf8')) as { wangsets: { wangtiles: { tileid: number }[] }[] };
     tsj.wangsets[0]!.wangtiles = tsj.wangsets[0]!.wangtiles.filter((w) => w.tileid !== 137);
     await writeFile(tsjPath, JSON.stringify(tsj));
-    expect(checkCoverage(await loadAssetSet('wa-starter-office', project.dir))).toEqual({ ok: false, missing: ['wall N1 E1 S1 W1'] });
+    expect(checkCoverage(wangSet(await loadAssetSet('wa-starter-office', project.dir)))).toEqual({ ok: false, missing: ['wall N1 E1 S1 W1'] });
   });
 });
 
@@ -126,7 +127,7 @@ describe('project-local sets', () => {
     const tileset = demoTileset() as { wangsets: { wangtiles: unknown[] }[] };
     tileset.wangsets[0]!.wangtiles.push({ tileid: 3, wangid: [0, 0, 1, 0, 0, 0, 1, 0] });
     await writeDemoSet(project.dir, { tileset });
-    const demo = await loadAssetSet('demo', project.dir);
+    const demo = wangSet(await loadAssetSet('demo', project.dir));
     expect(demo.walls.tileFor(0, 1, 0, 1)).toBe(1);
     expect([...demo.walls.wallTops].sort()).toEqual([1, 3]);
   });

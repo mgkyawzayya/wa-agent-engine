@@ -73,6 +73,12 @@ function styleGid(set: LoadedAssetSet, writer: TileWriter, style: string, what: 
   if (ref === undefined) {
     throw new WaEngineError('UNKNOWN_STYLE', `${what}: unknown floor style "${style}"`, { available: Object.keys(set.set.floorStyles.styles) });
   }
+  // In a set drawn with automapping rules a style may have only a marker, for rooms.
+  if (ref.tileset === undefined || ref.tile === undefined) {
+    throw new WaEngineError('UNKNOWN_STYLE', `${what}: floor style "${style}" has no tile (asset set "${set.id}" draws it in rooms only); ground, paths and water need a style with a tile`, {
+      available: Object.entries(set.set.floorStyles.styles).filter(([, r]) => r.tile !== undefined).map(([name]) => name),
+    });
+  }
   return writer.gid(ref.tileset, ref.tile);
 }
 

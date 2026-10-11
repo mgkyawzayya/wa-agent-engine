@@ -8,8 +8,9 @@ import {
   type TiledTileLayer,
 } from '../schemas/tiled.schema.js';
 import { WA_ZONE_PROPERTY_NAMES } from '../schemas/wa.schema.js';
-import { checkCoverage, loadAssetSet, type LoadedAssetSet } from './asset-set-registry.js';
+import { checkCoverage, loadAssetSet, type LoadedAssetSet, type LoadedAutomapSet } from './asset-set-registry.js';
 import { collectDoorSpans, faceStyleOf } from './autotiler.js';
+import { drawingCoverage, loadDrawingRules } from './automap/drawing.js';
 import { alignState, readState, type EngineState } from './engine-state.js';
 import { WaEngineError } from './errors.js';
 import { decodeGid, tilesetForGid } from './gid.js';
@@ -19,6 +20,8 @@ import { estimateTextHeight, furnitureCells, LABEL_TYPE } from './labels.js';
 import { readMap } from './map-io.js';
 import { resolveMap } from './map-session.js';
 import { resolveMapRelative } from './project-paths.js';
+import { sketchCells, type SketchCells } from './sketch.js';
+import { TileWriter } from './tile-writer.js';
 import { doorProblems, solidCells } from './walkability.js';
 import { checkZoneProperties, DEFAULT_ASSET_SET, isArea } from './zones.js';
 
@@ -110,6 +113,8 @@ interface Context {
   warnings: IssueList;
   // Every tile layer in draw order (groups depth-first), with its path.
   layers: { layer: TiledTileLayer; path: string; data: Uint32Array | undefined }[];
+  // For a set drawn with automapping rules: the walls, doors and faces of the map's sketch.
+  sketch: SketchCells | undefined;
 }
 
 // Caps that keep a report small enough for an agent to read and for one MCP message: one
@@ -198,7 +203,7 @@ function checkLayers(ctx: Context): void {
     return found === undefined ? -1 : all.findIndex((e) => e.layer === found.layer);
   };
   const floor = index('floor');
-  for (const role of ['start', 'collisions'] as const) {
+  for (const role of ['start', 'collisions', 'sketch', 'sketchStyle'] as const) {
     const at = index(role);
     if (floor !== -1 && at > floor) {
       add(ctx.errors, { code: 'OVERLAY_ABOVE_FLOOR', message: `the ${role} layer draws above the floor, so its overlay tiles show`, layer: all[at]!.path });
@@ -271,11 +276,30 @@ function checkGids(ctx: Context): void {
   }
 }
 
+// For a set drawn with automapping rules, walls are what the sketch says, whatever the rules
+// drew: every wall and wall-face cell of the sketch must collide.
+function checkSketchWalls(ctx: Context, sketch: SketchCells, solid: CellSet): void {
+  const layer = tryResolveRole(ctx.map, 'sketch')?.path;
+  for (const c of [...sketch.walls, ...sketch.faces].sort((p, q) => p.y - q.y || p.x - q.x)) {
+    if (!solid.has(c.x, c.y)) {
+      add(ctx.errors, { code: 'WALL_WITHOUT_COLLISION', message: 'a wall or wall-face cell of the sketch has no collision, so players can walk through it', ...(layer === undefined ? {} : { layer }), x: c.x, y: c.y });
+    }
+  }
+  for (const c of sketch.walls) {
+    const linked = [[0, -1], [1, 0], [0, 1], [-1, 0]].some(([dx, dy]) => sketch.walls.has(c.x + dx!, c.y + dy!) || sketch.doors.has(c.x + dx!, c.y + dy!));
+    if (!linked) add(ctx.warnings, { code: 'ISOLATED_WALL', message: 'a wall cell has no wall neighbours', x: c.x, y: c.y });
+  }
+}
+
 function checkWalls(ctx: Context, solid: CellSet): void {
   const { set, map } = ctx;
   if (set === undefined) return;
-  const terrain = set.set.wallTerrain.tileset;
-  const faceTileset = set.set.faceRules.tileset;
+  if (set.kind === 'automap') {
+    if (ctx.sketch !== undefined) checkSketchWalls(ctx, ctx.sketch, solid);
+    return;
+  }
+  const terrain = set.wang.wallTerrain.tileset;
+  const faceTileset = set.wang.faceRules.tileset;
   const horizontalLintel = set.walls.tileFor(0, 2, 0, 2);
   const local = (raw: number): { tileset: string; tile: number } | undefined => {
     const hit = raw === 0 ? undefined : tilesetForGid(map.tilesets, decodeGid(raw).gid);
@@ -293,7 +317,7 @@ function checkWalls(ctx: Context, solid: CellSet): void {
       const y = Math.floor(i / map.width);
       if (t.tileset === terrain && set.walls.lintels.has(t.tile)) {
         doors.add(x, y);
-        if (t.tile === horizontalLintel) for (let r = 1; r <= set.set.faceRules.height; r++) if (y + r < map.height) walkableUnderLintel.add(x, y + r);
+        if (t.tile === horizontalLintel) for (let r = 1; r <= set.wang.faceRules.height; r++) if (y + r < map.height) walkableUnderLintel.add(x, y + r);
         return;
       }
       const isWallTop = t.tileset === terrain && set.walls.wallTops.has(t.tile);
@@ -431,6 +455,33 @@ async function checkScript(ctx: Context): Promise<void> {
   }
 }
 
+// A set drawn with automapping rules: its rules must load, draw every piece rooms can need, and
+// be the rules the map was built with.
+async function checkDrawing(ctx: Context, set: LoadedAutomapSet): Promise<void> {
+  let missing: string[];
+  try {
+    const rules = await loadDrawingRules(set, ctx.projectDir);
+    const built = ctx.state?.automap;
+    if (built !== undefined && built.rulesHash !== rules.hash) {
+      add(ctx.warnings, {
+        code: 'ENGINE_STATE_INVALID',
+        message: `the automapping rules of asset set "${set.id}" changed since this map was built; rebuild it with build_room_from_dsl to draw the rooms with the new rules`,
+      });
+    }
+    missing = await drawingCoverage(set, rules, ctx.projectDir, ctx.mapAbs);
+  } catch (err) {
+    if (!(err instanceof WaEngineError)) throw err;
+    add(ctx.warnings, { code: 'ASSET_SET_INCOMPLETE', message: `the automapping rules of asset set "${set.id}" cannot be checked (${err.code}): ${err.message}` });
+    return;
+  }
+  if (missing.length > 0) {
+    add(ctx.warnings, {
+      code: 'ASSET_SET_INCOMPLETE',
+      message: `the automapping rules of asset set "${set.id}" draw no tile for: ${missing.join(', ')}; rooms that need these pieces get none`,
+    });
+  }
+}
+
 export async function validateLoadedMap(input: {
   map: TiledMap;
   projectDir: string;
@@ -448,6 +499,7 @@ export async function validateLoadedMap(input: {
     set: undefined,
     errors: new IssueList(MAX_REPORTED_ERRORS),
     warnings: new IssueList(MAX_REPORTED_WARNINGS),
+    sketch: undefined,
     layers: flatten(input.map.layers)
       .filter((e): e is { layer: TiledTileLayer; path: string } => e.layer.type === 'tilelayer')
       .map((e) => {
@@ -467,7 +519,7 @@ export async function validateLoadedMap(input: {
   } catch (err) {
     add(ctx.warnings, { code: 'ASSET_SET_NOT_FOUND', message: `wall checks skipped: ${err instanceof Error ? err.message : String(err)}` });
   }
-  if (ctx.set !== undefined) {
+  if (ctx.set?.kind === 'wang') {
     // A set without every wall piece can fail a later build with WALL_PIECE_MISSING.
     const coverage = checkCoverage(ctx.set);
     if (!coverage.ok) {
@@ -476,14 +528,25 @@ export async function validateLoadedMap(input: {
         message: `asset set "${setId}" has no tile for: ${coverage.missing.join(', ')} (N, E, S, W: 1 means a wall on that side); rooms that need these pieces fail to build`,
       });
     }
+  } else if (ctx.set?.kind === 'automap') {
+    await checkDrawing(ctx, ctx.set);
+    try {
+      ctx.sketch = sketchCells(ctx.map, new TileWriter(ctx.map), ctx.set.drawing);
+    } catch (err) {
+      // A sketch layer that cannot be read is reported by the layer checks.
+      if (!(err instanceof WaEngineError)) throw err;
+      ctx.sketch = undefined;
+    }
   }
   checkBasics(ctx);
   checkLayers(ctx);
   await checkTilesets(ctx);
   checkGids(ctx);
-  const solid = solidCells(ctx.map);
+  const tiles = solidCells(ctx.map);
+  // Walls and faces of the sketch block players whatever the rules drew there.
+  const solid = new CellSet([...tiles, ...(ctx.sketch === undefined ? [] : [...ctx.sketch.walls, ...ctx.sketch.faces])]);
   checkStartTiles(ctx, solid);
-  checkWalls(ctx, solid);
+  checkWalls(ctx, tiles);
   checkDoors(ctx, solid);
   await checkObjects(ctx);
   await checkScript(ctx);

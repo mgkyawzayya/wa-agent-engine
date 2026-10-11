@@ -54,6 +54,11 @@ export class TileWriter {
     entry.dirty = true;
   }
 
+  // A copy of a role's tiles as they are now, row by row.
+  copy(role: TileRole): Uint32Array {
+    return this.#layer(role).data.slice();
+  }
+
   // The tileset name and local id at a cell, or undefined for an empty cell.
   local(role: TileRole, x: number, y: number): { tileset: string; tile: number } | undefined {
     const raw = this.get(role, x, y);

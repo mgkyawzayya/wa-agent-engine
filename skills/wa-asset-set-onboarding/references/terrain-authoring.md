@@ -13,11 +13,12 @@ Tile ids in all these files are local ids inside one tileset, counted from 0, le
 | `mapCopyright` | Optional. The credit `scaffold_map` writes into every new map as its `mapCopyright`. |
 | `starterKitSha` | Optional. The map-starter-kit commit the set was made for. |
 | `tilesets` | One entry per tileset: `name` (equal to the name inside the `.tsj`), `tsj` (path relative to `set.json`), `image` (path of the PNG relative to the project root) and `tilesetCopyright` (the licence and author of the image). |
-| `wallTerrain` | The tileset and the name of its edge Wang set for walls, the colour numbers of the wall colour (`wallColor`) and the door colour (`doorColor`) in that Wang set, and `isolatedWallTile`, the tile for a wall cell with no wall neighbours. |
-| `doorLintelTiles` | The lintel tiles drawn over door cells: the horizontal and the vertical lintel. They must also be in the Wang set. |
-| `faceRules` | The wall faces: their tileset, `height` (always 2), the `styles`, and `exteriorStyle`, the style used outside every room. |
+| `wallTerrain` | The tileset and the name of its edge Wang set for walls, the colour numbers of the wall colour (`wallColor`) and the door colour (`doorColor`) in that Wang set, and `isolatedWallTile`, the tile for a wall cell with no wall neighbours. Not needed with `drawing`. |
+| `doorLintelTiles` | The lintel tiles drawn over door cells: the horizontal and the vertical lintel. They must also be in the Wang set. Not needed with `drawing`. |
+| `faceRules` | The wall faces: their tileset, `height` (always 2), the `styles`, and `exteriorStyle`, the style used outside every room. Not needed with `drawing`. |
+| `drawing` | Optional. Draw walls, faces, lintels, floors and collisions with Tiled automapping rules instead of the three fields above: see [Drawing with automapping rules](#drawing-with-automapping-rules). |
 | `wallStyles` | `names`: the face styles a room may choose as `wallStyle`, and the `default`. |
-| `floorStyles` | `styles`: a name and a tile for each floor, and the `default`. |
+| `floorStyles` | `styles`: a name and a tile for each floor, and the `default`. With `drawing`, a style may leave out its tile (`{}`): the rules draw it in rooms, and only ground and paths need a tile. |
 | `collisionTile` | The tile written on the `collisions` layer. It must carry the bool tile property `collides` = `true`. |
 | `startTile` | The tile written on the `start` layer for the spawn point. |
 | `prefabs` | One entry per prefab: `id`, `path` (relative to `set.json`), `width`, `height`, `category`, `placement`, `faceRow` (north-wall prefabs only), `use`, and an optional `license`. |
@@ -192,6 +193,52 @@ A door is a gap in the wall with a lintel tile drawn over it on the `foreground1
 - `floorStyles` maps each floor name to one tile. Choose plain tiles that repeat well; the engine fills a whole room with the one tile.
 - `collisionTile` is drawn on the `collisions` layer, under the floor, so it never shows in WorkAdventure. The starter set uses tile 2 of `WA_Special_Zones`, whose `collides` property is `true`.
 - `startTile` marks the spawn on the `start` layer. The starter set uses tile 1 of `WA_Special_Zones`.
+
+## Drawing with automapping rules
+
+Instead of a Wang set and face rules, a set can draw its rooms with [Tiled automapping rules](https://doc.mapeditor.org/en/stable/manual/automapping/): any art the rules can choose from the sketch, such as corners and wall ends with their own tiles, faces that change with what is next to them, or floors with borders along the walls. Use this path for anything beyond the starter kit's wall model.
+
+```json
+"drawing": {
+  "mode": "automap",
+  "rules": "automap/rules.txt",
+  "markerTileset": "wa-markers",
+  "markers": {
+    "wall": 0,
+    "door": 1,
+    "floor": {"wood-light": 2, "carpet-red": 3},
+    "wallStyle": {"white": 6, "yellow": 7}
+  }
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `rules` | The rules file (`rules.txt`) or a single rule map (`.tmj`), relative to `set.json`. A rules file lists rule maps, one per line, run in that order. |
+| `markerTileset` | `wa-markers`, the engine's 16 flat colours (ids 0 to 15), or the name of one of the set's own tilesets. The engine writes the `wa-markers` image into the project as `tilesets/wa-markers.png` the first time a map uses the set, and leaves an existing file alone. |
+| `markers` | The marker tile of a wall, a door, each floor style (every style needs one) and each wall style (every name in `wallStyles` needs one). Wall, door and floor markers must all differ; so must the wall-style markers. With `wa-markers` that leaves room for 14 floor styles. |
+
+How a build draws:
+
+1. The engine works out the rooms as with a Wang set, with every check: overlaps, thick walls, doors at junctions or onto wall faces, walkable doors.
+2. It paints markers on two hidden tile layers under the floor: `wa_sketch` gets the wall marker on every wall cell, the door marker on every door cell and each room's floor marker on its inside; `wa_style` gets each room's wall-style marker over its inside.
+3. It runs the rules over the rooms and 2 cells around them (and around the rooms the build replaces), with seed 0, the way Tiled's **Map > AutoMap** does. Every tile they change is recorded, so a later build or the removal of a room puts the old tiles back.
+
+What the rules see and write:
+
+- They read the layers by these names: `wa_sketch`, `wa_style`, `walls`, `floor`, `collisions`, `foreground1`, `foreground2`, `furniture1` to `furniture3`, `start`, whatever the map's own layers are called.
+- They may write `walls`, `floor`, `collisions`, `furniture1` to `furniture3`, `foreground1` and `foreground2`. Writing any other layer, or a tile from a tileset that `set.json` does not list (with the same image and tile size), fails the build with `ASSET_SET_INVALID`.
+- They draw collisions themselves: put the set's collision tile on `collisions` under every wall and wall face, or `validate_wa_map` reports `WALL_WITHOUT_COLLISION`.
+- Rule maps are Tiled JSON maps (`.tmj`) whose tilesets embed their images, which must be in the project. The marker tiles in a rule map must come from a tileset with the same image as the marker tileset (for `wa-markers`, `tilesets/wa-markers.png`).
+- Walls and faces still follow the engine's room model: walls one tile thick, faces in the 2 rows under a wall whose south side is open. The engine treats those cells as solid and hangs north-wall prefabs on those face rows, whatever art the rules draw there.
+
+Checking a set drawn with rules:
+
+- `validate_wa_map` runs the rules on a sketch of every piece rooms can need: the 16 wall-neighbour patterns (`wall N1 E0 S1 W0`), the walls beside both kinds of door, both lintels, the 4 variants of both face rows for each wall style and outside rooms (`face of wall style white, row 1, open west`), and each floor style. Pieces the rules draw no tile for come back as an `ASSET_SET_INCOMPLETE` warning.
+- When the rules change after a map was built, `validate_wa_map` warns `ENGINE_STATE_INVALID`: build the rooms again to draw them with the new rules.
+- A set that extends a set with `drawing` draws with its rules. Built-in sets cannot use `drawing`.
+
+The engine's repository has a complete example: `test/fixtures/asset-sets/office-automap/` draws the starter set's walls, faces, lintels, collisions and four floors with three rule maps (walls, faces, floors), and its tests check that every test room looks exactly as with `wa-starter-office`.
 
 ## Prefabs (.tmj)
 

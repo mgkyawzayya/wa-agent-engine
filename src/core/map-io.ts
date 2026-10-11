@@ -188,7 +188,7 @@ async function writeTemp(tmp: string, text: string, mode: number | undefined): P
 }
 
 // Errors from link() on filesystems without hard links (FAT/exFAT, some network mounts).
-const NO_HARD_LINKS = new Set(['ENOTSUP', 'EOPNOTSUPP', 'EPERM', 'ENOSYS', 'EXDEV', 'EMLINK']);
+export const NO_HARD_LINKS: ReadonlySet<string> = new Set(['ENOTSUP', 'EOPNOTSUPP', 'EPERM', 'ENOSYS', 'EXDEV', 'EMLINK']);
 
 // Creates the target only if it does not exist yet, so a concurrent create fails instead of
 // being overwritten.
