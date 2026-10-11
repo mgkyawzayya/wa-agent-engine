@@ -69,6 +69,8 @@ interface FixtureDef {
   region?: { x: number; y: number; width: number; height: number };
   // The colour tileset is an external file (tilesets/colours.tsj) in the map and rule maps.
   external?: boolean;
+  // Map layers placed inside a locked group layer.
+  lockedGroup?: string[];
 }
 
 const flags = (suffix: string): number =>
@@ -107,7 +109,7 @@ const rulesTileset = () => ({
   tiles: SPECIALS.map((match, id) => ({ id, properties: [{ name: 'MatchType', type: 'string', value: match }] })),
 });
 
-function tmj(layers: LayerDef[], withRules: boolean, extra: { properties?: Prop[] | undefined; ruleOptions?: RuleOptionsRect[] | undefined; external?: boolean } = {}): unknown {
+function tmj(layers: LayerDef[], withRules: boolean, extra: { properties?: Prop[] | undefined; ruleOptions?: RuleOptionsRect[] | undefined; external?: boolean; lockedGroup?: string[] | undefined } = {}): unknown {
   const { width, height } = size(layers);
   let id = 1;
   const out: unknown[] = layers.map((l) => {
@@ -120,6 +122,12 @@ function tmj(layers: LayerDef[], withRules: boolean, extra: { properties?: Prop[
       ...(l.properties !== undefined ? { properties: l.properties } : {}),
     };
   });
+  if (extra.lockedGroup !== undefined) {
+    const inside = out.filter((l) => extra.lockedGroup!.includes((l as { name: string }).name));
+    const at = out.indexOf(inside[0]!);
+    const group = { id: id++, layers: inside, locked: true, name: 'locked', opacity: 1, type: 'group', visible: true, x: 0, y: 0 };
+    out.splice(at, inside.length, group);
+  }
   let objectId = 1;
   if (extra.ruleOptions !== undefined) {
     out.push({
@@ -416,6 +424,11 @@ const FIXTURES: FixtureDef[] = [
     }],
   },
   {
+    name: 'locked-group', description: 'A target layer inside a locked group is locked too',
+    map: [{ name: 'ground', rows: ['A.A'] }, { name: 'deco', rows: ['...'] }], lockedGroup: ['deco'],
+    ruleMaps: [{ file: 'two.tmj', layers: [{ name: 'input_ground', rows: ['A'] }, { name: 'output_ground', rows: ['B'] }, { name: 'output_deco', rows: ['C'] }] }],
+  },
+  {
     name: 'external-tileset', description: 'Tiles of the same external tileset file match across the map and the rule map', external: true,
     map: [{ name: 'ground', rows: ['A.A'] }],
     ruleMaps: [AtoB()],
@@ -464,7 +477,7 @@ async function main(): Promise<void> {
     // Tiled's captured output (expected.tmj) is kept; every input file is rewritten.
     for (const file of await readdir(dir)) if (file !== 'expected.tmj') await rm(join(dir, file), { force: true });
     const external = f.external === true;
-    await writeFile(join(dir, f.mapFile ?? 'map.tmj'), json(tmj(f.map, false, { external })));
+    await writeFile(join(dir, f.mapFile ?? 'map.tmj'), json(tmj(f.map, false, { external, lockedGroup: f.lockedGroup })));
     for (const ruleMap of f.ruleMaps) {
       await writeFile(join(dir, ruleMap.file), json(tmj(ruleMap.layers, true, { properties: ruleMap.properties, ruleOptions: ruleMap.ruleOptions, external })));
     }

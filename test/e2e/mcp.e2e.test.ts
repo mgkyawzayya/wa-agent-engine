@@ -4,6 +4,7 @@ import type { Client } from '@modelcontextprotocol/client';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { readState } from '../../src/core/engine-state.js';
 import { readMap } from '../../src/core/map-io.js';
+import { writeStartRule } from '../helpers/automap.js';
 import { makeFullProject, makeProject, type TempProject } from '../helpers/project.js';
 import { connectMcp, errorOf } from './helpers.js';
 
@@ -37,9 +38,9 @@ const VENUE = {
   ],
 };
 
-test('the server lists exactly the seven map tools, with schemas', async () => {
+test('the server lists exactly the eight map tools, with schemas', async () => {
   const { tools } = await client.listTools();
-  expect(tools.map((t) => t.name)).toEqual(['scaffold_map', 'build_room_from_dsl', 'place_prefab', 'configure_wa_zone', 'validate_wa_map', 'render_map_preview', 'import_prop_set']);
+  expect(tools.map((t) => t.name)).toEqual(['scaffold_map', 'build_room_from_dsl', 'place_prefab', 'configure_wa_zone', 'validate_wa_map', 'render_map_preview', 'automap_map', 'import_prop_set']);
   for (const tool of tools) {
     expect(tool.inputSchema.type).toBe('object');
     expect(tool.outputSchema?.type).toBe('object');
@@ -75,6 +76,16 @@ describe('the whole workflow over stdio', () => {
     expect(Buffer.from(image!.data!, 'base64').equals(onDisk)).toBe(true);
     // Every success also carries its result as JSON text.
     expect(JSON.parse((render.content as { text: string }[])[0]!.text)).toEqual(render.structuredContent);
+  });
+
+  test('automap_map applies a rules file next to the map', async () => {
+    const base = { projectDir: project.dir, mapPath: 'maps/auto.tmj' };
+    await call('scaffold_map', { ...base, width: 12, height: 8, spawn: { x: 3, y: 4 } });
+    await writeStartRule(project.dir, base.mapPath, 'maps');
+    const automap = await call('automap_map', base);
+    expect(automap.isError).toBeFalsy();
+    expect(automap.structuredContent).toMatchObject({ rulesPath: 'maps/rules.txt', changedCells: 1, layersWritten: ['marks'], written: true });
+    expect((automap.structuredContent as { warnings: { code: string }[] }).warnings.map((w) => w.code)).toEqual(['AUTOMAP_ON_ENGINE_MAP']);
   });
 
   test('three parallel place_prefab calls on one map all persist', async () => {

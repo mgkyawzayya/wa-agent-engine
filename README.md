@@ -79,7 +79,7 @@ The layout format, the prefab catalog and the zone properties are documented in 
 
 ## The tools
 
-The MCP server (`wa-agent-engine mcp`, over stdio) and the CLI expose the same seven tools from one table, with the same results and error codes.
+The MCP server (`wa-agent-engine mcp`, over stdio) and the CLI expose the same eight tools from one table, with the same results and error codes.
 
 | MCP tool | CLI command | What it does |
 |---|---|---|
@@ -89,6 +89,7 @@ The MCP server (`wa-agent-engine mcp`, over stdio) and the CLI expose the same s
 | `configure_wa_zone` | `zone` | Creates or updates a named WorkAdventure area with checked properties. |
 | `validate_wa_map` | `validate` | Checks any Tiled map against WorkAdventure's rules. Read-only. |
 | `render_map_preview` | `render` | Renders a PNG preview into `.wa-preview/`. Over MCP it also returns the image. |
+| `automap_map` | `automap` | Applies a Tiled automapping rules file (`rules.txt` and its rule maps) to a map with Tiled 1.12's AutoMap semantics: deterministic rules draw the same tiles as Tiled. `dryRun` reports without writing. |
 | `import_prop_set` | `import-props` | Turns your own prop images (PNGs in 32 px tile multiples) into furniture prefabs, in a set that extends the starter kit's. |
 
 Every failure carries a code from a closed list (`ERROR_CODES`, plus `VALIDATION_CODES` for validation issues), so an agent can act on the code instead of the message.
@@ -114,6 +115,9 @@ wa-agent-engine build --input "{\"projectDir\":\"$P\",\"mapPath\":\"venue.tmj\",
 
 wa-agent-engine validate --input "{\"projectDir\":\"$P\",\"mapPath\":\"venue.tmj\"}"
 wa-agent-engine render   --input "{\"projectDir\":\"$P\",\"mapPath\":\"venue.tmj\",\"scale\":0.5}"
+
+# with a rules.txt next to the map: apply its Tiled automapping rules (dryRun reports only)
+wa-agent-engine automap  --input "{\"projectDir\":\"$P\",\"mapPath\":\"venue.tmj\",\"dryRun\":true}"
 ```
 
 `projectDir` is always the absolute path of the map project (the folder with `tilesets/`). A room's bounds include its walls, and neighbouring rooms share one wall line, which is why the hall starts at `y` 8 where the talk room ends.
@@ -136,6 +140,7 @@ The engine writes a map only if the file on disk is still the version it read, a
 
 - Save in Tiled before an agent edits the map, and reload in Tiled afterwards.
 - If an agent gets `MAP_CHANGED_ON_DISK`, it should read the map again and retry.
+- A map with Tiled automapping rules (`rules.txt`) can be automapped by the engine with `automap_map`; deterministic rules give the same tiles as Map > AutoMap in Tiled. On a map with an engine build record it warns `AUTOMAP_ON_ENGINE_MAP`: a rebuild does not re-run the rules.
 - Rooms built from the layout belong to the engine: a rebuild redraws them. Furniture placed with `place_prefab` is put back after a rebuild, or removed with a warning if the new rooms leave no space for it. If you edited such a piece in Tiled, the engine leaves your version alone.
 
 Add `.wa-preview/` and `.*.tmj.lock` to your map project's `.gitignore`.

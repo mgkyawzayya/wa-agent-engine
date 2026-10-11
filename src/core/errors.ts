@@ -82,6 +82,8 @@ export const ERROR_CODES = [
   'SCATTER_INCOMPLETE',
   // A rule map layer, property or rule_options object that automapping ignores, as Tiled does.
   'AUTOMAP_RULES_IGNORED',
+  // automap_map ran on a map with an engine build record: build_room_from_dsl does not re-run the rules.
+  'AUTOMAP_ON_ENGINE_MAP',
   // Also a validate_wa_map code: a build warns when its water covers a start tile.
   'START_TILE_BLOCKED',
 ] as const;

@@ -1,6 +1,6 @@
 # CLI and MCP reference
 
-The engine has seven tools. The MCP server and the CLI are both built from one tool table, so the same input gives the same result and the same coded errors on both, with one exception for malformed input, described below.
+The engine has eight tools. The MCP server and the CLI are both built from one tool table, so the same input gives the same result and the same coded errors on both, with one exception for malformed input, described below.
 
 ## Calling the tools
 
@@ -166,6 +166,39 @@ Renders the map to a PNG from the tileset images in the project, the way WorkAdv
 Output: `pngPath` (absolute path of the file), `width` and `height` (pixels), `bytes`, and `sha256` of the PNG.
 
 The file is written to `.wa-preview/` in the project, named after the map's path and the scale, for example `.wa-preview/venue@1x.png` or `.wa-preview/maps__venue@0.5x.png`. Keep that folder out of version control. Over MCP the image comes back as an image block when it is 3.75 MB or smaller; otherwise, or when your client shows no image, open `pngPath`. A missing tileset image fails with `TILESET_IMAGE_MISSING`.
+
+### `automap_map` (CLI command `automap`)
+
+Applies a Tiled automapping rules file to a map with the semantics of Tiled 1.12's **Map > AutoMap**: deterministic rules give the same tiles as Tiled, which test fixtures captured from Tiled check. Use it on a map that comes with its own `rules.txt`, or with a rules file the user names.
+
+| Input | Type | Required | Meaning |
+|---|---|---|---|
+| `projectDir`, `mapPath` | string | yes | See above. |
+| `rules` | string | no | The rules file (`rules.txt`) or a single rule map (`.tmj`), relative to `projectDir` and inside it (`PATH_OUTSIDE_PROJECT`, `PATH_BAD_EXTENSION`). By default `rules.txt` next to the map, else `rules.txt` in `projectDir`; with neither, `AUTOMAP_RULES_NOT_FOUND`. |
+| `region` | `{x, y, width, height}` | no | Limit the run to this rectangle, like a selection in Tiled: only rules whose input overlaps it are tried, their output may land outside it, and `AutomappingRadius` and earlier rule maps' output widen it for the rule maps after. It must be at least 1×1 and lie inside the map (`INVALID_INPUT`). |
+| `seed` | number | no | Seed for random output choices and rule probabilities: a whole number of 0 or more (`INVALID_INPUT`), 0 by default. The same map, rules and seed always give the same result. |
+| `dryRun` | boolean | no | Report what would change without writing the map. |
+
+Output: `rulesPath`, `ruleMaps` (the rule maps applied, in order, after `[filter]` lines), `rules`, `matches`, `changedCells`, `layersWritten` (tile layers whose cells or properties changed, or that were created), `written` (false for a dry run or when nothing changed) and `warnings`. Running it again changes nothing more, unless the rules read their own output.
+
+A rules file lists rule maps, one per line, relative to the file; a line ending in `.txt` includes another rules file, `#` and `//` start comment lines, and a `[pattern]` line limits the following rule maps to maps whose file name matches (`*`, `?`, `[...]`, case-insensitive). A rule map is a Tiled map with layers named `input_<layer>`, `inputnot_<layer>` and `output_<layer>` (with an optional index such as `input2_<layer>` or `output1_<layer>`), an optional `rule_options` object layer, and the special tiles of Tiled's automapping rules tileset (`MatchType` Empty, NonEmpty, Other, Ignore, Negate).
+
+Errors and warnings:
+
+| Code | Kind | Meaning |
+|---|---|---|
+| `AUTOMAP_RULES_NOT_FOUND` | error | The rules file or a rule map it lists does not exist. |
+| `AUTOMAP_RULES_INVALID` | error | The rules cannot be used: a rules file that cannot be read, a rule map that is not a readable Tiled JSON map, no input or output layer, a layer without `_`, layers of the wrong size, tile ids no tileset has, a tile from a tileset that is XML (`.tsx`) or whose image is missing, rules files that include each other, or an `AutomappingRadius` above 1000. `details` names the rules file, rule map, layer or tileset. |
+| `AUTOMAP_UNSUPPORTED` | error | Outside what the engine runs: legacy `regions` layers, object layers other than `rule_options`, isometric, staggered, hexagonal or infinite maps. `details.feature` says which. |
+| `PATH_BAD_EXTENSION` | error | A rule map is not `.tmj` or `.json`. Save `.tmx` rule maps as JSON in Tiled. |
+| `TILESET_CONFLICT` | error | The rules need a tileset the map lacks, and the map already has a different tileset with that name. |
+| `EXTERNAL_TILESET_UNRESOLVED` | error or warning | As an error: the rules need a tileset added, and the map has an external tileset the engine cannot read, so no tile id is free. As a warning: rules never match that tileset's tiles. Embed it in Tiled or save it as `.tsj`. |
+| `AUTOMAP_RULES_IGNORED` | warning | A rule-map layer, property or `rule_options` object Tiled would also ignore. |
+| `AUTOMAP_ON_ENGINE_MAP` | warning | The map has a wa-agent-engine build record: `build_room_from_dsl` does not re-run these rules, and a rebuild may undo their tiles inside built rooms. |
+
+Rule maps run in the listed order, each on the result of the previous one. Tiles the rules need from a tileset the map lacks are added with that tileset, with its image path relative to the map. Like Tiled, a missing target layer is created at the top of the map when the rules put tiles on it; a locked target layer is left alone unless the rule map sets `IgnoreLock` (only the layer's own lock counts, not a locked group around it), and `DeleteTiles` clears output layers even when they are locked.
+
+Where the engine differs from Tiled: random choices are seeded (Tiled's are not, so random rules cannot match Tiled draw for draw); a rule map that is broken or missing fails the whole call (Tiled skips it); `MatchType` is read from the tile's own property, not from class defaults of a Tiled project; and the fallback rules file is `rules.txt` in `projectDir`, not the rules file set in a Tiled project.
 
 ### `import_prop_set` (CLI command `import-props`)
 

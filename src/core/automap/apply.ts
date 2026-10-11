@@ -29,6 +29,9 @@ const PACK_STRIDE = 1 << 15;
 const pack = (x: number, y: number): number => (y + PACK_OFFSET) * PACK_STRIDE + (x + PACK_OFFSET);
 const unpack = (key: number): [number, number] => [(key % PACK_STRIDE) - PACK_OFFSET, Math.floor(key / PACK_STRIDE) - PACK_OFFSET];
 
+// The first tile layer with this name in draw order. Only the layer's own lock counts: Tiled
+// does not check parent groups, so a locked group does not protect the layers in it (the
+// locked-group fixture shows this).
 function findTileLayer(map: TiledMap, name: string): TiledTileLayer | undefined {
   let found: TiledTileLayer | undefined;
   forEachTileLayer(map.layers, (layer) => {

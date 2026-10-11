@@ -1,3 +1,4 @@
+import { automapMapTool } from './automap-map.js';
 import { buildRoomTool } from './build-room.js';
 import { configureWaZoneTool } from './configure-wa-zone.js';
 import { importPropSetTool } from './import-prop-set.js';
@@ -16,6 +17,7 @@ export const TOOLS: readonly ToolEntry[] = [
   configureWaZoneTool,
   validateWaMapTool,
   renderMapPreviewTool,
+  automapMapTool,
   importPropSetTool,
 ];
 

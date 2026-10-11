@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { checkSkills, frontmatterProblems, parseFrontmatter } from '../../scripts/check-skills.js';
+import { AUTOMAP_LAYER_NAME, checkSkills, frontmatterProblems, mentionProblems, parseFrontmatter } from '../../scripts/check-skills.js';
 
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const run = promisify(execFile);
@@ -154,5 +154,14 @@ describe('a broken skills folder', () => {
     expect(missing.code).toBe(1);
     expect(missing.stderr).toContain('the prefab catalog is missing');
     expect((await script(['scripts/gen-prefab-reference.ts', '--check'])).code).toBe(0);
+  });
+});
+
+describe('Tiled automapping layer names are not tools', () => {
+  test('layer names pass; made-up tool-like names do not', () => {
+    for (const name of ['input_floor', 'inputnot2_walls', 'output1_walls', 'rule_options', 'regions_input']) expect(AUTOMAP_LAYER_NAME.test(name), name).toBe(true);
+    for (const name of ['inputfoo_bar', 'outputs_wa_zone', 'automap_maps', 'render_map']) expect(AUTOMAP_LAYER_NAME.test(name), name).toBe(false);
+    expect(mentionProblems('Paint `input_floor` and `rule_options`, then call `automap_map`.')).toEqual([]);
+    expect(mentionProblems('Call `automap_mapp`.')).toHaveLength(1);
   });
 });

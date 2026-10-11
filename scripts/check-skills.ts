@@ -40,6 +40,9 @@ const CODES = new Set<string>([...ERROR_CODES, ...VALIDATION_CODES]);
 // snake_case words the docs may use that are not MCP tools: WA property names, the zones layer,
 // and Codex configuration keys.
 const NON_TOOL_IDENTIFIERS = new Set<string>([...WA_ZONE_PROPERTY_NAMES.filter((n) => n.includes('_')), 'wa_zones', 'mcp_servers', 'startup_timeout_sec']);
+// Tiled automapping layer names (input_floor, inputnot2_walls, output_walls, rule_options,
+// regions_input) are not MCP tools either.
+export const AUTOMAP_LAYER_NAME = /^(?:(?:input(?:not)?|output)\d*_[a-z0-9]+(?:_[a-z0-9]+)*|rule_options|regions_(?:input|output))$/;
 // UPPER_SNAKE words the docs may use that are not codes: the exported code lists and the
 // sample script's environment variable. Add a word here only if it is not a code.
 const NON_CODE_IDENTIFIERS = new Set<string>(['ERROR_CODES', 'VALIDATION_CODES', 'WA_AGENT_ENGINE']);
@@ -229,7 +232,7 @@ export function mentionProblems(markdown: string): string[] {
   const problems: string[] = [];
   const { code } = splitCode(markdown);
   for (const word of unique(markdown.matchAll(SNAKE_WORD))) {
-    if (!TOOL_NAMES.has(word) && !NON_TOOL_IDENTIFIERS.has(word)) {
+    if (!TOOL_NAMES.has(word) && !NON_TOOL_IDENTIFIERS.has(word) && !AUTOMAP_LAYER_NAME.test(word)) {
       problems.push(`mentions "${word}", which is not an MCP tool (tools: ${[...TOOL_NAMES].join(', ')}); if it is not meant as a tool, add it to NON_TOOL_IDENTIFIERS in scripts/check-skills.ts`);
     }
   }

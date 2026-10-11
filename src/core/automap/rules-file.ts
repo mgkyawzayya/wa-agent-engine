@@ -1,7 +1,7 @@
-import { readFile, stat } from 'node:fs/promises';
 import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path';
 import type { RuleMap, RuleMapReference, RuleSet } from '../../schemas/automap.schema.js';
 import { WaEngineError, type ErrorBody } from '../errors.js';
+import { readFileBounded } from '../map-io.js';
 import { assertProjectDir, isInside, resolveInProject } from '../project-paths.js';
 import { loadRuleMap } from './rule-map.js';
 
@@ -44,22 +44,16 @@ export function wildcardToRegExp(pattern: string): RegExp {
 
 const slashes = (p: string): string => p.split(sep).join('/');
 
-async function isFile(abs: string): Promise<boolean> {
-  try {
-    return (await stat(abs)).isFile();
-  } catch {
-    return false;
-  }
-}
-
 export async function loadRules(projectDir: string, rulesAbs: string): Promise<RuleSet> {
   const project = await assertProjectDir(projectDir);
-  // The caller's paths may go through a symbolic link to the project (macOS /tmp is one):
-  // take the path relative to whichever form of the project contains it.
-  const given = isAbsolute(rulesAbs) ? rulesAbs : resolve(projectDir, rulesAbs);
-  const base = isInside(resolve(projectDir), given) ? resolve(projectDir) : project;
-  const top = await resolveInProject(project, slashes(relative(base, given)), { ext: ['.txt', ...RULE_MAP_EXTENSIONS] });
+  const givenRoot = resolve(projectDir);
+  // Paths may reach the project through a symbolic link (macOS /tmp is one). Like Tiled, lines
+  // are resolved against each rules file's folder as given; every file is then checked and
+  // read through its real path.
+  const relOf = (abs: string): string => slashes(relative(isInside(givenRoot, abs) ? givenRoot : project, abs));
   const shown = (abs: string): string => slashes(relative(project, abs));
+  const topGiven = isAbsolute(rulesAbs) ? rulesAbs : resolve(projectDir, rulesAbs);
+  const topReal = await resolveInProject(project, relOf(topGiven), { ext: ['.txt', ...RULE_MAP_EXTENSIONS] });
   const loaded = new Map<string, Promise<RuleMap>>();
   const references: RuleMapReference[] = [];
   const warnings: ErrorBody[] = [];
@@ -73,12 +67,21 @@ export async function loadRules(projectDir: string, rulesAbs: string): Promise<R
     return pending;
   };
 
-  const parse = async (fileAbs: string, stack: readonly string[], inherited: RegExp | undefined): Promise<void> => {
-    if (!(await isFile(fileAbs))) throw new WaEngineError('AUTOMAP_RULES_NOT_FOUND', `rules file not found: ${shown(fileAbs)}`, { rules: shown(fileAbs) });
-    if ((await stat(fileAbs)).size > MAX_RULES_FILE_BYTES) {
-      throw new WaEngineError('AUTOMAP_RULES_INVALID', `rules file is larger than ${MAX_RULES_FILE_BYTES / 1024} KB: ${shown(fileAbs)}`, { rules: shown(fileAbs) });
-    }
-    const text = await readFile(fileAbs, 'utf8');
+  const readRules = async (real: string): Promise<string> => {
+    const rel = shown(real);
+    const bytes = await readFileBounded(real, MAX_RULES_FILE_BYTES, {
+      open: (errno) =>
+        errno === 'ENOENT' || errno === 'ENOTDIR'
+          ? new WaEngineError('AUTOMAP_RULES_NOT_FOUND', `rules file not found: ${rel}`, { rules: rel })
+          : new WaEngineError('AUTOMAP_RULES_INVALID', `rules file cannot be read (${errno ?? 'error'}): ${rel}`, { rules: rel }),
+      notFile: () => new WaEngineError('AUTOMAP_RULES_NOT_FOUND', `rules file is not a file: ${rel}`, { rules: rel }),
+      tooLarge: () => new WaEngineError('AUTOMAP_RULES_INVALID', `rules file is larger than ${MAX_RULES_FILE_BYTES / 1024} KB: ${rel}`, { rules: rel }),
+    });
+    return bytes.toString('utf8');
+  };
+
+  const parse = async (given: string, real: string, stack: readonly string[], inherited: RegExp | undefined): Promise<void> => {
+    const text = await readRules(real);
     let filter = inherited;
     for (const rawLine of text.split(/\r?\n/)) {
       const line = rawLine.trim();
@@ -90,40 +93,34 @@ export async function loadRules(projectDir: string, rulesAbs: string): Promise<R
           // Tiled ignores a filter that makes no valid expression: the rule maps after it
           // apply to every map.
           filter = undefined;
-          warnings.push({ code: 'AUTOMAP_RULES_IGNORED', message: `${shown(fileAbs)}: filter ${line} is not a valid pattern; the rule maps after it apply to every map`, details: { rules: shown(fileAbs), filter: line } });
+          warnings.push({ code: 'AUTOMAP_RULES_IGNORED', message: `${shown(real)}: filter ${line} is not a valid pattern; the rule maps after it apply to every map`, details: { rules: shown(real), filter: line } });
         }
         continue;
       }
-      const target = resolve(dirname(fileAbs), line);
-      const rel = shown(target);
+      const target = resolve(dirname(given), line);
+      const rel = relOf(target);
       if (extname(target).toLowerCase() === '.tmx') {
         throw new WaEngineError('PATH_BAD_EXTENSION', `rule map ${rel} is a .tmx file: save it as JSON (.tmj) in Tiled`, { ruleMap: rel });
       }
       const abs = await resolveInProject(project, rel, { ext: ['.txt', ...RULE_MAP_EXTENSIONS] });
       if (extname(abs).toLowerCase() === '.txt') {
         if (stack.includes(abs)) {
-          throw new WaEngineError('AUTOMAP_RULES_INVALID', `rules files include each other in a cycle: ${rel}`, { rules: rel, cycle: [...stack, abs].map(shown) });
+          throw new WaEngineError('AUTOMAP_RULES_INVALID', `rules files include each other in a cycle: ${shown(abs)}`, { rules: shown(abs), cycle: [...stack, abs].map(shown) });
         }
         if (stack.length >= MAX_INCLUDE_DEPTH) {
-          throw new WaEngineError('AUTOMAP_RULES_INVALID', `rules files are included more than ${MAX_INCLUDE_DEPTH} levels deep`, { rules: rel });
+          throw new WaEngineError('AUTOMAP_RULES_INVALID', `rules files are included more than ${MAX_INCLUDE_DEPTH} levels deep`, { rules: shown(abs) });
         }
-        await parse(abs, [...stack, abs], filter);
+        await parse(target, abs, [...stack, abs], filter);
         continue;
       }
-      if (!(await isFile(abs))) {
-        throw new WaEngineError('AUTOMAP_RULES_NOT_FOUND', `rule map not found: ${rel} (listed in ${shown(fileAbs)})`, { ruleMap: rel });
-      }
       if (references.length >= MAX_REFERENCES) {
-        throw new WaEngineError('AUTOMAP_RULES_INVALID', `rules files list more than ${MAX_REFERENCES} rule maps`, { rules: shown(top) });
+        throw new WaEngineError('AUTOMAP_RULES_INVALID', `rules files list more than ${MAX_REFERENCES} rule maps`, { rules: shown(topReal) });
       }
       references.push({ filter, ruleMap: await ruleMapAt(abs) });
     }
   };
 
-  if (extname(top).toLowerCase() === '.txt') await parse(top, [top], undefined);
-  else {
-    if (!(await isFile(top))) throw new WaEngineError('AUTOMAP_RULES_NOT_FOUND', `rule map not found: ${shown(top)}`, { ruleMap: shown(top) });
-    references.push({ filter: undefined, ruleMap: await ruleMapAt(top) });
-  }
-  return { projectDir: project, rulesPath: shown(top), rulesAbs: top, references, warnings };
+  if (extname(topReal).toLowerCase() === '.txt') await parse(topGiven, topReal, [topReal], undefined);
+  else references.push({ filter: undefined, ruleMap: await ruleMapAt(topReal) });
+  return { projectDir: project, rulesPath: shown(topReal), rulesAbs: topReal, references, warnings };
 }

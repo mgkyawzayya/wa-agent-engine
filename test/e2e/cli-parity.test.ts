@@ -1,5 +1,6 @@
 import type { Client } from '@modelcontextprotocol/client';
 import { afterAll, beforeAll, expect, test } from 'vitest';
+import { writeStartRule } from '../helpers/automap.js';
 import { makeFullProject, type TempProject } from '../helpers/project.js';
 import { connectMcp, errorOf, runCli } from './helpers.js';
 
@@ -50,12 +51,18 @@ test('successes and coded errors are identical on both surfaces, in workflow ord
     ['render_map_preview', 'render', { mapPath: 'p.tmj', scale: 0.25 }, 0],
     ['render_map_preview', 'render', { mapPath: 'p.tmj', scale: 3 }, 1],
   ];
-  for (const [name, command, args, code] of steps) {
+  const check = async ([name, command, args, code]: (typeof steps)[number]): Promise<void> => {
     const { cli, mcp, mcpJson } = await both(name, command, args);
     expect({ step: `${command} ${code}`, code: cli.code }).toEqual({ step: `${command} ${code}`, code });
     expect(Boolean(mcp.isError)).toBe(code === 1);
     expect(cli.json).toEqual(mcpJson);
-  }
+  };
+  for (const step of steps) await check(step);
+  // automap: no rules file yet, then one in each project.
+  await check(['automap_map', 'automap', { mapPath: 'p.tmj' }, 1]);
+  await writeStartRule(cliProject.dir, 'p.tmj', '.');
+  await writeStartRule(mcpProject.dir, 'p.tmj', '.');
+  await check(['automap_map', 'automap', { mapPath: 'p.tmj' }, 0]);
 });
 
 test('shape errors are rejected on both surfaces', async () => {

@@ -1,6 +1,6 @@
 ---
 name: wa-map-design
-description: Designs and draws WorkAdventure maps (Tiled .tmj) for online events and offices with the wa-agent-engine tools, from a venue brief to a validated and rendered map. Use it to build, furnish, extend or fix a WorkAdventure venue, room layout, meeting room, entry, exit or zone, for example a VarCamp venue, through the MCP tools scaffold_map, build_room_from_dsl, place_prefab, configure_wa_zone, validate_wa_map and render_map_preview, or the wa-agent-engine CLI.
+description: Designs and draws WorkAdventure maps (Tiled .tmj) for online events and offices with the wa-agent-engine tools, from a venue brief to a validated and rendered map. Use it to build, furnish, extend or fix a WorkAdventure venue, room layout, meeting room, entry, exit or zone, for example a VarCamp venue, through the MCP tools scaffold_map, build_room_from_dsl, place_prefab, configure_wa_zone, validate_wa_map, render_map_preview and automap_map, or the wa-agent-engine CLI.
 compatibility: Needs Node.js 26 or newer and a WorkAdventure map-starter-kit project with its tilesets folder. Uses the wa-agent-engine MCP server, or the CLI through npx -y wa-agent-engine@0.2.0.
 ---
 
@@ -40,6 +40,7 @@ The third form reads the JSON from stdin, and `--help` prints the command's inpu
 | Add or update a zone | `configure_wa_zone` | `zone` |
 | Check the map | `validate_wa_map` | `validate` |
 | Render a preview | `render_map_preview` | `render` |
+| Apply Tiled automapping rules: a map with its own `rules.txt`, or a rules file the user names | `automap_map` | `automap` |
 
 Every input, output and exit code is in [references/cli-and-mcp.md](references/cli-and-mcp.md).
 
@@ -212,6 +213,10 @@ Branch on `code`, never on the message text. `details` often names the cells, th
 | `PREVIEW_TOO_LARGE` | Render with `"scale": 0.5` or `0.25`. |
 | `ENGINE_STATE_INVALID` | The engine's build record no longer fits the map, usually because the map was resized in Tiled. Ask the user to undo the change. |
 | `TILESET_CONFLICT` | The map has another tileset with the same name as one of the asset set's. Ask the user how to resolve it. |
+| `AUTOMAP_RULES_NOT_FOUND` | No `rules.txt` next to the map or in the project, or a rule map it lists is missing. Ask the user for the rules file and pass it as `rules`. |
+| `AUTOMAP_RULES_INVALID`, `AUTOMAP_UNSUPPORTED` | A rule map is broken or uses something the engine does not run (`details` says what). Tell the user; do not edit their rule maps. |
+| `AUTOMAP_RULES_IGNORED` (warning) | Tiled would ignore that rule-map layer or property too. Mention it to the user. |
+| `AUTOMAP_ON_ENGINE_MAP` (warning) | The map has an engine build record: `build_room_from_dsl` does not re-run the rules. If you build rooms on this map, run `automap_map` again afterwards. |
 | `WALL_PIECE_MISSING` | The asset set has no tile for a wall shape the layout needs. With `wa-starter-office` this does not happen; with another set, see the asset-set onboarding skill. |
 | `LAYER_IS_GROUP`, `LAYER_WRONG_TYPE`, `LAYER_ROLE_UNRESOLVED`, `LAYER_DATA_UNSUPPORTED` | A hand-drawn map uses a layer name the engine needs for something else, or tile data it cannot read (for example an infinite map). Tell the user which layer the message names; do not rename layers yourself. |
 | `EXTERNAL_TILESET_UNRESOLVED` | The map links a tileset file instead of embedding it. Ask the user to embed it in Tiled (Map > Embed Tilesets). |

@@ -1,0 +1,7 @@
+{
+ "description": "A target layer inside a locked group is locked too",
+ "random": false,
+ "map": "map.tmj",
+ "inputsHash": "b20052686df546705dbbf0057a4434a0f5992530295e2eda7b6f8b9aad7d12fa",
+ "capturedInputsHash": "b20052686df546705dbbf0057a4434a0f5992530295e2eda7b6f8b9aad7d12fa"
+}
