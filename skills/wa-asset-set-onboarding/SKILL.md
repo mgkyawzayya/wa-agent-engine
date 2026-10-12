@@ -1,7 +1,7 @@
 ---
 name: wa-asset-set-onboarding
 description: Adds a tileset to wa-agent-engine as a project-local asset set, so the WorkAdventure map tools can draw walls, wall faces, floors, doors and furniture with it (through a Wang wall terrain, or Tiled automapping rules painted in a rule map from automap_template), or turns single prop images (stages, banners, boards, games) into furniture with import_prop_set. Use it when a user wants to build WorkAdventure maps with their own or third-party tiles or props, or asks to create, fix or check an asset set in .wa-asset-sets, its Tiled .tsj wall terrain or automapping rule maps, its set.json, or its prefab .tmj files.
-compatibility: Needs Node.js 26 or newer, a WorkAdventure map project that holds the tileset images, and the wa-agent-engine MCP server or the CLI through npx -y wa-agent-engine@0.3.0. Tiled helps for drawing the Wang set but is optional.
+compatibility: Needs Node.js 26 or newer, a WorkAdventure map project that holds the tileset images, and the wa-agent-engine MCP server or the CLI through npx -y wa-agent-engine@0.3.1. Tiled helps for drawing the Wang set but is optional.
 ---
 
 # Asset set onboarding
@@ -30,7 +30,7 @@ When the user has furniture as single images (one PNG per prop, such as a stage,
 3. Import it:
 
    ```bash
-   npx -y wa-agent-engine@0.3.0 import-props --input '{"projectDir": "/path/to/map-starter-kit", "setId": "varcamp", "source": "props/varcamp/props.json"}'
+   npx -y wa-agent-engine@0.3.1 import-props --input '{"projectDir": "/path/to/map-starter-kit", "setId": "varcamp", "source": "props/varcamp/props.json"}'
    ```
 
 4. The result lists every prefab id (the prop id in lowercase, `_` as `-`), size, category and use. The set extends `wa-starter-office`, so maps built with `"assetSet": "varcamp"` have the starter walls and floors and all the furniture of both sets. A map built with `wa-starter-office` can switch to it at the next build.
@@ -76,7 +76,7 @@ Write the tilesets and check the collision tile (steps 1 and 3 above) first, the
 1. **Run the template.** `automap_template` (CLI `automap-template`) writes a rule map to paint, with one rule for every piece a room needs, whose inputs already hold the engine's markers. Pass every tileset the user paints with, including the one with the collision tile, and the set's own folder as `outDir`:
 
    ```bash
-   npx -y wa-agent-engine@0.3.0 automap-template --input '{"projectDir": "/path/to/map-starter-kit", "outDir": ".wa-asset-sets/dungeon/automap", "tilesets": [".wa-asset-sets/dungeon/tilesets/Dungeon.tsj", ".wa-asset-sets/dungeon/tilesets/WA_Special_Zones.tsj"]}'
+   npx -y wa-agent-engine@0.3.1 automap-template --input '{"projectDir": "/path/to/map-starter-kit", "outDir": ".wa-asset-sets/dungeon/automap", "tilesets": [".wa-asset-sets/dungeon/tilesets/Dungeon.tsj", ".wa-asset-sets/dungeon/tilesets/WA_Special_Zones.tsj"]}'
    ```
 
    Without `assetSet` the template has one wall style and one floor style, both `plain`. To get rules for several styles, pass an existing set with those styles as `assetSet`: a set drawn with rules keeps its markers, and any other set may have at most 14 floor styles. The tool refuses to replace the files (`MAP_EXISTS`) unless the user asks for `"overwrite": true`, which loses what they painted; it never replaces files it did not write.
@@ -103,7 +103,7 @@ For a set drawn with automapping rules, the coverage check runs the rules on eve
 
 This makes `office-mini`, a minimal copy of the starter set with four tilesets, one wall style, two floors and the phone pod, then proves it. The full `set.json` is in [references/terrain-authoring.md](references/terrain-authoring.md).
 
-1. Get the starter set's definition files. They ship in the wa-agent-engine package. With the package installed globally, they are under `$(npm root -g)/wa-agent-engine/`; otherwise `npm pack wa-agent-engine@0.3.0` fetches them as a tarball:
+1. Get the starter set's definition files. They ship in the wa-agent-engine package. With the package installed globally, they are under `$(npm root -g)/wa-agent-engine/`; otherwise `npm pack wa-agent-engine@0.3.1` fetches them as a tarball:
 
    ```bash
    cd "$(mktemp -d)"
@@ -126,13 +126,13 @@ This makes `office-mini`, a minimal copy of the starter set with four tilesets, 
 3. Scaffold a test map with the set:
 
    ```bash
-   npx -y wa-agent-engine@0.3.0 scaffold --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj", "width": 20, "height": 14, "assetSet": "office-mini", "spawn": {"x": 4, "y": 4}}'
+   npx -y wa-agent-engine@0.3.1 scaffold --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj", "width": 20, "height": 14, "assetSet": "office-mini", "spawn": {"x": 4, "y": 4}}'
    ```
 
 4. Build the test room. The four rooms meet at the crossing (9, 6); the doors at (9, 3) and (9, 9) are vertical, and those at (4, 6) and (14, 6) horizontal.
 
    ```bash
-   npx -y wa-agent-engine@0.3.0 build --input '{
+   npx -y wa-agent-engine@0.3.1 build --input '{
      "projectDir": "/path/to/map-starter-kit",
      "mapPath": "set-test.tmj",
      "dsl": {
@@ -152,9 +152,9 @@ This makes `office-mini`, a minimal copy of the starter set with four tilesets, 
 5. Place the prefab, validate, and render:
 
    ```bash
-   npx -y wa-agent-engine@0.3.0 prefab --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj", "prefabId": "phone-pod-2x2", "x": 2, "y": 10}'
-   npx -y wa-agent-engine@0.3.0 validate --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj"}'
-   npx -y wa-agent-engine@0.3.0 render --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj"}'
+   npx -y wa-agent-engine@0.3.1 prefab --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj", "prefabId": "phone-pod-2x2", "x": 2, "y": 10}'
+   npx -y wa-agent-engine@0.3.1 validate --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj"}'
+   npx -y wa-agent-engine@0.3.1 render --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "set-test.tmj"}'
    ```
 
    Validate returns `{"ok": true, "errors": [], "warnings": []}`, and the preview shows four rooms with joined walls, white faces under each north wall, red carpet in the north-west room, four doors with lintels, and the phone pod.

@@ -24,6 +24,8 @@ Since 0.1.0:
 - **Worlds.** A layout can have a ground style, paths and plazas, rivers and ponds with bridges, and scattered trees, bushes and flowers. The map skill has recipes for worlds and event halls.
 - **Tiled automapping.** `automap_map` applies a Tiled rules file with the semantics of Tiled 1.12's AutoMap, checked against output recorded from Tiled itself. An asset set can draw its walls, faces, lintels, floors and collisions with automapping rules, and `automap_template` writes the rule map to paint in Tiled for a new tileset.
 
+0.3.1 fixes the MCP server's shutdown: a client that sends SIGINT or SIGTERM as soon as the server has started now gets a clean exit with code 0.
+
 ## Quick start
 
 You need **Node.js 26 or newer** and an agent that supports MCP. These steps use Claude Code.
@@ -45,8 +47,8 @@ If `npm install` stops because `pngquant failed to build`, see [Troubleshooting]
 Register the MCP server and install the skills:
 
 ```bash
-claude mcp add --transport stdio --scope user wa-agent-engine -- npx -y wa-agent-engine@0.3.0 mcp
-npx skills add https://github.com/mgkyawzayya/wa-agent-engine/tree/v0.3.0/skills --agent claude-code --global --yes
+claude mcp add --transport stdio --scope user wa-agent-engine -- npx -y wa-agent-engine@0.3.1 mcp
+npx skills add https://github.com/mgkyawzayya/wa-agent-engine/tree/v0.3.1/skills --agent claude-code --global --yes
 ```
 
 `claude mcp list` should show `wa-agent-engine: … ✔ Connected`. Setup for Codex, Cursor and Pi is in [docs/agent-setup.md](docs/agent-setup.md).
@@ -107,10 +109,10 @@ Every failure carries a code from a closed list (`ERROR_CODES`, plus `VALIDATION
 
 ## Using the CLI
 
-Agents that can run shell commands, and people, can use the CLI without MCP. Every command reads one JSON object (`--input '<json>'`, `--input-file <path>`, or `--input -` for stdin) and prints JSON. `npx -y wa-agent-engine@0.3.0 <command> --help` shows a command's input schema.
+Agents that can run shell commands, and people, can use the CLI without MCP. Every command reads one JSON object (`--input '<json>'`, `--input-file <path>`, or `--input -` for stdin) and prints JSON. `npx -y wa-agent-engine@0.3.1 <command> --help` shows a command's input schema.
 
 ```bash
-npm install -g wa-agent-engine@0.3.0     # or prefix each command with npx -y wa-agent-engine@0.3.0
+npm install -g wa-agent-engine@0.3.1     # or prefix each command with npx -y wa-agent-engine@0.3.1
 P=/absolute/path/to/my-venue
 
 wa-agent-engine scaffold --input "{\"projectDir\":\"$P\",\"mapPath\":\"venue.tmj\",\"width\":24,\"height\":16,\"spawn\":{\"x\":3,\"y\":13}}"
@@ -146,7 +148,7 @@ Exit codes: 0 means success; 1 means a tool error or invalid input, with a JSON 
 examples/varcamp-venue.commands.sh /absolute/path/to/my-venue
 ```
 
-It writes `varcamp-venue.tmj` (pass another map path as the second argument) and uses `wa-agent-engine` when installed, `npx -y wa-agent-engine@0.3.0` otherwise, or the command in `WA_AGENT_ENGINE`. The lounge's `playAudio` URL is a placeholder on example.com; point it at real audio before you use the map.
+It writes `varcamp-venue.tmj` (pass another map path as the second argument) and uses `wa-agent-engine` when installed, `npx -y wa-agent-engine@0.3.1` otherwise, or the command in `WA_AGENT_ENGINE`. The lounge's `playAudio` URL is a placeholder on example.com; point it at real audio before you use the map.
 
 ## Working alongside Tiled
 
@@ -191,4 +193,4 @@ npm run check-skills    # checks the skills and these docs against the tool tabl
 npm run verify:tiled    # with Tiled 1.12 installed and closed, after fetch-assets: records Tiled's automapping output again, then compares the engine with it
 ```
 
-The tests use the cached starter kit and store only hashes of rendered images, never the images. The automapping tests compare the engine with Tiled 1.12's own output, recorded under `test/fixtures/automap/` and `test/fixtures/automap-office/`; `verify:tiled` opens the Tiled app for a moment to record it again over the committed `expected.tmj` files (set `TILED` to its binary if it is not in `/Applications`; `git diff` then shows any change in Tiled's output), and prints `skipped` without Tiled. To try a local build in an agent, `npm pack` and point the MCP command at the tarball: `npx -y --package=/absolute/path/wa-agent-engine-0.3.0.tgz wa-agent-engine mcp`.
+The tests use the cached starter kit and store only hashes of rendered images, never the images. The automapping tests compare the engine with Tiled 1.12's own output, recorded under `test/fixtures/automap/` and `test/fixtures/automap-office/`; `verify:tiled` opens the Tiled app for a moment to record it again over the committed `expected.tmj` files (set `TILED` to its binary if it is not in `/Applications`; `git diff` then shows any change in Tiled's output), and prints `skipped` without Tiled. To try a local build in an agent, `npm pack` and point the MCP command at the tarball: `npx -y --package=/absolute/path/wa-agent-engine-0.3.1.tgz wa-agent-engine mcp`.

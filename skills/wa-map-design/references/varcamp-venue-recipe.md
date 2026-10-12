@@ -51,7 +51,7 @@ x=0             14               35                         51
 ## 1. Scaffold the map
 
 ```bash
-npx -y wa-agent-engine@0.3.0 scaffold --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "width": 52, "height": 31, "spawn": {"x": 47, "y": 18}, "mapName": "VarCamp 2025", "mapDescription": "VarCamp 2025 venue: talks, workshop, lounge, games and sponsors"}'
+npx -y wa-agent-engine@0.3.1 scaffold --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "width": 52, "height": 31, "spawn": {"x": 47, "y": 18}, "mapName": "VarCamp 2025", "mapDescription": "VarCamp 2025 venue: talks, workshop, lounge, games and sponsors"}'
 ```
 
 The spawn tile is in the hall, next to the registration desk and the entrance.
@@ -209,7 +209,7 @@ Save this input as `varcamp.build.json`:
 ```
 
 ```bash
-npx -y wa-agent-engine@0.3.0 build --input-file varcamp.build.json
+npx -y wa-agent-engine@0.3.1 build --input-file varcamp.build.json
 ```
 
 The result lists the 8 room areas (`daisy`, `padauk`, `khwar-nyo`, `phone-1`, `phone-2`, `sabal`, `khatta`, `hnin-si`), the variable `currentTalk`, 39 furniture instances, and no warnings.
@@ -217,8 +217,8 @@ The result lists the 8 room areas (`daisy`, `padauk`, `khwar-nyo`, `phone-1`, `p
 ## 3. Add extras with place_prefab
 
 ```bash
-npx -y wa-agent-engine@0.3.0 prefab --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "prefabId": "party-balloons-1x1", "x": 46, "y": 15}'
-npx -y wa-agent-engine@0.3.0 prefab --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "prefabId": "plant-palm-3x3", "x": 12, "y": 17}'
+npx -y wa-agent-engine@0.3.1 prefab --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "prefabId": "party-balloons-1x1", "x": 46, "y": 15}'
+npx -y wa-agent-engine@0.3.1 prefab --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "prefabId": "plant-palm-3x3", "x": 12, "y": 17}'
 ```
 
 These two are decoration that belongs to no room. If a later build covers one of them, the build removes it with a `PREFAB_REMOVED` warning; place it again elsewhere.
@@ -226,10 +226,10 @@ These two are decoration that belongs to no room. If a later build covers one of
 ## 4. Add the zones
 
 ```bash
-npx -y wa-agent-engine@0.3.0 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "name": "entry", "x": 46, "y": 16, "width": 4, "height": 4, "properties": {"start": true}}'
-npx -y wa-agent-engine@0.3.0 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "name": "exit", "x": 51, "y": 15, "width": 1, "height": 2, "properties": {"exitUrl": "garden.tmj#entry"}}'
-npx -y wa-agent-engine@0.3.0 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "name": "registration", "x": 40, "y": 19, "width": 6, "height": 2, "properties": {"openWebsite": "https://var.camp", "openWebsiteTrigger": "onaction", "openWebsiteTriggerMessage": "Press SPACE to register for VarCamp"}}'
-npx -y wa-agent-engine@0.3.0 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "name": "sponsor-workadventure", "x": 26, "y": 26, "width": 4, "height": 1, "properties": {"openWebsite": "https://workadventu.re", "openWebsiteTrigger": "onicon"}}'
+npx -y wa-agent-engine@0.3.1 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "name": "entry", "x": 46, "y": 16, "width": 4, "height": 4, "properties": {"start": true}}'
+npx -y wa-agent-engine@0.3.1 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "name": "exit", "x": 51, "y": 15, "width": 1, "height": 2, "properties": {"exitUrl": "garden.tmj#entry"}}'
+npx -y wa-agent-engine@0.3.1 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "name": "registration", "x": 40, "y": 19, "width": 6, "height": 2, "properties": {"openWebsite": "https://var.camp", "openWebsiteTrigger": "onaction", "openWebsiteTriggerMessage": "Press SPACE to register for VarCamp"}}'
+npx -y wa-agent-engine@0.3.1 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "name": "sponsor-workadventure", "x": 26, "y": 26, "width": 4, "height": 1, "properties": {"openWebsite": "https://workadventu.re", "openWebsiteTrigger": "onicon"}}'
 ```
 
 - `entry` is the named entry point. Another map reaches this venue with an `exitUrl` ending in `varcamp.tmj#entry`.
@@ -240,7 +240,7 @@ npx -y wa-agent-engine@0.3.0 zone --input '{"projectDir": "/path/to/map-starter-
 ## 5. Validate
 
 ```bash
-npx -y wa-agent-engine@0.3.0 validate --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj"}'
+npx -y wa-agent-engine@0.3.1 validate --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj"}'
 ```
 
 Expected result: `{"ok": true, "errors": [], "warnings": []}`.
@@ -248,7 +248,7 @@ Expected result: `{"ok": true, "errors": [], "warnings": []}`.
 ## 6. Render and look
 
 ```bash
-npx -y wa-agent-engine@0.3.0 render --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "scale": 0.5, "overlays": ["zones"]}'
+npx -y wa-agent-engine@0.3.1 render --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "varcamp.tmj", "scale": 0.5, "overlays": ["zones"]}'
 ```
 
 At scale 0.5 the preview is 832 × 496 px. Check that every room is there, that each door opens into the hall, that the booths and the quiet room connect as planned, and that the zone outlines lie where the brief wants them.

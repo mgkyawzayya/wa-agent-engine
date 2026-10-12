@@ -93,10 +93,10 @@ The engine checks every URL it writes and never fetches one.
 These run on the small venue from SKILL.md (a 24 × 14 map with the rooms `daisy` and `hall`):
 
 ```bash
-npx -y wa-agent-engine@0.3.0 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "name": "standup", "x": 13, "y": 6, "width": 3, "height": 3, "properties": {"jitsiRoom": "VarCamp standup", "jitsiTrigger": "onaction", "jitsiTriggerMessage": "Press SPACE to join the stand-up", "jitsiConfig": "{\"startWithAudioMuted\": true}", "jitsiWidth": 50}}'
-npx -y wa-agent-engine@0.3.0 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "name": "schedule", "x": 18, "y": 7, "width": 4, "height": 1, "properties": {"openWebsite": "https://var.camp", "openWebsiteTrigger": "onicon", "openWebsitePolicy": "fullscreen"}}'
-npx -y wa-agent-engine@0.3.0 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "name": "music", "x": 20, "y": 9, "width": 3, "height": 3, "properties": {"playAudio": "https://example.com/varcamp/lounge-loop.mp3", "audioLoop": true, "audioVolume": 0.3}}'
-npx -y wa-agent-engine@0.3.0 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "name": "quiet-corner", "x": 1, "y": 12, "width": 3, "height": 1, "properties": {"silent": true, "focusable": true, "zoomMargin": 0.5, "ai-zone": true, "description": "Quiet corner at the back of the Daisy talk room."}}'
+npx -y wa-agent-engine@0.3.1 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "name": "standup", "x": 13, "y": 6, "width": 3, "height": 3, "properties": {"jitsiRoom": "VarCamp standup", "jitsiTrigger": "onaction", "jitsiTriggerMessage": "Press SPACE to join the stand-up", "jitsiConfig": "{\"startWithAudioMuted\": true}", "jitsiWidth": 50}}'
+npx -y wa-agent-engine@0.3.1 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "name": "schedule", "x": 18, "y": 7, "width": 4, "height": 1, "properties": {"openWebsite": "https://var.camp", "openWebsiteTrigger": "onicon", "openWebsitePolicy": "fullscreen"}}'
+npx -y wa-agent-engine@0.3.1 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "name": "music", "x": 20, "y": 9, "width": 3, "height": 3, "properties": {"playAudio": "https://example.com/varcamp/lounge-loop.mp3", "audioLoop": true, "audioVolume": 0.3}}'
+npx -y wa-agent-engine@0.3.1 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "name": "quiet-corner", "x": 1, "y": 12, "width": 3, "height": 1, "properties": {"silent": true, "focusable": true, "zoomMargin": 0.5, "ai-zone": true, "description": "Quiet corner at the back of the Daisy talk room."}}'
 ```
 
 The audio URL is a placeholder on `example.com`: replace it with a real file, or with a path such as `audio/lounge.mp3` that exists in the project.

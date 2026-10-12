@@ -4,7 +4,7 @@
 # prints is the evidence transcript: each command, then its JSON result.
 #
 # Usage: examples/varcamp-venue.commands.sh <absolute project dir> [map path]
-# It runs wa-agent-engine when that is installed, and npx -y wa-agent-engine@0.3.0 otherwise.
+# It runs wa-agent-engine when that is installed, and npx -y wa-agent-engine@0.3.1 otherwise.
 # WA_AGENT_ENGINE overrides the command; it is split on spaces into the command and its
 # arguments. The map must not exist yet (scaffold refuses to replace it).
 set -euo pipefail
@@ -17,7 +17,7 @@ if [[ -n "${WA_AGENT_ENGINE:-}" ]]; then
 elif command -v wa-agent-engine > /dev/null; then
   WAE=(wa-agent-engine)
 else
-  WAE=(npx -y wa-agent-engine@0.3.0)
+  WAE=(npx -y wa-agent-engine@0.3.1)
 fi
 
 json() {

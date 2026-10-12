@@ -130,8 +130,8 @@ Building next to walls drawn by hand works: walls touching the new rooms join th
 Three rooms: a workshop and a lounge side by side, sharing wall column 13 and joined by a side door, above a hall that has an exit door in the bottom map edge. The map was scaffolded at 30 × 16.
 
 ```bash
-npx -y wa-agent-engine@0.3.0 scaffold --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "workshop.tmj", "width": 30, "height": 16, "spawn": {"x": 24, "y": 13}}'
-npx -y wa-agent-engine@0.3.0 build --input '{
+npx -y wa-agent-engine@0.3.1 scaffold --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "workshop.tmj", "width": 30, "height": 16, "spawn": {"x": 24, "y": 13}}'
+npx -y wa-agent-engine@0.3.1 build --input '{
   "projectDir": "/path/to/map-starter-kit",
   "mapPath": "workshop.tmj",
   "dsl": {
@@ -175,8 +175,8 @@ npx -y wa-agent-engine@0.3.0 build --input '{
     "variables": [{"name": "doorsOpen", "default": true, "persist": true}]
   }
 }'
-npx -y wa-agent-engine@0.3.0 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "workshop.tmj", "name": "exit", "x": 20, "y": 15, "width": 2, "height": 1, "properties": {"exitUrl": "venue.tmj#entry"}}'
-npx -y wa-agent-engine@0.3.0 validate --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "workshop.tmj"}'
+npx -y wa-agent-engine@0.3.1 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "workshop.tmj", "name": "exit", "x": 20, "y": 15, "width": 2, "height": 1, "properties": {"exitUrl": "venue.tmj#entry"}}'
+npx -y wa-agent-engine@0.3.1 validate --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "workshop.tmj"}'
 ```
 
 How the rules apply here:

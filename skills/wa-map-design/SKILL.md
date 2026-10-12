@@ -1,7 +1,7 @@
 ---
 name: wa-map-design
 description: Designs and draws WorkAdventure maps (Tiled .tmj) for online events and offices with the wa-agent-engine tools, from a venue brief to a validated and rendered map. Use it to build, furnish, extend or fix a WorkAdventure venue, room layout, meeting room, entry, exit or zone, for example a VarCamp venue, through the MCP tools scaffold_map, build_room_from_dsl, place_prefab, configure_wa_zone, validate_wa_map, render_map_preview and automap_map, or the wa-agent-engine CLI.
-compatibility: Needs Node.js 26 or newer and a WorkAdventure map-starter-kit project with its tilesets folder. Uses the wa-agent-engine MCP server, or the CLI through npx -y wa-agent-engine@0.3.0.
+compatibility: Needs Node.js 26 or newer and a WorkAdventure map-starter-kit project with its tilesets folder. Uses the wa-agent-engine MCP server, or the CLI through npx -y wa-agent-engine@0.3.1.
 ---
 
 # WorkAdventure map design
@@ -21,13 +21,13 @@ If the user has the map open in Tiled, ask them to save it before you start, and
 
 ## 2. Call the tools
 
-When the `wa-agent-engine` MCP server is connected, call its tools directly. Otherwise use the CLI. If the package is installed (`wa-agent-engine --version` prints `0.3.0`), run `wa-agent-engine <command>`. If not, run it through npx, pinned to the version this skill was written for, as the examples below do. Both need Node.js 26: on an older Node the CLI prints a message on stderr and exits 1.
+When the `wa-agent-engine` MCP server is connected, call its tools directly. Otherwise use the CLI. If the package is installed (`wa-agent-engine --version` prints `0.3.1`), run `wa-agent-engine <command>`. If not, run it through npx, pinned to the version this skill was written for, as the examples below do. Both need Node.js 26: on an older Node the CLI prints a message on stderr and exits 1.
 
 ```bash
-npx -y wa-agent-engine@0.3.0 <command> --input '<json>'
-npx -y wa-agent-engine@0.3.0 <command> --input-file input.json
-npx -y wa-agent-engine@0.3.0 <command> --input -
-npx -y wa-agent-engine@0.3.0 <command> --help
+npx -y wa-agent-engine@0.3.1 <command> --input '<json>'
+npx -y wa-agent-engine@0.3.1 <command> --input-file input.json
+npx -y wa-agent-engine@0.3.1 <command> --input -
+npx -y wa-agent-engine@0.3.1 <command> --help
 ```
 
 The third form reads the JSON from stdin, and `--help` prints the command's input as a JSON Schema. The CLI input is the same JSON object as the MCP tool's arguments, and the CLI prints the same result as JSON on stdout. It exits 0 on success. On a tool error it exits 1 and prints `{"error": {...}}` with a `code`, a `message` and sometimes `details`. An unknown command or flag exits 2 with a message on stderr.
@@ -92,13 +92,13 @@ The prefab ids, sizes and placement rules are in [references/prefab-catalog.md](
 1. **Scaffold** the map at the size of the layout. Choose the spawn tile now, because it stays where scaffolding puts it: a walkable cell inside a room, below its two face rows, clear of furniture and of the cells in front of doors. In a world map it may also be on a plaza or a path, away from water. If a later build covers it, `validate_wa_map` warns `START_TILE_BLOCKED`; then move the furniture or the room, or add an entry area with `start` and point people at it.
 
    ```bash
-   npx -y wa-agent-engine@0.3.0 scaffold --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "width": 24, "height": 14, "spawn": {"x": 17, "y": 10}, "mapName": "VarCamp test venue"}'
+   npx -y wa-agent-engine@0.3.1 scaffold --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "width": 24, "height": 14, "spawn": {"x": 17, "y": 10}, "mapName": "VarCamp test venue"}'
    ```
 
 2. **Build** the rooms. Send the whole layout every time: each build replaces the previous one, so a room left out of the DSL is removed from the map.
 
    ```bash
-   npx -y wa-agent-engine@0.3.0 build --input '{
+   npx -y wa-agent-engine@0.3.1 build --input '{
      "projectDir": "/path/to/map-starter-kit",
      "mapPath": "venue.tmj",
      "dsl": {
@@ -137,26 +137,26 @@ The prefab ids, sizes and placement rules are in [references/prefab-catalog.md](
 3. **Place** extra prefabs one at a time:
 
    ```bash
-   npx -y wa-agent-engine@0.3.0 prefab --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "prefabId": "plant-tree-1x2", "x": 13, "y": 3}'
+   npx -y wa-agent-engine@0.3.1 prefab --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "prefabId": "plant-tree-1x2", "x": 13, "y": 3}'
    ```
 
 4. **Add zones** that do not belong to one room: an entry area with `start` near the spawn, so other maps can send players to `venue.tmj#entry`, and an `exitUrl` zone over every exit door. Websites, sponsor links and similar zones go here too. The keys and their rules are in [references/zone-properties.md](references/zone-properties.md).
 
    ```bash
-   npx -y wa-agent-engine@0.3.0 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "name": "entry", "x": 15, "y": 9, "width": 4, "height": 3, "properties": {"start": true}}'
-   npx -y wa-agent-engine@0.3.0 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "name": "exit", "x": 16, "y": 13, "width": 2, "height": 1, "properties": {"exitUrl": "garden.tmj#entry"}}'
+   npx -y wa-agent-engine@0.3.1 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "name": "entry", "x": 15, "y": 9, "width": 4, "height": 3, "properties": {"start": true}}'
+   npx -y wa-agent-engine@0.3.1 zone --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "name": "exit", "x": 16, "y": 13, "width": 2, "height": 1, "properties": {"exitUrl": "garden.tmj#entry"}}'
    ```
 
 5. **Validate**, and fix every error before you go on. Warnings are worth reading but do not break the map.
 
    ```bash
-   npx -y wa-agent-engine@0.3.0 validate --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj"}'
+   npx -y wa-agent-engine@0.3.1 validate --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj"}'
    ```
 
 6. **Render** a preview and look at it. The MCP tool returns the image; if you get no image, or you use the CLI, open the file at `pngPath`. Add `"overlays": ["zones"]` to outline the areas, and use `"scale": 0.5` or `0.25` for big maps.
 
    ```bash
-   npx -y wa-agent-engine@0.3.0 render --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "overlays": ["zones"]}'
+   npx -y wa-agent-engine@0.3.1 render --input '{"projectDir": "/path/to/map-starter-kit", "mapPath": "venue.tmj", "overlays": ["zones"]}'
    ```
 
 Check the preview against the brief: every room present and labelled, doors where you meant them, furniture facing the right way, no hall left mostly empty, nothing blocking a doorway. To change the layout, edit the DSL and build again, then validate and render again. Tell the user where the map is, and show or describe the preview.
