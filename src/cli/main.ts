@@ -74,17 +74,20 @@ export async function main(argv: readonly string[]): Promise<number> {
       process.stderr.write(`wa-agent-engine mcp takes no arguments\n`);
       return 2;
     }
-    const server = startMcpServer();
     // Stop reading requests, let running calls finish their atomic write and drop their lock,
-    // then exit. A second signal ends the process at once.
+    // then exit. A second signal ends the process at once. The handlers go in before the server
+    // starts: its banner tells a client it is ready, and the client may signal straight away.
+    // A handler only runs once this code has returned, so server is set by then.
+    let server: ReturnType<typeof startMcpServer> | undefined;
     const stop = (): void => {
       const deadline = new Promise<void>((resolve) => setTimeout(resolve, SHUTDOWN_GRACE_MS).unref());
-      void server
+      void server!
         .close()
         .then(() => Promise.race([settleRunningCalls(), deadline]))
         .finally(() => process.exit(0));
     };
     for (const signal of ['SIGINT', 'SIGTERM'] as const) process.once(signal, stop);
+    server = startMcpServer();
     return 0;
   }
   const tool = TOOLS.find((t) => t.command === command);

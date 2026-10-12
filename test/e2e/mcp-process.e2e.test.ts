@@ -23,8 +23,10 @@ afterEach(async () => {
   project = undefined;
 });
 
+const spawnServer = (): ChildProcessWithoutNullStreams => spawn(process.execPath, ['--import', 'tsx', 'src/cli/index.ts', 'mcp'], { cwd: REPO_ROOT });
+
 async function startServer(): Promise<Server> {
-  const child = spawn(process.execPath, ['--import', 'tsx', 'src/cli/index.ts', 'mcp'], { cwd: REPO_ROOT });
+  const child = spawnServer();
   const stdout: string[] = [];
   let pending = '';
   child.stdout.setEncoding('utf8').on('data', (chunk: string) => {
@@ -79,6 +81,27 @@ describe('stopping', () => {
       const s = await startServer();
       s.child.kill(signal);
       expect(await s.exit).toBe(0);
+    }
+  }, 30_000);
+
+  test('a signal sent the moment the banner appears still stops the server with exit code 0', async () => {
+    // The banner tells a client the server is ready, so the stop handlers must already be in place.
+    // Signalling from the stderr handler itself, with several servers at once, makes any gap show.
+    const children = Array.from({ length: 8 }, () => spawnServer());
+    try {
+      const exits = await Promise.all(
+        children.map((child, i) => {
+          let banner = '';
+          child.stderr.setEncoding('utf8').on('data', (chunk: string) => {
+            banner += chunk;
+            if (banner.includes('MCP server on stdio') && !child.killed) child.kill(i % 2 === 0 ? 'SIGTERM' : 'SIGINT');
+          });
+          return once(child, 'exit').then(([code]) => code as number | null);
+        }),
+      );
+      expect(exits).toEqual(Array(8).fill(0));
+    } finally {
+      for (const child of children) if (child.exitCode === null) child.kill('SIGKILL');
     }
   }, 30_000);
 
